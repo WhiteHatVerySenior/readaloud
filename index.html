@@ -43,6 +43,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .tag-science{background:var(--blue2);color:var(--blue)}
 .tag-history{background:var(--amber2);color:var(--amber)}
 .tag-evs{background:var(--green2);color:var(--green)}
+.tag-hindi{background:#FFE4E1;color:#8B1A1A}
 .lbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
 .lv-adv{background:var(--teal2);color:var(--teal)}
 .lv-flu{background:var(--green2);color:var(--green)}
@@ -355,6 +356,9 @@ const STORIES = [
   {id:'water',   title:'The Water Cycle',           subject:'Science',diff:'Easy',  emoji:'💧',bg:'#E6F1FB',desc:'How water travels from ocean to cloud to rain and back.'},
   {id:'desert',  title:'The Desert Fox',            subject:'EVS',    diff:'Easy',  emoji:'🦊',bg:'#F5C4B3',desc:'A young fox learns to survive the scorching Thar Desert.'},
   {id:'ashoka',  title:"Ashoka's Message",          subject:'History',diff:'Medium',emoji:'🏛️',bg:'#FAC775',desc:'Ashoka gives up war and spreads a message of peace.'},
+  {id:'chacha',  title:'चाचा का पत्र',              subject:'Hindi',  diff:'Easy',  emoji:'✉️', bg:'#FFE4E1',desc:'एक बच्चे को उसके प्यारे चाचा का पत्र आता है।'},
+  {id:'barish',  title:'बारिश का मौसम',             subject:'Hindi',  diff:'Easy',  emoji:'🌧️', bg:'#E0F0FF',desc:'मोनू और सोनू बारिश में खेलते हैं।'},
+  {id:'sher',    title:'शेर और चूहा',               subject:'Hindi',  diff:'Easy',  emoji:'🦁', bg:'#FFF3CD',desc:'एक छोटे चूहे ने बड़े शेर की मदद की।'},
 ];
 
 // ══════════ STORY LINES (call & response) ════════════════
@@ -459,6 +463,39 @@ ashoka:[
   {s:'user',e:'🌍',bg:'#FAC775',t:"Ashoka sent messengers as far as Egypt and Greece to spread his message of peace and dharma."},
   {s:'app', e:'🇮🇳',bg:'#fde9b8',t:"Today his symbol — the Ashoka Chakra — sits at the centre of India's national flag, a reminder of his great vision."},
 ],
+
+chacha:[
+  {s:'app', e:'✉️',bg:'#FFE4E1',t:"आज राहुल को डाकिया एक पत्र दे गया। पत्र देखकर राहुल बहुत खुश हो गया।"},
+  {s:'user',e:'😊',bg:'#ffe8e5',t:"यह पत्र उसके प्यारे चाचा ने लिखा था जो दूर शहर में रहते थे।"},
+  {s:'app', e:'📝',bg:'#FFE4E1',t:"चाचा ने लिखा था — प्यारे राहुल, तुम्हें पढ़ाई में खूब मन लगाना चाहिए।"},
+  {s:'user',e:'📚',bg:'#ffe8e5',t:"हर रोज़ थोड़ा-थोड़ा पढ़ने से बड़ी से बड़ी किताब भी पूरी हो जाती है।"},
+  {s:'app', e:'🌟',bg:'#FFE4E1',t:"चाचा ने यह भी लिखा कि मेहनत करने वाले बच्चे ही जीवन में आगे बढ़ते हैं।"},
+  {s:'user',e:'💪',bg:'#ffe8e5',t:"राहुल ने पत्र पढ़कर सोचा — मैं भी खूब मेहनत करूँगा और चाचा को खुश करूँगा।"},
+  {s:'app', e:'✉️',bg:'#FFE4E1',t:"उसने तुरंत कागज़ उठाया और चाचा को जवाब लिखने बैठ गया।"},
+  {s:'user',e:'🖊️',bg:'#ffe8e5',t:"राहुल ने लिखा — प्यारे चाचा, आपका पत्र पाकर बहुत अच्छा लगा। मैं रोज़ पढ़ूँगा।"},
+],
+barish:[
+  {s:'app', e:'☁️',bg:'#E0F0FF',t:"आसमान में काले-काले बादल छा गए और तेज़ हवा चलने लगी।"},
+  {s:'user',e:'🌧️',bg:'#ddeeff',t:"थोड़ी देर में बारिश शुरू हो गई। मोनू और सोनू खिड़की से बाहर देख रहे थे।"},
+  {s:'app', e:'😄',bg:'#E0F0FF',t:"दोनों ने माँ से पूछा — माँ, क्या हम बाहर जाकर बारिश में खेल सकते हैं?"},
+  {s:'user',e:'👩',bg:'#ddeeff',t:"माँ मुस्कुराईं और बोलीं — ठीक है, लेकिन भीगकर आना मत। छाता लेकर जाओ।"},
+  {s:'app', e:'🌂',bg:'#E0F0FF',t:"दोनों भाग कर बाहर निकले। पानी में कागज़ की नाव चलाने लगे।"},
+  {s:'user',e:'⛵',bg:'#ddeeff',t:"मोनू की नाव तेज़ बह गई और सोनू की नाव धीरे-धीरे चलती रही।"},
+  {s:'app', e:'🐸',bg:'#E0F0FF',t:"तभी एक मेंढक कूदकर पानी में आ गया और उसने सोनू की नाव पलट दी।"},
+  {s:'user',e:'😂',bg:'#ddeeff',t:"दोनों ज़ोर से हँस पड़े। बारिश का यह दिन उन्हें हमेशा याद रहेगा।"},
+],
+sher:[
+  {s:'app', e:'🦁',bg:'#FFF3CD',t:"एक बार जंगल में एक बड़ा शेर सो रहा था। उसकी साँसें धीरे-धीरे चल रही थीं।"},
+  {s:'user',e:'🐭',bg:'#fff8dc',t:"तभी एक छोटा चूहा उसके पास से गुज़रा और गलती से शेर की पूँछ पर चढ़ गया।"},
+  {s:'app', e:'😠',bg:'#FFF3CD',t:"शेर की नींद टूट गई। उसने गुस्से में चूहे को अपने पंजे में दबा लिया।"},
+  {s:'user',e:'🙏',bg:'#fff8dc',t:"चूहा काँपते हुए बोला — महाराज, मुझे छोड़ दो। एक दिन मैं भी आपके काम आऊँगा।"},
+  {s:'app', e:'😄',bg:'#FFF3CD',t:"शेर हँसा और बोला — तू इतना छोटा, मेरे क्या काम आएगा? चल, जा यहाँ से।"},
+  {s:'user',e:'🐭',bg:'#fff8dc',t:"चूहा खुशी से वहाँ से चला गया। उसने मन में ठान लिया कि वह अपना वादा ज़रूर निभाएगा।"},
+  {s:'app', e:'🕸️',bg:'#FFF3CD',t:"कुछ दिन बाद शेर एक जाल में फँस गया। वह बहुत ज़ोर से दहाड़ रहा था।"},
+  {s:'user',e:'✂️',bg:'#fff8dc',t:"चूहे ने दहाड़ सुनी और दौड़ा चला आया। उसने अपने तेज़ दाँतों से जाल काट दिया।"},
+  {s:'app', e:'🦁',bg:'#FFF3CD',t:"शेर आज़ाद हो गया। उसने चूहे को गले लगाया और बोला — दोस्त, तुमने मेरी जान बचाई।"},
+  {s:'user',e:'🤝',bg:'#fff8dc',t:"चूहा बोला — महाराज, छोटा हो या बड़ा — हर किसी की मदद काम आती है।"},
+],
 };
 
 // ══════════ STATE ═════════════════════════════════════════
@@ -542,7 +579,7 @@ function renderProg(){
   document.getElementById('sAcc').innerHTML=`<div style="display:flex;align-items:flex-end;gap:5px;height:55px">${p.accH.map((a,i)=>`<div style="display:flex;flex-direction:column;align-items:center;flex:1"><div style="width:100%;border-radius:3px 3px 0 0;background:${a>=80?'#1D9E75':a>=65?'#EF9F27':'#E24B4A'};height:${a*0.55}px"></div><div style="font-size:9px;color:var(--text2);margin-top:3px;text-align:center">Wk${i+1}<br><b>${a}%</b></div></div>`).join('')}</div>`;
 }
 
-// ══════════ READER ════════════════════════════════════════
+// ══════════ READER ════════════════════════════════════
 function startStory(id){
   const s=STORIES.find(x=>x.id===id),lines=LINES[id];
   if(!s||!lines){alert('Coming soon!');return;}
@@ -555,9 +592,12 @@ function startStory(id){
   updateMet();
   buildReader();
 }
-function exitReader(){stopListen();stopSpeak();showScr(user.role==='teacher'?'scrTeacher':'scrStudent');}
+function exitReader(){stopListen();stopSpeak();autoMode=false;showScr(user.role==='teacher'?'scrTeacher':'scrStudent');}
 
-function getWords(t){return t.match(/\b[a-zA-Z']+\b/g)||[];}
+// Auto-flow state
+let autoMode = false;
+
+function getWords(t){return t.match(/\b[a-zA-Z\']+\b/g)||[];}
 function norm(s){return s.toLowerCase().replace(/[^a-z0-9]/g,'');}
 function simScore(a,b){
   a=norm(a);b=norm(b);
@@ -584,149 +624,179 @@ function updateMet(){
   if(acc!==null&&wpm!==null){const lv=getLevel(acc,wpm);const b=document.getElementById('rBadge');b.textContent=lv.label;b.className='lbadge '+lv.cls;}
 }
 
-// Build full reader — all lines listed, only active one expanded
+// ── BUILD READER UI ───────────────────────────────────
 function buildReader(){
   if(!story)return;
   const wrap=document.getElementById('readerWrap');
   const lines=story.lines;
   document.getElementById('rPbar').style.width=Math.round(lineIdx/lines.length*100)+'%';
 
-  let html='';
-  lines.forEach((line,i)=>{
-    const isActive=i===lineIdx;
-    const isDone=i<lineIdx;
-    const isUser=line.s==='user';
-    const turnCls=isUser?'user-turn':'app-turn';
-    const doneCls=isDone?'line-done':'';
-    const activeCls=isActive?'active-card':'';
+  // Show current + a peek at next line only
+  const cur=lines[lineIdx];
+  const next=lines[lineIdx+1];
+  const isUser=cur.s==='user';
 
-    if(isDone){
-      // Collapsed done lines — just show text, no image
-      html+=`<div class="${turnCls} ${doneCls}" id="ln${i}">
-        <div class="line-card ${activeCls}">
-          <div class="line-body" style="padding:10px 14px">
-            <div class="line-speaker">${isUser?'🎤 You':'🔊 App'}</div>
-            <div class="line-text" style="font-size:14px;opacity:.7" id="lt${i}">${line.t}</div>
-          </div>
-        </div>
-      </div>`;
-    } else if(isActive){
-      // Active line — full with image and word spans if user turn
-      let textHTML=line.t;
-      if(isUser){
-        const words=getWords(line.t);
-        let tmp=line.t;
-        words.forEach((w,wi)=>{tmp=tmp.replace(w,`@@${wi}@@`);});
-        textHTML='';
-        tmp.split(/(@@\d+@@)/).forEach(p=>{
-          const m=p.match(/@@(\d+)@@/);
-          if(m)textHTML+=`<span class="word" id="w${m[1]}">${words[parseInt(m[1])]}</span>`;
-          else textHTML+=p;
-        });
-      }
-      html+=`<div class="${turnCls}" id="ln${i}">
-        <div class="line-card ${activeCls}">
-          <div class="line-image" style="background:${line.bg}">${line.e}</div>
-          <div class="line-body">
-            <div class="line-speaker">
-              ${isUser?'🎤 Your turn — read this aloud':'🔊 App turn — listen carefully'}
-              <span class="turn-badge ${isUser?'turn-you':'turn-app'}">${isUser?'YOU':'APP'}</span>
-            </div>
-            <div class="line-text" id="lt${i}">${textHTML}</div>
-          </div>
-        </div>
-      </div>`;
-    } else {
-      // Upcoming lines — subtle preview
-      html+=`<div class="${turnCls}" id="ln${i}" style="opacity:.35">
-        <div class="line-card">
-          <div class="line-body" style="padding:8px 14px">
-            <div class="line-speaker" style="font-size:10px">${isUser?'🎤 Your turn':'🔊 App turn'}</div>
-            <div style="font-size:13px;color:var(--text2);font-family:Georgia,serif">${line.t.substring(0,60)}…</div>
-          </div>
-        </div>
-      </div>`;
-    }
-  });
+  let wordHTML=cur.t;
+  if(isUser && autoMode){
+    const words=getWords(cur.t);
+    let tmp=cur.t;
+    words.forEach((w,wi)=>{tmp=tmp.replace(w,`@@${wi}@@`);});
+    wordHTML='';
+    tmp.split(/(@@\d+@@)/).forEach(p=>{
+      const m=p.match(/@@(\d+)@@/);
+      if(m)wordHTML+=`<span class="word" id="w${m[1]}">${words[parseInt(m[1])]}</span>`;
+      else wordHTML+=p;
+    });
+  }
 
-  // Controls
-  html+=`<div class="status-bar" id="sBr" style="margin-top:6px">
-    <div id="sDot"></div>
-    <div class="transcript" id="sTxt">—</div>
+  const turnColor = isUser ? '#185FA5' : '#0F6E56';
+  const turnBg = isUser ? 'var(--blue2)' : 'var(--teal2)';
+  const turnLabel = isUser ? '🎤 Your turn — read aloud' : '🔊 App is reading…';
+  const turnBadge = isUser ? 'YOUR TURN' : 'APP TURN';
+  const badgeBg = isUser ? 'var(--blue)' : 'var(--green3)';
+
+  let html=`
+  <!-- PAST lines summary bar -->
+  ${lineIdx>0?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:8px 14px;margin-bottom:10px;font-size:12px;color:var(--text2)">
+    ✓ ${lineIdx} line${lineIdx>1?'s':''} done &nbsp;·&nbsp; ${Math.round(lineIdx/lines.length*100)}% complete
+  </div>`:''}
+
+  <!-- CURRENT LINE — big and clear -->
+  <div id="curLine" style="border-radius:var(--rl);overflow:hidden;border:2px solid ${turnColor};box-shadow:0 0 0 4px ${isUser?'rgba(55,138,221,.12)':'rgba(29,158,117,.12)'};margin-bottom:12px">
+    <div style="background:${cur.bg};height:160px;display:flex;align-items:center;justify-content:center;font-size:80px">${cur.e}</div>
+    <div style="background:${turnBg};padding:16px 18px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-size:11px;font-weight:700;color:${turnColor};text-transform:uppercase;letter-spacing:.08em">${turnLabel}</span>
+        <span style="background:${badgeBg};color:#fff;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700">${turnBadge}</span>
+      </div>
+      <div style="font-size:21px;line-height:1.9;font-family:Georgia,serif" id="curText">${wordHTML}</div>
+    </div>
   </div>
-  <div style="display:flex;gap:10px;margin-top:10px">
-    <button class="btn btn-primary btn-xl" id="mainBtn" onclick="handleBtn()" style="flex:1">—</button>
+
+  <!-- NEXT LINE — subtle preview -->
+  ${next?`<div style="opacity:.35;border-radius:var(--rl);border:1px solid var(--border);overflow:hidden;margin-bottom:14px">
+    <div style="background:${next.s==='user'?'var(--blue2)':'var(--teal2)'};padding:10px 16px">
+      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;margin-bottom:4px">${next.s==='user'?'🎤 Next — your turn':'🔊 Next — app turn'}</div>
+      <div style="font-size:14px;color:var(--text2);font-family:Georgia,serif">${next.t.substring(0,70)}${next.t.length>70?'…':''}</div>
+    </div>
+  </div>`:''}
+
+  <!-- STATUS BAR -->
+  <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:11px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <div id="sDot" style="flex-shrink:0"></div>
+    <div id="sTxt" style="font-size:13px;color:var(--text2);font-style:italic;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div style="display:flex;gap:10px">
+    ${!autoMode
+      ? `<button class="btn btn-primary btn-xl" onclick="startAuto()" style="flex:1">▶ Start reading</button>`
+      : `<button class="btn btn-red btn-xl" onclick="pauseAuto()" style="flex:1" id="pauseBtn">${isUser?'⏸ Pause':'⏸ Pause'}</button>`
+    }
     <button class="btn btn-sm" onclick="skipLine()" style="min-height:58px;padding:10px 16px">Skip →</button>
   </div>`;
 
   wrap.innerHTML=html;
-  setTimeout(()=>activateLine(),100);
-}
 
-function activateLine(){
-  if(!story)return;
-  const lines=story.lines;
-  if(lineIdx>=lines.length){showDone();return;}
-  // Scroll to active line
-  const el=document.getElementById('ln'+lineIdx);
-  if(el)setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),200);
-
-  const line=lines[lineIdx];
-  const isUser=line.s==='user';
-  const btn=document.getElementById('mainBtn');
-  const dot=document.getElementById('sDot');
-  const txt=document.getElementById('sTxt');
-
-  if(isUser){
-    btn.innerHTML=recognizing?'<span class="mic-dot"></span> Listening… tap to stop':'🎤 Tap to start reading';
-    btn.className=recognizing?'btn btn-red btn-xl':'btn btn-primary btn-xl';
-    btn.style.flex='1';
-    dot.innerHTML=recognizing?'<span class="mic-dot"></span>':'';
-    txt.textContent=recognizing?'Read the highlighted word aloud…':'Tap the button and read the green line aloud';
-    if(!recognizing)highlightW();
-  } else {
-    btn.innerHTML=speaking?'<span class="app-dot"></span> Speaking…':'🔊 Tap to hear again';
-    btn.className='btn btn-green btn-xl';
-    dot.innerHTML=speaking?'<span class="app-dot"></span>':'';
-    txt.textContent=speaking?'Listen carefully…':'Tap to replay this line';
-    if(!speaking)setTimeout(()=>speakLine(line.t),300);
+  // If auto mode is running, start the current line action
+  if(autoMode){
+    if(isUser) startListen();
+    // app turn is triggered by speakLine which was already called via nextLine()
   }
-  document.getElementById('rPbar').style.width=Math.round(lineIdx/lines.length*100)+'%';
-  document.getElementById('rLine').textContent=(lineIdx+1)+'/'+story.lines.length;
 }
 
-function handleBtn(){
-  if(!story)return;
+// ── AUTO FLOW ─────────────────────────────────────────
+function startAuto(){
+  autoMode=true;
+  buildReader();
+  nextLine();
+}
+
+function pauseAuto(){
+  autoMode=false;
+  stopListen();
+  stopSpeak();
+  buildReader();
+  document.getElementById('sTxt').textContent='Paused — press Start to continue';
+}
+
+function nextLine(){
+  if(!story||!autoMode)return;
+  if(lineIdx>=story.lines.length){showDone();return;}
   const line=story.lines[lineIdx];
-  if(line.s==='user'){recognizing?stopListen():startListen();activateLine();}
-  else{stopSpeak();speakLine(line.t);}
+  updateMet();
+  buildReader();
+  if(line.s==='app'){
+    speakLine(line.t);
+  } else {
+    // Small delay so UI settles before mic starts
+    setTimeout(()=>startListen(),400);
+  }
 }
 
-// ══════ SPEECH RECOGNITION ═══════════════════════════════
+function skipLine(){
+  stopListen();stopSpeak();
+  lineIdx++;wordIdx=0;
+  if(autoMode) nextLine();
+  else buildReader();
+}
+
+// ── SPEECH RECOGNITION (user turn) ───────────────────
 function startListen(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){document.getElementById('sTxt').textContent='Use Chrome for speech recognition.';return;}
+  if(!SR){
+    document.getElementById('sTxt').textContent='Speech recognition not available — use Chrome.';
+    // Auto-skip after 3s if no SR available
+    setTimeout(()=>{lineIdx++;wordIdx=0;nextLine();},3000);
+    return;
+  }
   if(!sessionStart)sessionStart=Date.now();
-  recognition=new SR();recognition.continuous=true;recognition.interimResults=true;recognition.lang='en-IN';
+  recognition=new SR();
+  recognition.continuous=true;
+  recognition.interimResults=true;
+  const _isHindi = story && story.lines[lineIdx] && /[\u0900-\u097F]/.test(story.lines[lineIdx].t);
+  recognition.lang = _isHindi ? 'hi-IN' : 'en-IN';
+
   recognition.onresult=(e)=>{
     let interim='';
     for(let i=e.resultIndex;i<e.results.length;i++){
       if(e.results[i].isFinal)processSpoken(e.results[i][0].transcript);
       else interim+=e.results[i][0].transcript;
     }
-    const st=document.getElementById('sTxt');if(st)st.textContent=interim||'Listening…';
+    const st=document.getElementById('sTxt');
+    if(st)st.textContent=interim||'Listening…';
   };
-  recognition.onerror=(e)=>{if(e.error!=='no-speech'){const s=document.getElementById('sTxt');if(s)s.textContent='Mic: '+e.error;}};
+
+  recognition.onerror=(e)=>{
+    if(e.error==='no-speech'){
+      // Silence for too long — auto advance
+      stopListen();
+      lineIdx++;wordIdx=0;
+      setTimeout(()=>nextLine(),500);
+    } else {
+      const s=document.getElementById('sTxt');
+      if(s)s.textContent='Mic: '+e.error;
+    }
+  };
+
   recognition.onend=()=>{if(recognizing){try{recognition.start();}catch(ex){}}};
   recognizing=true;
   try{recognition.start();}catch(ex){}
-  activateLine();
+
+  // Update UI dot
+  const dot=document.getElementById('sDot');
+  const txt=document.getElementById('sTxt');
+  if(dot)dot.innerHTML='<span class="mic-dot"></span>';
+  if(txt)txt.textContent='Listening — read the highlighted words aloud';
 }
+
 function stopListen(){
   recognizing=false;
   if(recognition){try{recognition.stop();}catch(ex){}recognition=null;}
-  activateLine();
+  const dot=document.getElementById('sDot');
+  if(dot)dot.innerHTML='';
 }
+
 function processSpoken(transcript){
   if(!story)return;
   const line=story.lines[lineIdx];
@@ -742,14 +812,16 @@ function processSpoken(transcript){
     totalWords++;wordIdx++;
     updateMet();
     if(wordIdx>=words.length){
+      // Line complete — move to next
       stopListen();
       wordIdx=0;lineIdx++;
-      setTimeout(()=>buildReader(),600);
+      setTimeout(()=>nextLine(),500);
       return;
     }
     highlightW();
   }
 }
+
 function highlightW(){
   if(!story)return;
   const words=getWords(story.lines[lineIdx].t);
@@ -761,35 +833,80 @@ function highlightW(){
   }
 }
 
-// ══════ TEXT-TO-SPEECH ════════════════════════════════════
+// ── TTS (app turn) ────────────────────────────────────
 function speakLine(text){
-  if(!synth){advanceAfterApp();return;}
+  if(!synth){
+    setTimeout(()=>{lineIdx++;nextLine();},1200);
+    return;
+  }
   stopSpeak();
-  const utt=new SpeechSynthesisUtterance(text);
-  utt.lang='en-IN';utt.rate=0.88;utt.pitch=1.05;
-  const voices=synth.getVoices();
-  const pref=voices.find(v=>v.lang.startsWith('en')&&(v.name.includes('Google')||v.name.includes('Samantha')||v.name.includes('Karen')||v.name.includes('Daniel')));
-  if(pref)utt.voice=pref;
-  utt.onstart=()=>{speaking=true;activateLine();};
-  utt.onend=()=>{speaking=false;lineIdx++;setTimeout(()=>buildReader(),400);};
-  utt.onerror=()=>{speaking=false;lineIdx++;buildReader();};
-  speaking=true;synth.speak(utt);
-  activateLine();
-}
-function stopSpeak(){if(synth)synth.cancel();speaking=false;}
-function skipLine(){stopListen();stopSpeak();lineIdx++;buildReader();}
 
-// ══════ FINISH ════════════════════════════════════════════
+  // Detect language from current line
+  const line = story ? story.lines[lineIdx] : null;
+  const isHindi = line && /[\u0900-\u097F]/.test(line.t);
+
+  // Break text into natural chunks at punctuation for more organic delivery
+  // We speak the full text but tune prosody carefully
+  const utt = new SpeechSynthesisUtterance(text);
+
+  if(isHindi){
+    utt.lang = 'hi-IN';
+    utt.rate = 0.82;
+    utt.pitch = 1.08;
+    const voices = synth.getVoices();
+    const pref = voices.find(v => v.lang.startsWith('hi') ||
+      v.name.toLowerCase().includes('hindi') ||
+      v.name.includes('Lekha'));
+    if(pref) utt.voice = pref;
+  } else {
+    utt.lang = 'en-IN';
+    // Vary rate slightly based on sentence length — shorter = slightly faster, longer = slower
+    const wordCount = text.split(' ').length;
+    utt.rate = wordCount < 8 ? 0.84 : wordCount < 14 ? 0.80 : 0.76;
+    utt.pitch = 1.0 + (Math.random() * 0.08); // tiny natural variation
+    const voices = synth.getVoices();
+    // Prefer warm, natural voices
+    const pref = voices.find(v => v.lang.startsWith('en') && (
+      v.name.includes('Samantha') ||   // macOS warm
+      v.name.includes('Karen') ||      // Australian natural
+      v.name.includes('Moira') ||      // Irish warm
+      v.name.includes('Google UK') ||
+      v.name.includes('Daniel') ||
+      v.name.includes('Google') 
+    ));
+    if(pref) utt.voice = pref;
+  }
+
+  const dot = document.getElementById('sDot');
+  const txt = document.getElementById('sTxt');
+  if(dot) dot.innerHTML = '<span class="app-dot"></span>';
+  if(txt) txt.textContent = isHindi ? 'सुनिए ध्यान से…' : 'Listen carefully…';
+
+  utt.onstart = ()=>{ speaking = true; };
+  utt.onend = ()=>{
+    speaking = false;
+    lineIdx++;
+    // Natural pause between lines — like a reader taking a breath
+    const pauseMs = 700 + Math.random() * 400;
+    setTimeout(()=>nextLine(), pauseMs);
+  };
+  utt.onerror = ()=>{ speaking=false; lineIdx++; setTimeout(()=>nextLine(),300); };
+  speaking = true;
+  synth.speak(utt);
+}
+function stopSpeak(){ if(synth) synth.cancel(); speaking=false; }
+
+// ── FINISH ────────────────────────────────────────────
 function showDone(){
-  stopListen();stopSpeak();
+  autoMode=false;stopListen();stopSpeak();
   document.getElementById('rPbar').style.width='100%';
   document.getElementById('readerWrap').style.display='none';
   const tot=correct+errors,acc=tot>0?Math.round(correct/tot*100):0;
-  const el=(Date.now()-(sessionStart||Date.now()))/60000,wpm=el>0?Math.round(totalWords/Math.max(el,.01)):0;
+  const el2=(Date.now()-(sessionStart||Date.now()))/60000,wpm=el2>0?Math.round(totalWords/Math.max(el2,.01)):0;
   const lv=getLevel(acc,wpm),col=acc>=80?'var(--green)':acc>=65?'var(--amber)':'var(--red)';
   const msg=acc>=88?'🌟 Excellent! Your reading is clear and confident.'
     :acc>=72?'👍 Good effort! Keep practising every day.'
-    :'💪 Great start — a little reading each day makes a big difference!';
+    :'💪 Great start — reading a little each day goes a long way!';
   document.getElementById('readerDone').style.display='block';
   document.getElementById('readerDone').innerHTML=`
   <div class="finish-card">
@@ -805,7 +922,7 @@ function showDone(){
     <span class="lbadge ${lv.cls}" style="font-size:13px;padding:5px 16px;display:inline-flex;margin-bottom:10px">${lv.label} reader</span>
     <p style="font-size:13px;color:var(--text2);margin:8px 0 1.5rem">${msg}</p>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <button class="btn btn-primary btn-xl" style="width:auto;min-width:130px" onclick="startStory('${story.s.id}')">🔁 Again</button>
+      <button class="btn btn-primary btn-xl" style="width:auto;min-width:130px" onclick="startStory(\'${story.s.id}\')">🔁 Again</button>
       <button class="btn btn-xl" style="width:auto;min-width:130px" onclick="exitReader()">← Back</button>
     </div>
   </div>`;
