@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReadAloud — Interactive Storybook</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f3; --bg3: #eeede9;
+    --text: #1a1a1a; --text2: #666660; --text3: #999994;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --blue: #185FA5; --blue-light: #E6F1FB; --blue-mid: #378ADD;
+    --green: #0F6E56; --green-light: #EAF3DE; --green-mid: #1D9E75;
+    --amber: #854F0B; --amber-light: #FAEEDA; --amber-mid: #EF9F27;
+    --red: #A32D2D; --red-light: #FCEBEB; --red-mid: #E24B4A;
+    --teal-light: #E1F5EE; --teal-dark: #085041;
+    --purple-light: #EEEDFE; --purple-dark: #3C3489;
+    --radius: 8px; --radius-lg: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: var(--text); background: var(--bg3); min-height: 100vh; }
+
+  /* Layout */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+  .topbar { background: var(--bg); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .topbar-title { font-size: 16px; font-weight: 600; }
+  .topbar-sub { font-size: 11px; color: var(--text2); margin-top: 1px; }
+  .page-body { flex: 1; padding: 20px; max-width: 860px; margin: 0 auto; width: 100%; }
+
+  /* Cards */
+  .card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 14px; }
+  .card-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .btn:hover { background: var(--bg2); }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
+  .btn-primary:hover { background: #0C447C; }
+  .btn-success { background: var(--green-mid); color: white; border-color: var(--green-mid); }
+  .btn-danger-soft { background: var(--red-light); color: var(--red); border-color: #F09595; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-lg { padding: 12px 24px; font-size: 15px; }
+  .btn-listening { background: var(--red-light); border-color: var(--red-mid); color: var(--red); }
+
+  /* Tags / Badges */
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .tag-easy { background: var(--green-light); color: var(--green); }
+  .tag-medium { background: var(--amber-light); color: var(--amber); }
+  .tag-hard { background: var(--red-light); color: var(--red); }
+  .tag-english { background: var(--teal-light); color: var(--teal-dark); }
+  .tag-science { background: var(--blue-light); color: var(--blue); }
+  .tag-history { background: var(--amber-light); color: var(--amber); }
+  .tag-evs { background: var(--green-light); color: var(--green); }
+  .level-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .lv-adv { background: var(--teal-light); color: var(--teal-dark); }
+  .lv-flu { background: var(--green-light); color: var(--green); }
+  .lv-dev { background: var(--amber-light); color: var(--amber); }
+  .lv-beg { background: var(--red-light); color: var(--red); }
+
+  /* Tabs */
+  .tab-bar { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 18px; background: var(--bg); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+  .tab { padding: 11px 18px; font-size: 13px; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 500; transition: all 0.15s; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  /* Metrics */
+  .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .metric-card { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; }
+  .metric-label { font-size: 10px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .metric-val { font-size: 24px; font-weight: 700; color: var(--text); }
+  .metric-val.good { color: var(--green); }
+  .metric-val.warn { color: var(--amber); }
+  .metric-val.bad { color: var(--red); }
+
+  /* Progress bar */
+  .pbar-wrap { height: 5px; background: var(--bg3); border-radius: 3px; margin-bottom: 16px; }
+  .pbar { height: 5px; background: var(--blue-mid); border-radius: 3px; transition: width 0.4s ease; }
+
+  /* Avatar */
+  .avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .av-blue { background: #B5D4F4; color: #0C447C; }
+  .av-teal { background: #9FE1CB; color: #085041; }
+  .av-amber { background: #FAC775; color: #633806; }
+  .av-purple { background: #CECBF6; color: #3C3489; }
+
+  /* Story cards */
+  .stories-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .story-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: all 0.18s; }
+  .story-card:hover { border-color: var(--blue-mid); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .story-thumb { width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; font-size: 56px; }
+  .story-info { padding: 12px 14px; }
+  .story-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .story-desc { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 8px; }
+  .story-tags { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+  .mini-progress { height: 3px; background: var(--bg3); border-radius: 2px; margin-top: 8px; }
+  .mini-progress-fill { height: 3px; background: var(--green-mid); border-radius: 2px; }
+
+  /* Student list */
+  .student-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .student-row:last-child { border-bottom: none; }
+  .student-name { font-size: 13px; font-weight: 600; }
+  .student-sub { font-size: 11px; color: var(--text2); margin-top: 1px; }
+  .acc-bar-wrap { width: 80px; height: 5px; background: var(--bg3); border-radius: 3px; margin-top: 3px; }
+  .acc-bar { height: 5px; border-radius: 3px; }
+
+  /* Login screen */
+  .login-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+  .login-box { width: 100%; max-width: 360px; }
+  .login-brand { text-align: center; margin-bottom: 2rem; }
+  .login-icon { width: 56px; height: 56px; background: var(--blue-light); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 28px; }
+  .login-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .login-sub { font-size: 13px; color: var(--text2); }
+  .login-option { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--bg); cursor: pointer; margin-bottom: 10px; transition: all 0.15s; text-align: left; width: 100%; }
+  .login-option:hover { border-color: var(--blue-mid); background: var(--blue-light); }
+  .login-option-name { font-size: 14px; font-weight: 600; }
+  .login-option-sub { font-size: 11px; color: var(--text2); }
+
+  /* Reader specific */
+  .scene-image { width: 100%; height: 240px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: flex; align-items: center; justify-content: center; font-size: 90px; overflow: hidden; }
+  .scene-text-wrap { padding: 16px 18px; }
+  .scene-counter { font-size: 11px; color: var(--text2); margin-bottom: 8px; font-weight: 500; }
+  .scene-text { font-size: 18px; line-height: 1.9; font-family: Georgia, 'Times New Roman', serif; }
+  .word { display: inline; padding: 1px 3px; border-radius: 4px; transition: all 0.12s; cursor: default; }
+  .word.done { color: var(--green); }
+  .word.active { background: #FAC775; color: #412402; font-weight: 700; border-radius: 4px; }
+  .word.err { background: var(--red-light); color: var(--red); text-decoration: underline wavy var(--red); }
+  .transcript-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: var(--text2); min-height: 38px; font-style: italic; margin: 12px 0; }
+  .reader-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .mic-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--red-mid); display: inline-block; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+  .status-text { font-size: 12px; color: var(--text2); flex: 1; }
+
+  /* Finish card */
+  .finish-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem 2rem; text-align: center; }
+  .score-ring { width: 88px; height: 88px; border-radius: 50%; border: 4px solid var(--green-mid); display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 1.2rem; }
+  .score-num { font-size: 26px; font-weight: 700; color: var(--green); }
+  .score-sub { font-size: 10px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .finish-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin: 1.2rem 0; }
+  .finish-stat { background: var(--bg2); border-radius: var(--radius); padding: 10px; }
+  .finish-stat-val { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+  .finish-stat-lbl { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* Teacher chart */
+  .bar-chart { display: flex; align-items: flex-end; gap: 5px; height: 70px; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+  .bar-block { width: 100%; border-radius: 4px 4px 0 0; background: #B5D4F4; min-height: 3px; }
+  .bar-lbl { font-size: 9px; color: var(--text2); margin-top: 3px; text-align: center; }
+  .level-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .level-bar-label { width: 80px; font-size: 12px; color: var(--text2); }
+  .level-bar-track { flex: 1; height: 9px; background: var(--bg3); border-radius: 5px; }
+  .level-bar-fill { height: 9px; border-radius: 5px; transition: width 0.6s ease; }
+  .level-bar-count { font-size: 12px; font-weight: 600; min-width: 20px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .assign-form { display: flex; flex-direction: column; gap: 12px; }
+  .form-label { font-size: 12px; color: var(--text2); margin-bottom: 5px; font-weight: 500; }
+  select, input[type="date"] { width: 100%; padding: 8px 10px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); color: var(--text); font-size: 13px; cursor: pointer; }
+  .toast { background: var(--green-light); border: 1px solid #97C459; border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: var(--green); margin-top: 10px; display: none; }
+  .progress-hist-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .progress-hist-row:last-child { border-bottom: none; }
+  .progress-hist-title { font-size: 13px; font-weight: 500; }
+  .progress-hist-sub { font-size: 11px; color: var(--text2); }
+  .acc-trend { display: flex; align-items: flex-end; gap: 4px; height: 55px; }
+  .acc-trend-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+  .acc-trend-bar { width: 100%; border-radius: 3px 3px 0 0; background: var(--blue-mid); }
+  .acc-trend-lbl { font-size: 9px; color: var(--text2); margin-top: 3px; }
+  .attention-empty { font-size: 13px; color: var(--text2); padding: 10px 0; }
+  input[type="text"] { padding: 8px 10px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); color: var(--text); font-size: 13px; }
+  .search-row { display: flex; gap: 10px; margin-bottom: 14px; }
+  .search-row input { flex: 1; }
+  .no-support-msg { background: var(--amber-light); border: 1px solid var(--amber-mid); border-radius: var(--radius); padding: 12px 14px; font-size: 13px; color: var(--amber); margin-bottom: 12px; display: none; }
+  @media (max-width: 600px) {
+    .stories-grid { grid-template-columns: 1fr 1fr; }
+    .metrics-grid { grid-template-columns: 1fr 1fr; }
+    .finish-grid { grid-template-columns: 1fr 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 400px) {
+    .stories-grid { grid-template-columns: 1fr; }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN: LOGIN
+═══════════════════════════════════════════════════════ -->
+<div id="screenLogin" class="screen active">
+  <div class="login-wrap">
+    <div class="login-box">
+      <div class="login-brand">
+        <div class="login-icon">📖</div>
+        <div class="login-title">ReadAloud</div>
+        <div class="login-sub">Interactive read-aloud platform for Class 7</div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px;font-weight:500;">Sign in as</div>
+      <button class="login-option" onclick="loginAs('teacher','Priya')">
+        <div class="avatar av-purple">TP</div>
+        <div><div class="login-option-name">Ms. Priya Sharma</div><div class="login-option-sub">Teacher — Class 7B</div></div>
+      </button>
+      <button class="login-option" onclick="loginAs('student','Arjun')">
+        <div class="avatar av-blue">AK</div>
+        <div><div class="login-option-name">Arjun Kumar</div><div class="login-option-sub">Student · Fluent reader</div></div>
+      </button>
+      <button class="login-option" onclick="loginAs('student','Meera')">
+        <div class="avatar av-teal">MS</div>
+        <div><div class="login-option-name">Meera Singh</div><div class="login-option-sub">Student · Advanced reader</div></div>
+      </button>
+      <button class="login-option" onclick="loginAs('student','Ravi')">
+        <div class="avatar av-amber">RN</div>
+        <div><div class="login-option-name">Ravi Nair</div><div class="login-option-sub">Student · Developing reader</div></div>
+      </button>
+      <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:14px;">Demo prototype — no password needed · Use Chrome for speech recognition</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN: TEACHER
+═══════════════════════════════════════════════════════ -->
+<div id="screenTeacher" class="screen">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">📊 Teacher Dashboard</div>
+      <div class="topbar-sub">Ms. Priya Sharma · Class 7B · 24 students</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="avatar av-purple">TP</div>
+      <button class="btn btn-sm" onclick="goLogin()">Sign out</button>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="tab-bar" style="border-radius:var(--radius-lg) var(--radius-lg) 0 0;margin-bottom:0;background:var(--bg);border:1px solid var(--border);border-bottom:none;padding:0 8px;">
+      <div class="tab active" onclick="tTab(this,'t-overview')">Overview</div>
+      <div class="tab" onclick="tTab(this,'t-students')">Students</div>
+      <div class="tab" onclick="tTab(this,'t-library')">Story Library</div>
+      <div class="tab" onclick="tTab(this,'t-assign')">Assign</div>
+    </div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg);padding:18px">
+
+      <!-- Overview Tab -->
+      <div id="t-overview">
+        <div class="metrics-grid">
+          <div class="metric-card"><div class="metric-label">Class avg accuracy</div><div class="metric-val good">78%</div></div>
+          <div class="metric-card"><div class="metric-label">Avg speed</div><div class="metric-val">82 wpm</div></div>
+          <div class="metric-card"><div class="metric-label">Sessions today</div><div class="metric-val">11</div></div>
+          <div class="metric-card"><div class="metric-label">Stories completed</div><div class="metric-val">34</div></div>
+        </div>
+        <div class="two-col">
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title">Level distribution — Class 7B</div>
+            <div class="level-bar-row"><span class="level-bar-label">Advanced</span><div class="level-bar-track"><div class="level-bar-fill" style="width:17%;background:#1D9E75"></div></div><span class="level-bar-count good" style="color:var(--green)">4</span></div>
+            <div class="level-bar-row"><span class="level-bar-label">Fluent</span><div class="level-bar-track"><div class="level-bar-fill" style="width:33%;background:#5DCAA5"></div></div><span class="level-bar-count" style="color:var(--green)">8</span></div>
+            <div class="level-bar-row"><span class="level-bar-label">Developing</span><div class="level-bar-track"><div class="level-bar-fill" style="width:38%;background:#EF9F27"></div></div><span class="level-bar-count warn" style="color:var(--amber)">9</span></div>
+            <div class="level-bar-row"><span class="level-bar-label">Beginner</span><div class="level-bar-track"><div class="level-bar-fill" style="width:12%;background:#E24B4A"></div></div><span class="level-bar-count bad" style="color:var(--red)">3</span></div>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title">Weekly sessions</div>
+            <div class="bar-chart" style="margin-top:6px">
+              <div class="bar-col"><div class="bar-block" style="height:35%"></div><div class="bar-lbl">Mon<br>7</div></div>
+              <div class="bar-col"><div class="bar-block" style="height:55%"></div><div class="bar-lbl">Tue<br>12</div></div>
+              <div class="bar-col"><div class="bar-block" style="height:42%"></div><div class="bar-lbl">Wed<br>9</div></div>
+              <div class="bar-col"><div class="bar-block" style="height:78%"></div><div class="bar-lbl">Thu<br>17</div></div>
+              <div class="bar-col"><div class="bar-block" style="height:100%;background:#378ADD"></div><div class="bar-lbl">Fri<br>22</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <div class="card-title">⚠️ Needs attention</div>
+          <div id="t-attention"></div>
+        </div>
+      </div>
+
+      <!-- Students Tab -->
+      <div id="t-students" style="display:none">
+        <div class="search-row">
+          <input type="text" placeholder="Search students…" oninput="renderStudentList(this.value, document.getElementById('lvlFilter').value)" style="flex:1">
+          <select id="lvlFilter" onchange="renderStudentList(document.querySelector('#t-students input').value, this.value)">
+            <option value="">All levels</option>
+            <option>Advanced</option><option>Fluent</option><option>Developing</option><option>Beginner</option>
+          </select>
+        </div>
+        <div class="card" style="padding:6px 16px"><div id="studentList"></div></div>
+      </div>
+
+      <!-- Library Tab -->
+      <div id="t-library" style="display:none">
+        <div class="search-row" style="margin-bottom:16px">
+          <select onchange="renderLibrary(this.value, document.getElementById('libDiff').value)">
+            <option value="">All subjects</option>
+            <option>English</option><option>Science</option><option>History</option><option>EVS</option>
+          </select>
+          <select id="libDiff" onchange="renderLibrary(document.querySelector('#t-library select').value, this.value)">
+            <option value="">All levels</option>
+            <option>Easy</option><option>Medium</option><option>Hard</option>
+          </select>
+        </div>
+        <div class="stories-grid" id="libGrid"></div>
+      </div>
+
+      <!-- Assign Tab -->
+      <div id="t-assign" style="display:none">
+        <div class="card">
+          <div class="card-title">Assign a story</div>
+          <div class="assign-form">
+            <div><div class="form-label">Story</div>
+              <select><option>The Tunnel (English · Medium)</option><option>The Water Cycle (Science · Easy)</option><option>Monsoon Magic (English · Easy)</option><option>The Desert Fox (EVS · Easy)</option><option>Ashoka's Empire (History · Medium)</option><option>The Solar System (Science · Hard)</option></select>
+            </div>
+            <div><div class="form-label">Assign to</div>
+              <select><option>Entire Class 7B</option><option>Arjun Kumar</option><option>Meera Singh</option><option>Ravi Nair</option><option>Beginners group (3 students)</option><option>Developing group (9 students)</option></select>
+            </div>
+            <div><div class="form-label">Due date</div><input type="date"></div>
+            <button class="btn btn-primary" onclick="document.getElementById('assignToast').style.display='block';setTimeout(()=>document.getElementById('assignToast').style.display='none',3000)">
+              ✓ Assign story
+            </button>
+            <div id="assignToast" class="toast">✓ Story successfully assigned!</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN: STUDENT HOME
+═══════════════════════════════════════════════════════ -->
+<div id="screenStudent" class="screen">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="sGreeting">Hello!</div>
+      <div class="topbar-sub">Class 7B — ReadAloud</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="avatar" id="sAvatar" style="background:#B5D4F4;color:#0C447C">AK</div>
+      <button class="btn btn-sm" onclick="goLogin()">Sign out</button>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="tab-bar" style="border-radius:var(--radius-lg) var(--radius-lg) 0 0;margin-bottom:0;background:var(--bg);border:1px solid var(--border);border-bottom:none;padding:0 8px;">
+      <div class="tab active" onclick="sTab(this,'s-home')">My stories</div>
+      <div class="tab" onclick="sTab(this,'s-progress')">My progress</div>
+    </div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg);padding:18px">
+
+      <!-- Stories tab -->
+      <div id="s-home">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em">Assigned stories</div>
+          <select onchange="renderStudentStories(this.value)" id="sDiffFilter">
+            <option value="">All difficulties</option>
+            <option>Easy</option><option>Medium</option><option>Hard</option>
+          </select>
+        </div>
+        <div class="stories-grid" id="sStoriesGrid"></div>
+      </div>
+
+      <!-- Progress tab -->
+      <div id="s-progress" style="display:none">
+        <div class="metrics-grid" id="sMetrics"></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Reading history</div>
+            <div id="sHistory"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Accuracy over time</div>
+            <div class="acc-trend" id="sAccTrend"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN: READER
+═══════════════════════════════════════════════════════ -->
+<div id="screenReader" class="screen">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn btn-sm" id="readerBackBtn" onclick="exitReader()">← Back</button>
+      <div>
+        <div class="topbar-title" id="readerTitle">Story</div>
+        <div class="topbar-sub" id="readerMeta">Subject · Difficulty</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="level-badge lv-flu" id="readerBadge">—</span>
+      <span style="font-size:12px;color:var(--text2)" id="readerWpmTop">— wpm</span>
+    </div>
+  </div>
+  <div class="page-body">
+    <div id="noSupportMsg" class="no-support-msg">
+      ⚠️ Speech recognition requires Chrome or Edge on desktop. You can still read the story but words won't be tracked automatically.
+    </div>
+    <div class="metrics-grid">
+      <div class="metric-card"><div class="metric-label">Accuracy</div><div class="metric-val" id="rAcc">—</div></div>
+      <div class="metric-card"><div class="metric-label">Speed (WPM)</div><div class="metric-val" id="rWpm">—</div></div>
+      <div class="metric-card"><div class="metric-label">Words read</div><div class="metric-val" id="rWords">0</div></div>
+      <div class="metric-card"><div class="metric-label">Scene</div><div class="metric-val" id="rSceneNum">1</div></div>
+    </div>
+    <div class="pbar-wrap"><div class="pbar" id="rProgressBar" style="width:0%"></div></div>
+    <div id="readerContent"></div>
+    <div id="readerFinished" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════════ -->
+<script>
+
+// ─── DATA ─────────────────────────────────────────────
+
+const STUDENTS = [
+  {name:'Arjun Kumar',  init:'AK', av:'av-blue',   level:'Fluent',     acc:84, wpm:98,  sessions:12, done:5},
+  {name:'Meera Singh',  init:'MS', av:'av-teal',   level:'Advanced',   acc:94, wpm:130, sessions:15, done:8},
+  {name:'Ravi Nair',    init:'RN', av:'av-amber',  level:'Developing', acc:61, wpm:58,  sessions:7,  done:3},
+  {name:'Priya Patel',  init:'PP', av:'av-purple', level:'Beginner',   acc:48, wpm:38,  sessions:4,  done:1},
+  {name:'Sahil Khan',   init:'SK', av:'av-blue',   level:'Developing', acc:70, wpm:72,  sessions:9,  done:4},
+  {name:'Ananya Roy',   init:'AR', av:'av-teal',   level:'Fluent',     acc:88, wpm:105, sessions:11, done:6},
+  {name:'Dev Sharma',   init:'DS', av:'av-amber',  level:'Beginner',   acc:52, wpm:44,  sessions:5,  done:2},
+  {name:'Kavya Iyer',   init:'KI', av:'av-purple', level:'Advanced',   acc:96, wpm:138, sessions:18, done:9},
+];
+
+const STUDENT_PROFILES = {
+  Arjun: { init:'AK', av:'av-blue',   accHistory:[72,76,80,84], wpmHistory:[78,85,92,98], level:'Fluent',     streak:4, done:5 },
+  Meera: { init:'MS', av:'av-teal',   accHistory:[85,88,91,94], wpmHistory:[110,118,124,130], level:'Advanced', streak:7, done:8 },
+  Ravi:  { init:'RN', av:'av-amber',  accHistory:[50,54,58,61], wpmHistory:[40,48,53,58], level:'Developing', streak:2, done:3 },
+};
+
+const STORIES = [
+  { id:'tunnel',   title:'The Tunnel',         subject:'English', diff:'Medium', emoji:'🌿', bg:'#C8E6A0', desc:'A boy explores a jungle railway tunnel and befriends its watchman.' },
+  { id:'water',    title:'The Water Cycle',    subject:'Science', diff:'Easy',   emoji:'💧', bg:'#B5D4F4', desc:'How water evaporates, condenses and falls back as rain.' },
+  { id:'monsoon',  title:'Monsoon Magic',      subject:'English', diff:'Easy',   emoji:'🌧️', bg:'#9FE1CB', desc:'A village child experiences the joy of the first monsoon rains.' },
+  { id:'desert',   title:'The Desert Fox',     subject:'EVS',     diff:'Easy',   emoji:'🦊', bg:'#F5C4B3', desc:'A young fox learns to survive in the scorching Thar Desert.' },
+  { id:'ashoka',   title:"Ashoka's Empire",   subject:'History', diff:'Medium', emoji:'🏛️', bg:'#FAC775', desc:'The rise of Emperor Ashoka and his message of peace and dharma.' },
+  { id:'solar',    title:'The Solar System',   subject:'Science', diff:'Hard',   emoji:'🪐', bg:'#CECBF6', desc:'A journey through the eight planets, moons, and the vast cosmos.' },
+];
+
+const STORY_CONTENT = {
+  tunnel: [
+    { text: "It was almost noon, and the jungle was very still, very silent. Heat waves shimmered along the railway embankment where it cut a path through the tall evergreen trees.", emoji:'🌿', bg:'#C8E6A0' },
+    { text: "Suraj stood near the cutting, waiting for the midday train. He was waiting so that he could watch the steam engine come roaring out of the tunnel.", emoji:'🧒', bg:'#d4ebc0' },
+    { text: "The steam engine shot out of the tunnel, snorting and puffing like some green, black, and gold dragon. Showering sparks left and right, it roared a challenge to the jungle.", emoji:'🚂', bg:'#d6e8d0' },
+    { text: "Suraj began walking into the tunnel. When he had gone about twenty yards, it became pitch dark. The walls were damp and sticky. A bat flew past.", emoji:'🕳️', bg:'#2a2a3e' },
+    { text: "Coming straight from the darkness into the light, Suraj was dazzled. He looked up at the hillside and saw a flash of orange and gold — a long swishing tail between the trees.", emoji:'🐆', bg:'#c8e6a0' },
+    { text: "About fifteen metres from the tunnel stood the watchman's hut. Marigolds grew in front, and at the back there was a small vegetable patch. It was the watchman's duty to inspect the tunnel every day.", emoji:'🏡', bg:'#e8f0d8' },
+    { text: "Welcome, welcome. I don't often have visitors. Sit down and tell me why you were inspecting my tunnel. You could come back tonight and watch the night mail come through.", emoji:'👴', bg:'#e5f0d5' },
+  ],
+  water: [
+    { text: "The sun heats up water in rivers, lakes, and oceans, turning it slowly into water vapour. This invisible process is called evaporation, and it happens all around us every day.", emoji:'☀️', bg:'#E6F1FB' },
+    { text: "As water vapour rises high into the sky, it cools down and turns back into tiny water droplets. These droplets gather together to form the clouds we see floating above.", emoji:'☁️', bg:'#B5D4F4' },
+    { text: "When clouds collect too many water droplets, the water falls back to Earth as rain, snow, or hail. Scientists call this process precipitation.", emoji:'🌧️', bg:'#85B7EB' },
+    { text: "Rainwater flows over the land into rivers and streams, or soaks deep into the ground to become groundwater. Plants absorb it through their roots to grow and survive.", emoji:'🌱', bg:'#c8e6a0' },
+    { text: "The water cycle never stops. The same water has been cycling around our planet for billions of years. The water you drink today may once have been drunk by a dinosaur!", emoji:'🔄', bg:'#E1F5EE' },
+  ],
+  monsoon: [
+    { text: "For weeks, the sky had been white and heavy with heat. Then one afternoon, a cool wind swept through the village, rattling the leaves of the old neem trees.", emoji:'💨', bg:'#E1F5EE' },
+    { text: "The first drop hit the dusty ground with a loud smack. Then another. Then a thousand drops at once, and the whole village burst into laughter and song.", emoji:'💦', bg:'#9FE1CB' },
+    { text: "Rani ran outside with her arms outstretched, face turned up to the sky. The rain smelled like the earth waking up after a long, long sleep.", emoji:'🌧️', bg:'#5DCAA5' },
+    { text: "The frogs came out from nowhere, croaking joyfully in the puddles. The peacock on the temple roof spread his magnificent tail and danced in the rain.", emoji:'🦚', bg:'#c8e6a0' },
+    { text: "That night, falling asleep to the steady sound of rain on the roof, Rani smiled. The monsoon had come at last. The fields would be green again.", emoji:'🌿', bg:'#E1F5EE' },
+  ],
+  desert: [
+    { text: "In the golden sands of the Thar Desert, a small fox kit took her very first steps outside the burrow. The sun was already blazing, even though it was only early morning.", emoji:'🦊', bg:'#FAEEDA' },
+    { text: "The desert fox had large, pointed ears — much bigger than those of a city fox. These helped her stay cool by letting the body heat escape into the dry desert air.", emoji:'👂', bg:'#FAC775' },
+    { text: "At night, the desert became cool and full of life. The fox hunted lizards and insects under the bright moonlight, her soft padded feet completely silent on the warm sand.", emoji:'🌙', bg:'#1a1200' },
+    { text: "By morning she was safely back in her underground burrow. In the Thar Desert, every single creature has found its own clever way to survive the scorching heat of the day.", emoji:'🏜️', bg:'#F5C4B3' },
+  ],
+};
+
+const HISTORY = {
+  Arjun: [
+    { title:'Monsoon Magic',   acc:92, wpm:112, date:'Today' },
+    { title:'The Tunnel',      acc:84, wpm:98,  date:'Yesterday' },
+    { title:'The Desert Fox',  acc:78, wpm:88,  date:'2 days ago' },
+  ],
+  Meera: [
+    { title:'The Tunnel',      acc:96, wpm:138, date:'Today' },
+    { title:'The Water Cycle', acc:94, wpm:132, date:'Yesterday' },
+    { title:'Monsoon Magic',   acc:92, wpm:128, date:'3 days ago' },
+  ],
+  Ravi: [
+    { title:'The Desert Fox',  acc:61, wpm:58,  date:'Today' },
+    { title:'Monsoon Magic',   acc:58, wpm:54,  date:'2 days ago' },
+  ],
+};
+
+// ─── STATE ────────────────────────────────────────────
+let currentUser = null;
+let currentStory = null;
+let rScene = 0, rWordIdx = 0, rCorrect = 0, rErrors = 0, rTotalWords = 0;
+let rSessionStart = null, rSceneStart = null;
+let recognizing = false, recognition = null;
+
+// ─── NAVIGATION ───────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+function goLogin() { stopListening(); showScreen('screenLogin'); }
+
+function loginAs(role, name) {
+  currentUser = { role, name };
+  if (role === 'teacher') {
+    showScreen('screenTeacher');
+    renderAttentionList();
+    renderStudentList('', '');
+    renderLibrary('', '');
+  } else {
+    const p = STUDENT_PROFILES[name] || STUDENT_PROFILES.Arjun;
+    document.getElementById('sGreeting').textContent = 'Hello, ' + name + '! 👋';
+    const av = document.getElementById('sAvatar');
+    av.textContent = p.init;
+    av.className = 'avatar ' + p.av;
+    showScreen('screenStudent');
+    renderStudentStories('');
+    renderStudentProgress();
+  }
+}
+
+// ─── TEACHER TABS ─────────────────────────────────────
+function tTab(el, id) {
+  el.parentNode.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['t-overview','t-students','t-library','t-assign'].forEach(x => {
+    const d = document.getElementById(x);
+    if (d) d.style.display = (x === id) ? 'block' : 'none';
+  });
+}
+function sTab(el, id) {
+  el.parentNode.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['s-home','s-progress'].forEach(x => {
+    const d = document.getElementById(x);
+    if (d) d.style.display = (x === id) ? 'block' : 'none';
+  });
+}
+
+// ─── TEACHER RENDERS ──────────────────────────────────
+function renderAttentionList() {
+  const list = document.getElementById('t-attention');
+  const needs = STUDENTS.filter(s => s.acc < 65 || s.wpm < 55);
+  if (!needs.length) { list.innerHTML = '<div class="attention-empty">✓ All students are on track!</div>'; return; }
+  list.innerHTML = needs.map(s => `
+    <div class="student-row">
+      <div class="avatar ${s.av}" style="width:32px;height:32px;font-size:11px">${s.init}</div>
+      <div style="flex:1"><div class="student-name">${s.name}</div><div class="student-sub">Accuracy: ${s.acc}% · Speed: ${s.wpm} wpm · ${s.sessions} sessions</div></div>
+      <span class="level-badge lv-beg">${s.level}</span>
+    </div>`).join('');
+}
+
+function renderStudentList(search, level) {
+  const list = document.getElementById('studentList');
+  let data = STUDENTS.filter(s =>
+    (!search || s.name.toLowerCase().includes(search.toLowerCase())) &&
+    (!level || s.level === level)
+  );
+  list.innerHTML = data.map(s => {
+    const barColor = s.acc >= 80 ? '#1D9E75' : s.acc >= 65 ? '#EF9F27' : '#E24B4A';
+    const lvlCls = s.level === 'Advanced' ? 'lv-adv' : s.level === 'Fluent' ? 'lv-flu' : s.level === 'Developing' ? 'lv-dev' : 'lv-beg';
+    return `
+      <div class="student-row">
+        <div class="avatar ${s.av}" style="width:32px;height:32px;font-size:11px">${s.init}</div>
+        <div style="flex:1"><div class="student-name">${s.name}</div><div class="student-sub">${s.sessions} sessions · ${s.done} stories done</div></div>
+        <div style="text-align:right;min-width:90px">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:2px">Accuracy</div>
+          <div class="acc-bar-wrap"><div class="acc-bar" style="width:${s.acc}%;background:${barColor}"></div></div>
+          <div style="font-size:10px;color:var(--text2);margin-top:1px">${s.acc}%</div>
+        </div>
+        <span class="level-badge ${lvlCls}" style="margin-left:12px">${s.level}</span>
+      </div>`;
+  }).join('');
+}
+
+function renderLibrary(subj, diff) {
+  const grid = document.getElementById('libGrid');
+  let stories = STORIES.filter(s => (!subj || s.subject === subj) && (!diff || s.diff === diff));
+  grid.innerHTML = stories.map(s => storyCardHTML(s, false)).join('');
+}
+
+function storyCardHTML(s, clickable) {
+  const diffCls = s.diff === 'Easy' ? 'tag-easy' : s.diff === 'Medium' ? 'tag-medium' : 'tag-hard';
+  const subjCls = 'tag-' + s.subject.toLowerCase();
+  const onclick = clickable ? `onclick="startStory('${s.id}')"` : '';
+  const hasContent = !!STORY_CONTENT[s.id];
+  return `
+    <div class="story-card" ${onclick} style="${!hasContent && clickable ? 'opacity:0.6' : ''}">
+      <div class="story-thumb" style="background:${s.bg}">${s.emoji}</div>
+      <div class="story-info">
+        <div class="story-title">${s.title}</div>
+        <div class="story-desc">${s.desc}</div>
+        <div class="story-tags">
+          <span class="tag ${subjCls}">${s.subject}</span>
+          <span class="tag ${diffCls}">${s.diff}</span>
+          ${!hasContent && clickable ? '<span style="font-size:10px;color:var(--text3);margin-left:auto">Coming soon</span>' : ''}
+        </div>
+        ${clickable ? '<div class="mini-progress"><div class="mini-progress-fill" style="width:0%"></div></div>' : ''}
+      </div>
+    </div>`;
+}
+
+// ─── STUDENT RENDERS ──────────────────────────────────
+function renderStudentStories(diff) {
+  const grid = document.getElementById('sStoriesGrid');
+  let stories = STORIES.filter(s => !diff || s.diff === diff);
+  grid.innerHTML = stories.map(s => storyCardHTML(s, true)).join('');
+}
+
+function renderStudentProgress() {
+  const name = currentUser.name;
+  const p = STUDENT_PROFILES[name] || STUDENT_PROFILES.Arjun;
+  const acc = p.accHistory[p.accHistory.length - 1];
+  const wpm = p.wpmHistory[p.wpmHistory.length - 1];
+  const accColor = acc >= 80 ? 'good' : acc >= 65 ? 'warn' : 'bad';
+  const lvlCls = p.level === 'Advanced' ? 'lv-adv' : p.level === 'Fluent' ? 'lv-flu' : p.level === 'Developing' ? 'lv-dev' : 'lv-beg';
+
+  document.getElementById('sMetrics').innerHTML = `
+    <div class="metric-card"><div class="metric-label">Accuracy</div><div class="metric-val ${accColor}">${acc}%</div></div>
+    <div class="metric-card"><div class="metric-label">Speed (WPM)</div><div class="metric-val">${wpm}</div></div>
+    <div class="metric-card"><div class="metric-label">Stories done</div><div class="metric-val">${p.done}</div></div>
+    <div class="metric-card"><div class="metric-label">Day streak 🔥</div><div class="metric-val warn">${p.streak}</div></div>`;
+
+  const hist = HISTORY[name] || [];
+  document.getElementById('sHistory').innerHTML = hist.map(r => `
+    <div class="progress-hist-row">
+      <div><div class="progress-hist-title">${r.title}</div><div class="progress-hist-sub">${r.date}</div></div>
+      <div style="text-align:right"><div style="font-size:13px;font-weight:700;color:${r.acc>=80?'var(--green)':'var(--amber)'}">${r.acc}%</div><div style="font-size:11px;color:var(--text2)">${r.wpm} wpm</div></div>
+    </div>`).join('') || '<div class="attention-empty">No history yet — start reading!</div>';
+
+  document.getElementById('sAccTrend').innerHTML = `
+    <div class="acc-trend" style="display:flex;align-items:flex-end;gap:5px;height:55px;width:100%">
+      ${p.accHistory.map((a,i) => `
+        <div class="acc-trend-col" style="display:flex;flex-direction:column;align-items:center;flex:1">
+          <div class="acc-trend-bar" style="width:100%;height:${a*0.55}px;background:${a>=80?'#1D9E75':a>=65?'#EF9F27':'#E24B4A'};border-radius:3px 3px 0 0"></div>
+          <div class="acc-trend-lbl" style="font-size:9px;color:var(--text2);margin-top:3px;text-align:center">Wk ${i+1}<br><b>${a}%</b></div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ─── STORY READER ─────────────────────────────────────
+function startStory(id) {
+  const story = STORIES.find(s => s.id === id);
+  const content = STORY_CONTENT[id];
+  if (!story) return;
+  if (!content) { alert('This story is coming soon!'); return; }
+
+  currentStory = { story, content };
+  rScene = 0; rWordIdx = 0; rCorrect = 0; rErrors = 0; rTotalWords = 0;
+  rSessionStart = Date.now(); rSceneStart = null;
+
+  document.getElementById('readerTitle').textContent = story.title;
+  document.getElementById('readerMeta').textContent = story.subject + ' · ' + story.diff;
+  document.getElementById('readerFinished').style.display = 'none';
+  document.getElementById('readerContent').style.display = 'block';
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  document.getElementById('noSupportMsg').style.display = SR ? 'none' : 'block';
+
+  showScreen('screenReader');
+  updateReaderMetrics();
+  renderReaderScene();
+}
+
+function exitReader() {
+  stopListening();
+  if (currentUser.role === 'teacher') showScreen('screenTeacher');
+  else showScreen('screenStudent');
+}
+
+function getWords(text) { return text.match(/\b[a-zA-Z']+\b/g) || []; }
+function normalize(s) { return s.toLowerCase().replace(/[^a-z0-9]/g, ''); }
+function wordSimilarity(a, b) {
+  a = normalize(a); b = normalize(b);
+  if (a === b) return 1;
+  if (a.startsWith(b) || b.startsWith(a)) return 0.85;
+  if (a.includes(b) || b.includes(a)) return 0.75;
+  let matches = 0;
+  for (let c of a) if (b.includes(c)) matches++;
+  return matches / Math.max(a.length, b.length);
+}
+function getLevelInfo(acc, wpm) {
+  if (acc >= 92 && wpm >= 120) return { label: 'Advanced', cls: 'lv-adv' };
+  if (acc >= 80 && wpm >= 90)  return { label: 'Fluent',   cls: 'lv-flu' };
+  if (acc >= 65 && wpm >= 55)  return { label: 'Developing', cls: 'lv-dev' };
+  return { label: 'Beginner', cls: 'lv-beg' };
+}
+
+function updateReaderMetrics() {
+  const total = rCorrect + rErrors;
+  const acc = total > 0 ? Math.round(rCorrect / total * 100) : null;
+  const elapsedMin = (Date.now() - (rSessionStart || Date.now())) / 60000;
+  const wpm = (elapsedMin > 0.05 && rTotalWords > 0) ? Math.round(rTotalWords / elapsedMin) : null;
+
+  const mAcc = document.getElementById('rAcc');
+  if (acc !== null) {
+    mAcc.textContent = acc + '%';
+    mAcc.className = 'metric-val ' + (acc >= 80 ? 'good' : acc >= 65 ? 'warn' : 'bad');
+  }
+  if (wpm !== null) {
+    document.getElementById('rWpm').textContent = wpm;
+    document.getElementById('readerWpmTop').textContent = wpm + ' wpm';
+  }
+  document.getElementById('rWords').textContent = rTotalWords;
+  if (currentStory) document.getElementById('rSceneNum').textContent = (rScene + 1) + '/' + currentStory.content.length;
+
+  if (acc !== null && wpm !== null) {
+    const lvl = getLevelInfo(acc, wpm);
+    const b = document.getElementById('readerBadge');
+    b.textContent = lvl.label;
+    b.className = 'level-badge ' + lvl.cls;
+  }
+}
+
+function renderReaderScene() {
+  if (!currentStory) return;
+  const scenes = currentStory.content;
+  if (rScene >= scenes.length) { showFinished(); return; }
+
+  const sc = scenes[rScene];
+  const words = getWords(sc.text);
+  rWordIdx = 0; rSceneStart = null;
+
+  const progress = Math.round(rScene / scenes.length * 100);
+  document.getElementById('rProgressBar').style.width = progress + '%';
+  document.getElementById('rSceneNum').textContent = (rScene + 1) + '/' + scenes.length;
+
+  // Build highlighted text
+  let htmlText = sc.text;
+  // Replace each word with a placeholder
+  const usedWords = [];
+  htmlText = htmlText.replace(/\b([a-zA-Z']+)\b/g, (match) => {
+    const idx = usedWords.length;
+    usedWords.push(match);
+    return `@@${idx}@@`;
+  });
+  let rendered = '';
+  htmlText.split(/(@@\d+@@)/).forEach(part => {
+    const m = part.match(/@@(\d+)@@/);
+    if (m) rendered += `<span class="word" id="rw${m[1]}" onclick="tapWord(${m[1]})" style="${tapModeActive?'cursor:pointer':''}"> ${usedWords[parseInt(m[1])]}</span>`;
+    else rendered += part;
+  });
+
+  const isDark = sc.bg.startsWith('#1') || sc.bg.startsWith('#0') || sc.bg.startsWith('#2a');
+  const textOnImg = isDark ? '#ffffff' : '#1a1a1a';
+
+  document.getElementById('readerContent').innerHTML = `
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="scene-image" style="background:${sc.bg};color:${textOnImg}">${sc.emoji}</div>
+      <div class="scene-text-wrap">
+        <div class="scene-counter">Scene ${rScene + 1} of ${scenes.length} — read the text below aloud</div>
+        <div class="scene-text" id="rText">${rendered}</div>
+      </div>
+    </div>
+    <div class="transcript-box" id="rTranscript">
+      ${tapModeActive ? '✋ Tap each word in order as you read it aloud' : 'Press <strong>Start reading</strong> and read the sentence above out loud…'}
+    </div>
+    <div class="reader-controls">
+      <button class="btn btn-primary btn-lg" id="rBtn" onclick="toggleListen()">🎤 Start reading</button>
+      <button class="btn btn-sm" onclick="skipScene()" style="color:var(--text2)">Skip scene →</button>
+      <span class="status-text" id="rStatus"></span>
+    </div>`;
+
+  highlightCurrentWord();
+}
+
+function highlightCurrentWord() {
+  if (!currentStory) return;
+  const words = getWords(currentStory.content[rScene].text);
+  for (let i = 0; i < words.length; i++) {
+    const el = document.getElementById('rw' + i);
+    if (!el) continue;
+    if (i < rWordIdx) el.className = 'word done';
+    else if (i === rWordIdx) el.className = 'word active';
+    else el.className = 'word';
+  }
+}
+
+// ─── SPEECH RECOGNITION ───────────────────────────────
+function toggleListen() {
+  if (tapModeActive) { 
+    const s = document.getElementById('rStatus');
+    if (s) s.textContent = 'Tap mode is ON — tap each word as you read it.';
+    return; 
+  }
+  recognizing ? stopListening() : startListening(); 
+}
+
+function startListening() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    const s = document.getElementById('rStatus');
+    if (s) s.textContent = '⚠️ Speech recognition not available — try Chrome.';
+    return;
+  }
+  if (!rSceneStart) rSceneStart = Date.now();
+  if (!rSessionStart) rSessionStart = Date.now();
+
+  recognition = new SR();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-IN'; // Indian English
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) processSpoken(e.results[i][0].transcript);
+      else interim += e.results[i][0].transcript;
+    }
+    const tb = document.getElementById('rTranscript');
+    if (tb) tb.textContent = interim || '…listening…';
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error !== 'no-speech') {
+      const s = document.getElementById('rStatus');
+      if (s) s.textContent = 'Mic error: ' + e.error + '. Check browser mic permissions.';
+    }
+  };
+
+  recognition.onend = () => { if (recognizing) { try { recognition.start(); } catch(ex) {} } };
+
+  recognizing = true;
+  try { recognition.start(); } catch(ex) {}
+
+  const btn = document.getElementById('rBtn');
+  if (btn) btn.innerHTML = '<span class="mic-dot"></span> Listening… (click to stop)';
+  if (btn) btn.className = 'btn btn-listening btn-lg';
+
+  const s = document.getElementById('rStatus');
+  if (s) s.textContent = 'Speak clearly — read the highlighted word';
+  highlightCurrentWord();
+}
+
+function stopListening() {
+  recognizing = false;
+  if (recognition) { try { recognition.stop(); } catch(ex) {} recognition = null; }
+  const btn = document.getElementById('rBtn');
+  if (btn) { btn.innerHTML = '🎤 Start reading'; btn.className = 'btn btn-primary btn-lg'; }
+}
+
+function processSpoken(transcript) {
+  if (!currentStory) return;
+  const words = getWords(currentStory.content[rScene].text);
+  const spoken = transcript.trim().split(/\s+/).filter(Boolean);
+
+  for (const spk of spoken) {
+    if (rWordIdx >= words.length) break;
+    const target = words[rWordIdx];
+    const score = wordSimilarity(spk, target);
+    const el = document.getElementById('rw' + rWordIdx);
+
+    if (score >= 0.65) {
+      if (el) el.className = 'word done';
+      rCorrect++;
+    } else {
+      if (el) el.className = 'word err';
+      rErrors++;
+    }
+    rTotalWords++;
+    rWordIdx++;
+    updateReaderMetrics();
+
+    if (rWordIdx >= words.length) {
+      // Scene complete
+      stopListening();
+      const tb = document.getElementById('rTranscript');
+      if (tb) tb.textContent = '✓ Scene complete!';
+      const s = document.getElementById('rStatus');
+      if (s) {
+        const elapsed = (Date.now() - (rSceneStart || Date.now())) / 60000;
+        const sceneWpm = Math.round(words.length / Math.max(elapsed, 0.01));
+        s.textContent = `Scene done — ${sceneWpm} wpm`;
+      }
+      setTimeout(() => { rScene++; renderReaderScene(); }, 1400);
+      return;
+    }
+    highlightCurrentWord();
+  }
+}
+
+function skipScene() {
+  stopListening();
+  rScene++;
+  renderReaderScene();
+}
+
+function showFinished() {
+  stopListening();
+  document.getElementById('rProgressBar').style.width = '100%';
+  document.getElementById('readerContent').style.display = 'none';
+
+  const total = rCorrect + rErrors;
+  const acc = total > 0 ? Math.round(rCorrect / total * 100) : 0;
+  const elapsed = (Date.now() - (rSessionStart || Date.now())) / 60000;
+  const wpm = elapsed > 0 ? Math.round(rTotalWords / Math.max(elapsed, 0.01)) : 0;
+  const lvl = getLevelInfo(acc, wpm);
+  const accColor = acc >= 80 ? 'var(--green)' : acc >= 65 ? 'var(--amber)' : 'var(--red)';
+
+  const feedback = acc >= 88 ? '🌟 Excellent reading! Your teacher will be very proud.' :
+                   acc >= 72 ? '👍 Good effort! Keep practising a little every day.' :
+                   '💪 Great start! Reading every day will help you improve fast.';
+
+  const fd = document.getElementById('readerFinished');
+  fd.style.display = 'block';
+  fd.innerHTML = `
+    <div class="finish-card">
+      <div class="score-ring">
+        <span class="score-num" style="color:${accColor}">${acc}%</span>
+        <span class="score-sub">accuracy</span>
+      </div>
+      <h2 style="font-size:20px;margin-bottom:6px">Story complete! 🎉</h2>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:1.2rem">You finished reading <em>${currentStory.story.title}</em></p>
+      <div class="finish-grid">
+        <div class="finish-stat"><div class="finish-stat-val" style="color:${accColor}">${acc}%</div><div class="finish-stat-lbl">Accuracy</div></div>
+        <div class="finish-stat"><div class="finish-stat-val">${wpm}</div><div class="finish-stat-lbl">Words/min</div></div>
+        <div class="finish-stat"><div class="finish-stat-val">${rTotalWords}</div><div class="finish-stat-lbl">Words read</div></div>
+        <div class="finish-stat"><div class="finish-stat-val">${currentStory.content.length}</div><div class="finish-stat-lbl">Scenes</div></div>
+      </div>
+      <span class="level-badge ${lvl.cls}" style="font-size:13px;padding:5px 16px;margin-bottom:12px;display:inline-flex">${lvl.label} reader</span>
+      <p style="font-size:14px;color:var(--text2);margin:10px 0 1.5rem">${feedback}</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary btn-lg" onclick="startStory('${currentStory.story.id}')">🔁 Read again</button>
+        <button class="btn btn-lg" onclick="exitReader()">← Back to stories</button>
+      </div>
+    </div>`;
+
+  updateReaderMetrics();
+}
+
+// ─── INIT ─────────────────────────────────────────────
+renderStudentList('', '');
+renderLibrary('', '');
+
+
+
+
+// ─── MIC PERMISSION PRE-REQUEST ───────────────────────
+async function requestMicPermission() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(t => t.stop());
+  } catch(e) { console.warn('Mic:', e.message); }
+}
+document.addEventListener('click', function onFirstClick() {
+  requestMicPermission();
+  document.removeEventListener('click', onFirstClick);
+}, { once: true });
+
+// ─── TAP MODE ─────────────────────────────────────────
+let tapModeActive = false;
+
+function enableTapMode() {
+  tapModeActive = true;
+  
+  // If reader is open, rebuild scene with tap mode
+  if (currentStory) renderReaderScene();
+  else alert('Tap mode enabled! Start a story and tap each word after you read it.');
+}
+
+function tapWord(idx) {
+  if (!tapModeActive || !currentStory) return;
+  const words = getWords(currentStory.content[rScene].text);
+  if (idx !== rWordIdx) return; // must tap in order
+  const el = document.getElementById('rw' + idx);
+  if (el) el.className = 'word done';
+  rCorrect++;
+  rTotalWords++;
+  rWordIdx++;
+  updateReaderMetrics();
+  if (rWordIdx >= words.length) {
+    const tb = document.getElementById('rTranscript');
+    if (tb) tb.textContent = '✓ Scene complete!';
+    setTimeout(() => { rScene++; renderReaderScene(); }, 900);
+    return;
+  }
+  highlightCurrentWord();
+  // scroll active word into view
+  const next = document.getElementById('rw' + rWordIdx);
+  if (next) next.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+}
+
+</script>
+</body>
+</html>
