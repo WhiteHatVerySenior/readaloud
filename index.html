@@ -213,7 +213,13 @@
         <div class="avatar av-amber">RN</div>
         <div><div class="login-option-name">Ravi Nair</div><div class="login-option-sub">Student · Developing reader</div></div>
       </button>
-      <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:14px;">Demo prototype — no password needed · Use Chrome for speech recognition</div>
+      <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:14px;">Demo prototype — no password needed</div>
+      <div id="micPermBox" style="margin-top:12px;background:#EAF3DE;border:1px solid #97C459;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:13px;font-weight:600;color:#27500A;margin-bottom:4px">🎤 Allow microphone first</div>
+        <div style="font-size:12px;color:#3B6D11;margin-bottom:10px">Chrome needs permission before speech recognition works. Click below — a popup will appear asking to allow the mic.</div>
+        <button id="micBtn" onclick="askMicPermission()" style="background:#1D9E75;color:white;border:none;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%">🎤 Allow microphone</button>
+        <div id="micStatus" style="font-size:12px;margin-top:8px;min-height:18px"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -942,17 +948,32 @@ renderLibrary('', '');
 
 
 
-// ─── MIC PERMISSION PRE-REQUEST ───────────────────────
-async function requestMicPermission() {
+// ─── MIC PERMISSION ───────────────────────────────────
+async function askMicPermission() {
+  const btn = document.getElementById('micBtn');
+  const status = document.getElementById('micStatus');
+  const box = document.getElementById('micPermBox');
+  if (btn) btn.textContent = 'Requesting...';
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     stream.getTracks().forEach(t => t.stop());
-  } catch(e) { console.warn('Mic:', e.message); }
+    if (btn) btn.textContent = '✓ Microphone allowed!';
+    if (btn) btn.style.background = '#0F6E56';
+    if (status) { status.textContent = 'Great! Now sign in and start reading.'; status.style.color = '#0F6E56'; }
+    if (box) box.style.borderColor = '#1D9E75';
+  } catch(e) {
+    if (btn) btn.textContent = '✗ Permission denied — try again';
+    if (btn) btn.style.background = '#A32D2D';
+    if (status) { 
+      status.style.color = '#A32D2D';
+      if (e.name === 'NotAllowedError') {
+        status.innerHTML = 'Blocked. Go to Chrome address bar → click 🔒 → Site settings → Microphone → Allow → Refresh page.';
+      } else {
+        status.textContent = 'Error: ' + e.message;
+      }
+    }
+  }
 }
-document.addEventListener('click', function onFirstClick() {
-  requestMicPermission();
-  document.removeEventListener('click', onFirstClick);
-}, { once: true });
 
 // ─── TAP MODE ─────────────────────────────────────────
 let tapModeActive = false;
