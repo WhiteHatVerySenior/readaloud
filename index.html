@@ -2,1030 +2,820 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>ReadAloud — Interactive Storybook</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #ffffff; --bg2: #f5f5f3; --bg3: #eeede9;
-    --text: #1a1a1a; --text2: #666660; --text3: #999994;
-    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
-    --blue: #185FA5; --blue-light: #E6F1FB; --blue-mid: #378ADD;
-    --green: #0F6E56; --green-light: #EAF3DE; --green-mid: #1D9E75;
-    --amber: #854F0B; --amber-light: #FAEEDA; --amber-mid: #EF9F27;
-    --red: #A32D2D; --red-light: #FCEBEB; --red-mid: #E24B4A;
-    --teal-light: #E1F5EE; --teal-dark: #085041;
-    --purple-light: #EEEDFE; --purple-dark: #3C3489;
-    --radius: 8px; --radius-lg: 12px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-  }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: var(--text); background: var(--bg3); min-height: 100vh; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f3;--bg3:#eeede9;
+  --text:#1a1a1a;--text2:#666660;--text3:#aaa9a4;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.2);
+  --blue:#185FA5;--blue2:#E6F1FB;--blue3:#378ADD;
+  --green:#0F6E56;--green2:#EAF3DE;--green3:#1D9E75;
+  --amber:#854F0B;--amber2:#FAEEDA;--amber3:#EF9F27;
+  --red:#A32D2D;--red2:#FCEBEB;--red3:#E24B4A;
+  --teal2:#E1F5EE;--teal:#085041;
+  --r:8px;--rl:14px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:var(--text);background:var(--bg3);min-height:100vh}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+.topbar{background:var(--bg);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px}
+.topbar-title{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.topbar-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.page{flex:1;padding:16px;max-width:780px;margin:0 auto;width:100%}
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;margin-bottom:12px}
+.card-title{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 18px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.btn:hover{background:var(--bg2)}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{background:#0C447C}
+.btn-green{background:var(--green3);color:#fff;border-color:var(--green3)}
+.btn-red{background:var(--red2);color:var(--red);border-color:#F09595}
+.btn-sm{padding:6px 13px;font-size:12px}
+.btn-xl{padding:16px 24px;font-size:17px;width:100%;border-radius:12px;min-height:58px}
+.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.tag-easy{background:var(--green2);color:var(--green)}
+.tag-med{background:var(--amber2);color:var(--amber)}
+.tag-hard{background:var(--red2);color:var(--red)}
+.tag-english{background:var(--teal2);color:var(--teal)}
+.tag-science{background:var(--blue2);color:var(--blue)}
+.tag-history{background:var(--amber2);color:var(--amber)}
+.tag-evs{background:var(--green2);color:var(--green)}
+.lbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.lv-adv{background:var(--teal2);color:var(--teal)}
+.lv-flu{background:var(--green2);color:var(--green)}
+.lv-dev{background:var(--amber2);color:var(--amber)}
+.lv-beg{background:var(--red2);color:var(--red)}
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg);border-radius:var(--rl) var(--rl) 0 0;overflow-x:auto}
+.tab{padding:11px 16px;font-size:13px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:600;white-space:nowrap;transition:all .15s}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-body{background:var(--bg);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--rl) var(--rl);padding:16px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.mc{background:var(--bg2);border-radius:var(--r);padding:11px 13px}
+.ml{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.mv{font-size:22px;font-weight:800;color:var(--text)}
+.mv.good{color:var(--green)}.mv.warn{color:var(--amber)}.mv.bad{color:var(--red)}
+.pbar-wrap{height:5px;background:var(--bg3);border-radius:3px;margin-bottom:14px}
+.pbar{height:5px;background:var(--blue3);border-radius:3px;transition:width .4s}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.av-blue{background:#B5D4F4;color:#0C447C}
+.av-teal{background:#9FE1CB;color:#085041}
+.av-amber{background:#FAC775;color:#633806}
+.av-purple{background:#CECBF6;color:#3C3489}
+.sgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.scard{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:all .18s}
+.scard:hover{border-color:var(--blue3);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.scard:active{transform:scale(.98)}
+.sthumb{width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:48px}
+.sinfo{padding:10px 12px}
+.stitle{font-size:13px;font-weight:700;margin-bottom:3px}
+.sdesc{font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:7px}
+.stags{display:flex;gap:5px;flex-wrap:wrap}
+.srow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.srow:last-child{border-bottom:none}
+select,input[type=date],input[type=text]{width:100%;padding:8px 10px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px}
+.toast{background:var(--green2);border:1px solid #97C459;border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--green);margin-top:10px;display:none}
+.login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.login-box{width:100%;max-width:340px}
+.login-opt{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:var(--rl);border:1px solid var(--border);background:var(--bg);cursor:pointer;margin-bottom:9px;transition:all .15s;width:100%;text-align:left}
+.login-opt:hover{border-color:var(--blue3);background:var(--blue2)}
+.bchart{display:flex;align-items:flex-end;gap:5px;height:65px}
+.bcol{display:flex;flex-direction:column;align-items:center;flex:1}
+.bbar{width:100%;border-radius:4px 4px 0 0;background:#B5D4F4;min-height:3px}
+.blbl{font-size:9px;color:var(--text2);margin-top:3px;text-align:center}
+.lbrow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.lblbl{width:78px;font-size:12px;color:var(--text2)}
+.lbtrack{flex:1;height:8px;background:var(--bg3);border-radius:4px}
+.lbfill{height:8px;border-radius:4px}
+.abar{width:70px;height:5px;background:var(--bg3);border-radius:3px;margin-top:3px}
+.afill{height:5px;border-radius:3px}
 
-  /* Layout */
-  .screen { display: none; min-height: 100vh; }
-  .screen.active { display: flex; flex-direction: column; }
-  .topbar { background: var(--bg); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-  .topbar-title { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-  .topbar-sub { font-size: 11px; color: var(--text2); margin-top: 1px; }
-  .page-body { flex: 1; padding: 20px; max-width: 860px; margin: 0 auto; width: 100%; }
+/* ═══ CALL & RESPONSE READER ═══ */
+.reader-wrap{display:flex;flex-direction:column;gap:10px}
+.line-card{border-radius:var(--rl);overflow:hidden;border:2px solid transparent;transition:border-color .3s}
+.line-body{padding:14px 16px}
+.line-image{width:100%;height:150px;display:flex;align-items:center;justify-content:center;font-size:76px}
+.line-speaker{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:flex;align-items:center;gap:7px}
+.line-text{font-size:20px;line-height:1.9;font-family:Georgia,serif}
 
-  /* Cards */
-  .card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 14px; }
-  .card-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+/* User turn colours */
+.user-turn .line-card{border-color:#B5D4F4}
+.user-turn .line-card.active-card{border-color:var(--blue);box-shadow:0 0 0 3px rgba(55,138,221,.15)}
+.user-turn .line-body{background:var(--blue2)}
+.user-turn .line-speaker{color:var(--blue)}
 
-  /* Buttons */
-  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
-  .btn:hover { background: var(--bg2); }
-  .btn:active { transform: scale(0.98); }
-  .btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
-  .btn-primary:hover { background: #0C447C; }
-  .btn-success { background: var(--green-mid); color: white; border-color: var(--green-mid); }
-  .btn-danger-soft { background: var(--red-light); color: var(--red); border-color: #F09595; }
-  .btn-sm { padding: 5px 12px; font-size: 12px; }
-  .btn-lg { padding: 12px 24px; font-size: 15px; }
-  .btn-listening { background: var(--red-light); border-color: var(--red-mid); color: var(--red); }
+/* App turn colours */
+.app-turn .line-card{border-color:#9FE1CB}
+.app-turn .line-card.active-card{border-color:var(--green3);box-shadow:0 0 0 3px rgba(29,158,117,.15)}
+.app-turn .line-body{background:var(--teal2)}
+.app-turn .line-speaker{color:var(--teal)}
+.app-turn .line-text{color:#0a3d2e}
 
-  /* Tags / Badges */
-  .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-  .tag-easy { background: var(--green-light); color: var(--green); }
-  .tag-medium { background: var(--amber-light); color: var(--amber); }
-  .tag-hard { background: var(--red-light); color: var(--red); }
-  .tag-english { background: var(--teal-light); color: var(--teal-dark); }
-  .tag-science { background: var(--blue-light); color: var(--blue); }
-  .tag-history { background: var(--amber-light); color: var(--amber); }
-  .tag-evs { background: var(--green-light); color: var(--green); }
-  .level-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-  .lv-adv { background: var(--teal-light); color: var(--teal-dark); }
-  .lv-flu { background: var(--green-light); color: var(--green); }
-  .lv-dev { background: var(--amber-light); color: var(--amber); }
-  .lv-beg { background: var(--red-light); color: var(--red); }
+/* Completed line */
+.line-done .line-card{opacity:.4;border-color:var(--border)!important;box-shadow:none!important}
+.line-done .line-body{background:var(--bg2)!important}
 
-  /* Tabs */
-  .tab-bar { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 18px; background: var(--bg); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
-  .tab { padding: 11px 18px; font-size: 13px; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 500; transition: all 0.15s; }
-  .tab:hover { color: var(--text); }
-  .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+/* Word highlights */
+.word{display:inline;padding:2px 4px;border-radius:4px;transition:all .1s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.word.done{color:var(--green);background:rgba(29,158,117,.1)}
+.word.active{background:#FAC775;color:#412402;font-weight:700}
+.word.err{background:var(--red2);color:var(--red);text-decoration:underline wavy var(--red)}
 
-  /* Metrics */
-  .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
-  .metric-card { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; }
-  .metric-label { font-size: 10px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-  .metric-val { font-size: 24px; font-weight: 700; color: var(--text); }
-  .metric-val.good { color: var(--green); }
-  .metric-val.warn { color: var(--amber); }
-  .metric-val.bad { color: var(--red); }
+/* Status + mic dot */
+.status-bar{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:11px 14px;display:flex;align-items:center;gap:10px}
+.transcript{font-size:13px;color:var(--text2);font-style:italic;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mic-dot{width:10px;height:10px;border-radius:50%;background:var(--red3);display:inline-block;animation:pulse 1s infinite;flex-shrink:0}
+.app-dot{width:10px;height:10px;border-radius:50%;background:var(--green3);display:inline-block;animation:pulse .7s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
 
-  /* Progress bar */
-  .pbar-wrap { height: 5px; background: var(--bg3); border-radius: 3px; margin-bottom: 16px; }
-  .pbar { height: 5px; background: var(--blue-mid); border-radius: 3px; transition: width 0.4s ease; }
+/* Turn badge */
+.turn-badge{padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;color:#fff}
+.turn-you{background:var(--blue)}
+.turn-app{background:var(--green3)}
 
-  /* Avatar */
-  .avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-  .av-blue { background: #B5D4F4; color: #0C447C; }
-  .av-teal { background: #9FE1CB; color: #085041; }
-  .av-amber { background: #FAC775; color: #633806; }
-  .av-purple { background: #CECBF6; color: #3C3489; }
+/* Finish */
+.finish-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:2rem 1.5rem;text-align:center}
+.score-ring{width:90px;height:90px;border-radius:50%;border:4px solid var(--green3);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem}
+.score-num{font-size:26px;font-weight:800;color:var(--green)}
+.score-sub{font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 
-  /* Story cards */
-  .stories-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  .story-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: all 0.18s; }
-  .story-card:hover { border-color: var(--blue-mid); transform: translateY(-2px); box-shadow: var(--shadow); }
-  .story-thumb { width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; font-size: 56px; }
-  .story-info { padding: 12px 14px; }
-  .story-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-  .story-desc { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 8px; }
-  .story-tags { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
-  .mini-progress { height: 3px; background: var(--bg3); border-radius: 2px; margin-top: 8px; }
-  .mini-progress-fill { height: 3px; background: var(--green-mid); border-radius: 2px; }
-
-  /* Student list */
-  .student-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .student-row:last-child { border-bottom: none; }
-  .student-name { font-size: 13px; font-weight: 600; }
-  .student-sub { font-size: 11px; color: var(--text2); margin-top: 1px; }
-  .acc-bar-wrap { width: 80px; height: 5px; background: var(--bg3); border-radius: 3px; margin-top: 3px; }
-  .acc-bar { height: 5px; border-radius: 3px; }
-
-  /* Login screen */
-  .login-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
-  .login-box { width: 100%; max-width: 360px; }
-  .login-brand { text-align: center; margin-bottom: 2rem; }
-  .login-icon { width: 56px; height: 56px; background: var(--blue-light); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 28px; }
-  .login-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-  .login-sub { font-size: 13px; color: var(--text2); }
-  .login-option { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--bg); cursor: pointer; margin-bottom: 10px; transition: all 0.15s; text-align: left; width: 100%; }
-  .login-option:hover { border-color: var(--blue-mid); background: var(--blue-light); }
-  .login-option-name { font-size: 14px; font-weight: 600; }
-  .login-option-sub { font-size: 11px; color: var(--text2); }
-
-  /* Reader specific */
-  .scene-image { width: 100%; height: 240px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: flex; align-items: center; justify-content: center; font-size: 90px; overflow: hidden; }
-  .scene-text-wrap { padding: 16px 18px; }
-  .scene-counter { font-size: 11px; color: var(--text2); margin-bottom: 8px; font-weight: 500; }
-  .scene-text { font-size: 18px; line-height: 1.9; font-family: Georgia, 'Times New Roman', serif; }
-  .word { display: inline; padding: 2px 4px; border-radius: 4px; transition: all 0.12s; cursor: default; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-  .word.done { color: var(--green); }
-  .word.active { background: #FAC775; color: #412402; font-weight: 700; border-radius: 4px; }
-  .word.err { background: var(--red-light); color: var(--red); text-decoration: underline wavy var(--red); }
-  .transcript-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: var(--text2); min-height: 38px; font-style: italic; margin: 12px 0; }
-  .reader-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .mic-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--red-mid); display: inline-block; animation: pulse 1s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
-  .status-text { font-size: 12px; color: var(--text2); flex: 1; }
-
-  /* Finish card */
-  .finish-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem 2rem; text-align: center; }
-  .score-ring { width: 88px; height: 88px; border-radius: 50%; border: 4px solid var(--green-mid); display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 1.2rem; }
-  .score-num { font-size: 26px; font-weight: 700; color: var(--green); }
-  .score-sub { font-size: 10px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-  .finish-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin: 1.2rem 0; }
-  .finish-stat { background: var(--bg2); border-radius: var(--radius); padding: 10px; }
-  .finish-stat-val { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
-  .finish-stat-lbl { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
-
-  /* Teacher chart */
-  .bar-chart { display: flex; align-items: flex-end; gap: 5px; height: 70px; }
-  .bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
-  .bar-block { width: 100%; border-radius: 4px 4px 0 0; background: #B5D4F4; min-height: 3px; }
-  .bar-lbl { font-size: 9px; color: var(--text2); margin-top: 3px; text-align: center; }
-  .level-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .level-bar-label { width: 80px; font-size: 12px; color: var(--text2); }
-  .level-bar-track { flex: 1; height: 9px; background: var(--bg3); border-radius: 5px; }
-  .level-bar-fill { height: 9px; border-radius: 5px; transition: width 0.6s ease; }
-  .level-bar-count { font-size: 12px; font-weight: 600; min-width: 20px; }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .assign-form { display: flex; flex-direction: column; gap: 12px; }
-  .form-label { font-size: 12px; color: var(--text2); margin-bottom: 5px; font-weight: 500; }
-  select, input[type="date"] { width: 100%; padding: 8px 10px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); color: var(--text); font-size: 13px; cursor: pointer; }
-  .toast { background: var(--green-light); border: 1px solid #97C459; border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: var(--green); margin-top: 10px; display: none; }
-  .progress-hist-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
-  .progress-hist-row:last-child { border-bottom: none; }
-  .progress-hist-title { font-size: 13px; font-weight: 500; }
-  .progress-hist-sub { font-size: 11px; color: var(--text2); }
-  .acc-trend { display: flex; align-items: flex-end; gap: 4px; height: 55px; }
-  .acc-trend-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
-  .acc-trend-bar { width: 100%; border-radius: 3px 3px 0 0; background: var(--blue-mid); }
-  .acc-trend-lbl { font-size: 9px; color: var(--text2); margin-top: 3px; }
-  .attention-empty { font-size: 13px; color: var(--text2); padding: 10px 0; }
-  input[type="text"] { padding: 8px 10px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); color: var(--text); font-size: 13px; }
-  .search-row { display: flex; gap: 10px; margin-bottom: 14px; }
-  .search-row input { flex: 1; }
-  .no-support-msg { background: var(--amber-light); border: 1px solid var(--amber-mid); border-radius: var(--radius); padding: 12px 14px; font-size: 13px; color: var(--amber); margin-bottom: 12px; display: none; }
-  @media (max-width: 640px) {
-    .stories-grid { grid-template-columns: 1fr 1fr; }
-    .metrics-grid { grid-template-columns: 1fr 1fr; }
-    .finish-grid { grid-template-columns: 1fr 1fr; }
-    .two-col { grid-template-columns: 1fr; }
-    .page-body { padding: 12px; }
-    .topbar { padding: 10px 14px; }
-    .tab { padding: 9px 12px; font-size: 12px; }
-    .scene-image { height: 180px; font-size: 72px; }
-    .scene-text { font-size: 20px; line-height: 2; }
-    .btn-lg { padding: 14px 20px; font-size: 15px; width: 100%; justify-content: center; }
-    .reader-controls { flex-direction: column; align-items: stretch; }
-    .reader-controls .btn-sm { text-align: center; }
-    .metric-val { font-size: 20px; }
-    .story-thumb { height: 90px; font-size: 40px; }
-    .login-box { padding: 0 4px; }
-    .topbar-title { font-size: 15px; }
-    .card { padding: 12px 14px; }
-    .word { font-size: 20px; line-height: 2.1; padding: 2px 4px; }
-    .transcript-box { font-size: 14px; }
-  }
-  @media (max-width: 400px) {
-    .stories-grid { grid-template-columns: 1fr; }
-    .metrics-grid { grid-template-columns: 1fr 1fr; }
-    .scene-text { font-size: 18px; }
-  }
-
+@media(max-width:600px){
+  .g4{grid-template-columns:1fr 1fr}
+  .g2{grid-template-columns:1fr}
+  .page{padding:10px}
+  .line-text{font-size:17px}
+  .line-image{height:110px;font-size:58px}
+  .mv{font-size:18px}
+  .tab{padding:9px 12px;font-size:12px}
+  .btn-xl{font-size:15px;min-height:52px}
+}
+@media(max-width:380px){
+  .sgrid{grid-template-columns:1fr}
+  .line-text{font-size:15px}
+}
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════
-     SCREEN: LOGIN
-═══════════════════════════════════════════════════════ -->
-<div id="screenLogin" class="screen active">
+<!-- ═══ LOGIN ═══ -->
+<div id="scrLogin" class="screen active">
   <div class="login-wrap">
     <div class="login-box">
-      <div class="login-brand">
-        <div class="login-icon">📖</div>
-        <div class="login-title">ReadAloud</div>
-        <div class="login-sub">Interactive read-aloud platform for Class 7</div>
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="width:56px;height:56px;background:var(--blue2);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px">📖</div>
+        <div style="font-size:22px;font-weight:800;margin-bottom:4px">ReadAloud</div>
+        <div style="font-size:13px;color:var(--text2)">Call &amp; Response reading platform</div>
       </div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:10px;font-weight:500;">Sign in as</div>
-      <button class="login-option" onclick="loginAs('teacher','Priya')">
+
+      <div id="micBox" style="margin-bottom:14px;background:var(--green2);border:1px solid #97C459;border-radius:var(--rl);padding:14px;text-align:center">
+        <div style="font-size:14px;font-weight:700;color:#27500A;margin-bottom:4px">🎤 Allow microphone first</div>
+        <div style="font-size:12px;color:#3B6D11;margin-bottom:10px;line-height:1.5">Tap below — your browser will ask permission to listen while you read.</div>
+        <button id="micBtn" onclick="askMic()" style="background:var(--green3);color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;width:100%">🎤 Allow microphone</button>
+        <div id="micSt" style="font-size:12px;margin-top:8px;min-height:18px;line-height:1.5"></div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Sign in as</div>
+      <button class="login-opt" onclick="login('teacher','Priya')">
         <div class="avatar av-purple">TP</div>
-        <div><div class="login-option-name">Ms. Priya Sharma</div><div class="login-option-sub">Teacher — Class 7B</div></div>
+        <div><div style="font-size:13px;font-weight:700">Ms. Priya Sharma</div><div style="font-size:11px;color:var(--text2)">Teacher · Class 7B</div></div>
       </button>
-      <button class="login-option" onclick="loginAs('student','Arjun')">
+      <button class="login-opt" onclick="login('student','Arjun')">
         <div class="avatar av-blue">AK</div>
-        <div><div class="login-option-name">Arjun Kumar</div><div class="login-option-sub">Student · Fluent reader</div></div>
+        <div><div style="font-size:13px;font-weight:700">Arjun Kumar</div><div style="font-size:11px;color:var(--text2)">Student · Fluent reader</div></div>
       </button>
-      <button class="login-option" onclick="loginAs('student','Meera')">
+      <button class="login-opt" onclick="login('student','Meera')">
         <div class="avatar av-teal">MS</div>
-        <div><div class="login-option-name">Meera Singh</div><div class="login-option-sub">Student · Advanced reader</div></div>
+        <div><div style="font-size:13px;font-weight:700">Meera Singh</div><div style="font-size:11px;color:var(--text2)">Student · Advanced reader</div></div>
       </button>
-      <button class="login-option" onclick="loginAs('student','Ravi')">
+      <button class="login-opt" onclick="login('student','Ravi')">
         <div class="avatar av-amber">RN</div>
-        <div><div class="login-option-name">Ravi Nair</div><div class="login-option-sub">Student · Developing reader</div></div>
+        <div><div style="font-size:13px;font-weight:700">Ravi Nair</div><div style="font-size:11px;color:var(--text2)">Student · Developing reader</div></div>
       </button>
-      <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:14px;">Demo prototype — no password needed</div>
-      <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:6px">✓ Tested on Chrome for Android &amp; iOS</div>
-      <div id="micPermBox" style="margin-top:12px;background:#EAF3DE;border:1px solid #97C459;border-radius:10px;padding:16px;text-align:center">
-        <div style="font-size:15px;font-weight:700;color:#27500A;margin-bottom:6px">🎤 Allow microphone first</div>
-        <div style="font-size:13px;color:#3B6D11;margin-bottom:12px;line-height:1.5">Tap below — your browser will ask permission to use your mic. You must allow it for reading to work.</div>
-        <button id="micBtn" onclick="askMicPermission()" style="background:#1D9E75;color:white;border:none;padding:14px 22px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;width:100%;letter-spacing:0.01em">🎤 Allow microphone</button>
-        <div id="micStatus" style="font-size:13px;margin-top:10px;min-height:20px;line-height:1.5"></div>
-      </div>
+      <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px">Works best on Chrome (Android / iOS / desktop)</div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     SCREEN: TEACHER
-═══════════════════════════════════════════════════════ -->
-<div id="screenTeacher" class="screen">
+<!-- ═══ TEACHER ═══ -->
+<div id="scrTeacher" class="screen">
   <div class="topbar">
-    <div>
-      <div class="topbar-title">📊 Teacher Dashboard</div>
-      <div class="topbar-sub">Ms. Priya Sharma · Class 7B · 24 students</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px">
+    <div><div class="topbar-title">📊 Dashboard</div><div class="topbar-sub">Ms. Priya · Class 7B</div></div>
+    <div style="display:flex;align-items:center;gap:8px">
       <div class="avatar av-purple">TP</div>
       <button class="btn btn-sm" onclick="goLogin()">Sign out</button>
     </div>
   </div>
-  <div class="page-body">
-    <div class="tab-bar" style="border-radius:var(--radius-lg) var(--radius-lg) 0 0;margin-bottom:0;background:var(--bg);border:1px solid var(--border);border-bottom:none;padding:0 8px;">
-      <div class="tab active" onclick="tTab(this,'t-overview')">Overview</div>
-      <div class="tab" onclick="tTab(this,'t-students')">Students</div>
-      <div class="tab" onclick="tTab(this,'t-library')">Story Library</div>
-      <div class="tab" onclick="tTab(this,'t-assign')">Assign</div>
-    </div>
-    <div style="background:var(--bg);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg);padding:18px">
-
-      <!-- Overview Tab -->
-      <div id="t-overview">
-        <div class="metrics-grid">
-          <div class="metric-card"><div class="metric-label">Class avg accuracy</div><div class="metric-val good">78%</div></div>
-          <div class="metric-card"><div class="metric-label">Avg speed</div><div class="metric-val">82 wpm</div></div>
-          <div class="metric-card"><div class="metric-label">Sessions today</div><div class="metric-val">11</div></div>
-          <div class="metric-card"><div class="metric-label">Stories completed</div><div class="metric-val">34</div></div>
+  <div class="page">
+    <div class="tabs"><div class="tab active" onclick="tTab(this,'ov')">Overview</div><div class="tab" onclick="tTab(this,'st')">Students</div><div class="tab" onclick="tTab(this,'li')">Library</div><div class="tab" onclick="tTab(this,'as')">Assign</div></div>
+    <div class="tab-body">
+      <div id="t-ov">
+        <div class="g4" style="margin-bottom:14px">
+          <div class="mc"><div class="ml">Avg accuracy</div><div class="mv good">78%</div></div>
+          <div class="mc"><div class="ml">Avg speed</div><div class="mv">82 wpm</div></div>
+          <div class="mc"><div class="ml">Sessions today</div><div class="mv">11</div></div>
+          <div class="mc"><div class="ml">Stories done</div><div class="mv">34</div></div>
         </div>
-        <div class="two-col">
-          <div class="card" style="margin-bottom:0">
-            <div class="card-title">Level distribution — Class 7B</div>
-            <div class="level-bar-row"><span class="level-bar-label">Advanced</span><div class="level-bar-track"><div class="level-bar-fill" style="width:17%;background:#1D9E75"></div></div><span class="level-bar-count good" style="color:var(--green)">4</span></div>
-            <div class="level-bar-row"><span class="level-bar-label">Fluent</span><div class="level-bar-track"><div class="level-bar-fill" style="width:33%;background:#5DCAA5"></div></div><span class="level-bar-count" style="color:var(--green)">8</span></div>
-            <div class="level-bar-row"><span class="level-bar-label">Developing</span><div class="level-bar-track"><div class="level-bar-fill" style="width:38%;background:#EF9F27"></div></div><span class="level-bar-count warn" style="color:var(--amber)">9</span></div>
-            <div class="level-bar-row"><span class="level-bar-label">Beginner</span><div class="level-bar-track"><div class="level-bar-fill" style="width:12%;background:#E24B4A"></div></div><span class="level-bar-count bad" style="color:var(--red)">3</span></div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-title">Level distribution</div>
+            <div class="lbrow"><span class="lblbl">Advanced</span><div class="lbtrack"><div class="lbfill" style="width:17%;background:#1D9E75"></div></div><b style="font-size:12px;color:var(--green)">4</b></div>
+            <div class="lbrow"><span class="lblbl">Fluent</span><div class="lbtrack"><div class="lbfill" style="width:33%;background:#5DCAA5"></div></div><b style="font-size:12px;color:var(--green)">8</b></div>
+            <div class="lbrow"><span class="lblbl">Developing</span><div class="lbtrack"><div class="lbfill" style="width:38%;background:#EF9F27"></div></div><b style="font-size:12px;color:var(--amber)">9</b></div>
+            <div class="lbrow"><span class="lblbl">Beginner</span><div class="lbtrack"><div class="lbfill" style="width:12%;background:#E24B4A"></div></div><b style="font-size:12px;color:var(--red)">3</b></div>
           </div>
-          <div class="card" style="margin-bottom:0">
+          <div class="card">
             <div class="card-title">Weekly sessions</div>
-            <div class="bar-chart" style="margin-top:6px">
-              <div class="bar-col"><div class="bar-block" style="height:35%"></div><div class="bar-lbl">Mon<br>7</div></div>
-              <div class="bar-col"><div class="bar-block" style="height:55%"></div><div class="bar-lbl">Tue<br>12</div></div>
-              <div class="bar-col"><div class="bar-block" style="height:42%"></div><div class="bar-lbl">Wed<br>9</div></div>
-              <div class="bar-col"><div class="bar-block" style="height:78%"></div><div class="bar-lbl">Thu<br>17</div></div>
-              <div class="bar-col"><div class="bar-block" style="height:100%;background:#378ADD"></div><div class="bar-lbl">Fri<br>22</div></div>
+            <div class="bchart">
+              <div class="bcol"><div class="bbar" style="height:35%"></div><div class="blbl">Mon<br>7</div></div>
+              <div class="bcol"><div class="bbar" style="height:55%"></div><div class="blbl">Tue<br>12</div></div>
+              <div class="bcol"><div class="bbar" style="height:42%"></div><div class="blbl">Wed<br>9</div></div>
+              <div class="bcol"><div class="bbar" style="height:78%"></div><div class="blbl">Thu<br>17</div></div>
+              <div class="bcol"><div class="bbar" style="height:100%;background:var(--blue3)"></div><div class="blbl">Fri<br>22</div></div>
             </div>
           </div>
         </div>
-        <div class="card" style="margin-top:14px">
-          <div class="card-title">⚠️ Needs attention</div>
-          <div id="t-attention"></div>
-        </div>
+        <div class="card" style="margin-top:12px"><div class="card-title">Needs attention</div><div id="t-att"></div></div>
       </div>
-
-      <!-- Students Tab -->
-      <div id="t-students" style="display:none">
-        <div class="search-row">
-          <input type="text" placeholder="Search students…" oninput="renderStudentList(this.value, document.getElementById('lvlFilter').value)" style="flex:1">
-          <select id="lvlFilter" onchange="renderStudentList(document.querySelector('#t-students input').value, this.value)">
-            <option value="">All levels</option>
-            <option>Advanced</option><option>Fluent</option><option>Developing</option><option>Beginner</option>
-          </select>
+      <div id="t-st" style="display:none">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" placeholder="Search…" oninput="renderSt(this.value,document.getElementById('lvlF').value)" style="flex:1">
+          <select id="lvlF" onchange="renderSt(document.querySelector('#t-st input').value,this.value)" style="width:auto"><option value="">All</option><option>Advanced</option><option>Fluent</option><option>Developing</option><option>Beginner</option></select>
         </div>
-        <div class="card" style="padding:6px 16px"><div id="studentList"></div></div>
+        <div class="card" style="padding:4px 14px"><div id="stList"></div></div>
       </div>
-
-      <!-- Library Tab -->
-      <div id="t-library" style="display:none">
-        <div class="search-row" style="margin-bottom:16px">
-          <select onchange="renderLibrary(this.value, document.getElementById('libDiff').value)">
-            <option value="">All subjects</option>
-            <option>English</option><option>Science</option><option>History</option><option>EVS</option>
-          </select>
-          <select id="libDiff" onchange="renderLibrary(document.querySelector('#t-library select').value, this.value)">
-            <option value="">All levels</option>
-            <option>Easy</option><option>Medium</option><option>Hard</option>
-          </select>
+      <div id="t-li" style="display:none">
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <select onchange="renderLib(this.value,document.getElementById('libD').value)" style="flex:1"><option value="">All subjects</option><option>English</option><option>Science</option><option>History</option><option>EVS</option></select>
+          <select id="libD" onchange="renderLib(document.querySelector('#t-li select').value,this.value)" style="flex:1"><option value="">All levels</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
         </div>
-        <div class="stories-grid" id="libGrid"></div>
+        <div class="sgrid" id="libGrid"></div>
       </div>
-
-      <!-- Assign Tab -->
-      <div id="t-assign" style="display:none">
+      <div id="t-as" style="display:none">
         <div class="card">
           <div class="card-title">Assign a story</div>
-          <div class="assign-form">
-            <div><div class="form-label">Story</div>
-              <select><option>The Tunnel (English · Medium)</option><option>The Water Cycle (Science · Easy)</option><option>Monsoon Magic (English · Easy)</option><option>The Desert Fox (EVS · Easy)</option><option>Ashoka's Empire (History · Medium)</option><option>The Solar System (Science · Hard)</option></select>
-            </div>
-            <div><div class="form-label">Assign to</div>
-              <select><option>Entire Class 7B</option><option>Arjun Kumar</option><option>Meera Singh</option><option>Ravi Nair</option><option>Beginners group (3 students)</option><option>Developing group (9 students)</option></select>
-            </div>
-            <div><div class="form-label">Due date</div><input type="date"></div>
-            <button class="btn btn-primary" onclick="document.getElementById('assignToast').style.display='block';setTimeout(()=>document.getElementById('assignToast').style.display='none',3000)">
-              ✓ Assign story
-            </button>
-            <div id="assignToast" class="toast">✓ Story successfully assigned!</div>
+          <div style="display:flex;flex-direction:column;gap:11px;margin-top:4px">
+            <div><div style="font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:600">Story</div><select><option>The Tunnel</option><option>The Lost Kite</option><option>The Brave Little Firefly</option><option>Monsoon Magic</option><option>Journey to the Deep Sea</option><option>The Water Cycle</option><option>The Desert Fox</option><option>Ashoka's Message</option></select></div>
+            <div><div style="font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:600">Assign to</div><select><option>Entire Class 7B</option><option>Arjun Kumar</option><option>Meera Singh</option><option>Ravi Nair</option><option>Beginners group</option><option>Developing group</option></select></div>
+            <div><div style="font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:600">Due date</div><input type="date"></div>
+            <button class="btn btn-primary" onclick="document.getElementById('aToast').style.display='block';setTimeout(()=>document.getElementById('aToast').style.display='none',3000)">Assign story</button>
+            <div id="aToast" class="toast">Story assigned successfully!</div>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     SCREEN: STUDENT HOME
-═══════════════════════════════════════════════════════ -->
-<div id="screenStudent" class="screen">
+<!-- ═══ STUDENT HOME ═══ -->
+<div id="scrStudent" class="screen">
   <div class="topbar">
-    <div>
-      <div class="topbar-title" id="sGreeting">Hello!</div>
-      <div class="topbar-sub">Class 7B — ReadAloud</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <div class="avatar" id="sAvatar" style="background:#B5D4F4;color:#0C447C">AK</div>
+    <div><div class="topbar-title" id="sGreet">Hello!</div><div class="topbar-sub">Class 7B · ReadAloud</div></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="avatar" id="sAv" style="background:#B5D4F4;color:#0C447C">AK</div>
       <button class="btn btn-sm" onclick="goLogin()">Sign out</button>
     </div>
   </div>
-  <div class="page-body">
-    <div class="tab-bar" style="border-radius:var(--radius-lg) var(--radius-lg) 0 0;margin-bottom:0;background:var(--bg);border:1px solid var(--border);border-bottom:none;padding:0 8px;">
-      <div class="tab active" onclick="sTab(this,'s-home')">My stories</div>
-      <div class="tab" onclick="sTab(this,'s-progress')">My progress</div>
-    </div>
-    <div style="background:var(--bg);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg);padding:18px">
-
-      <!-- Stories tab -->
-      <div id="s-home">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div style="font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em">Assigned stories</div>
-          <select onchange="renderStudentStories(this.value)" id="sDiffFilter">
-            <option value="">All difficulties</option>
-            <option>Easy</option><option>Medium</option><option>Hard</option>
-          </select>
+  <div class="page">
+    <div class="tabs"><div class="tab active" onclick="sTab(this,'ho')">My stories</div><div class="tab" onclick="sTab(this,'pr')">My progress</div></div>
+    <div class="tab-body">
+      <div id="s-ho">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">Stories</div>
+          <select onchange="renderSStories(this.value)" style="width:auto"><option value="">All</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
         </div>
-        <div class="stories-grid" id="sStoriesGrid"></div>
+        <div class="sgrid" id="sGrid"></div>
       </div>
-
-      <!-- Progress tab -->
-      <div id="s-progress" style="display:none">
-        <div class="metrics-grid" id="sMetrics"></div>
-        <div class="two-col">
-          <div class="card">
-            <div class="card-title">Reading history</div>
-            <div id="sHistory"></div>
-          </div>
-          <div class="card">
-            <div class="card-title">Accuracy over time</div>
-            <div class="acc-trend" id="sAccTrend"></div>
-          </div>
+      <div id="s-pr" style="display:none">
+        <div class="g4" style="margin-bottom:14px" id="sMet"></div>
+        <div class="g2">
+          <div class="card"><div class="card-title">Reading history</div><div id="sHist"></div></div>
+          <div class="card"><div class="card-title">Accuracy trend</div><div id="sAcc"></div></div>
         </div>
       </div>
-
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     SCREEN: READER
-═══════════════════════════════════════════════════════ -->
-<div id="screenReader" class="screen">
+<!-- ═══ READER ═══ -->
+<div id="scrReader" class="screen">
   <div class="topbar">
-    <div style="display:flex;align-items:center;gap:10px">
-      <button class="btn btn-sm" id="readerBackBtn" onclick="exitReader()">← Back</button>
-      <div>
-        <div class="topbar-title" id="readerTitle">Story</div>
-        <div class="topbar-sub" id="readerMeta">Subject · Difficulty</div>
-      </div>
+    <div style="display:flex;align-items:center;gap:8px;min-width:0">
+      <button class="btn btn-sm" onclick="exitReader()">← Back</button>
+      <div style="min-width:0"><div class="topbar-title" id="rTitle">Story</div><div class="topbar-sub" id="rMeta">Subject</div></div>
     </div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <span class="level-badge lv-flu" id="readerBadge">—</span>
-      <span style="font-size:12px;color:var(--text2)" id="readerWpmTop">— wpm</span>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+      <span class="lbadge lv-flu" id="rBadge">—</span>
+      <span style="font-size:12px;color:var(--text2)" id="rWpmTop">—</span>
     </div>
   </div>
-  <div class="page-body">
-    <div id="noSupportMsg" class="no-support-msg">
-      ⚠️ Speech recognition requires Chrome or Edge on desktop. You can still read the story but words won't be tracked automatically.
+  <div class="page">
+    <div class="g4" style="margin-bottom:12px">
+      <div class="mc"><div class="ml">Accuracy</div><div class="mv" id="rAcc">—</div></div>
+      <div class="mc"><div class="ml">Speed</div><div class="mv" id="rWpm">—</div></div>
+      <div class="mc"><div class="ml">Words</div><div class="mv" id="rWords">0</div></div>
+      <div class="mc"><div class="ml">Line</div><div class="mv" id="rLine">1</div></div>
     </div>
-    <div class="metrics-grid">
-      <div class="metric-card"><div class="metric-label">Accuracy</div><div class="metric-val" id="rAcc">—</div></div>
-      <div class="metric-card"><div class="metric-label">Speed (WPM)</div><div class="metric-val" id="rWpm">—</div></div>
-      <div class="metric-card"><div class="metric-label">Words read</div><div class="metric-val" id="rWords">0</div></div>
-      <div class="metric-card"><div class="metric-label">Scene</div><div class="metric-val" id="rSceneNum">1</div></div>
-    </div>
-    <div class="pbar-wrap"><div class="pbar" id="rProgressBar" style="width:0%"></div></div>
-    <div id="readerContent"></div>
-    <div id="readerFinished" style="display:none"></div>
+    <div class="pbar-wrap"><div class="pbar" id="rPbar" style="width:0%"></div></div>
+    <div class="reader-wrap" id="readerWrap"></div>
+    <div id="readerDone" style="display:none"></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     JAVASCRIPT
-═══════════════════════════════════════════════════════ -->
 <script>
-
-// ─── DATA ─────────────────────────────────────────────
-
-const STUDENTS = [
-  {name:'Arjun Kumar',  init:'AK', av:'av-blue',   level:'Fluent',     acc:84, wpm:98,  sessions:12, done:5},
-  {name:'Meera Singh',  init:'MS', av:'av-teal',   level:'Advanced',   acc:94, wpm:130, sessions:15, done:8},
-  {name:'Ravi Nair',    init:'RN', av:'av-amber',  level:'Developing', acc:61, wpm:58,  sessions:7,  done:3},
-  {name:'Priya Patel',  init:'PP', av:'av-purple', level:'Beginner',   acc:48, wpm:38,  sessions:4,  done:1},
-  {name:'Sahil Khan',   init:'SK', av:'av-blue',   level:'Developing', acc:70, wpm:72,  sessions:9,  done:4},
-  {name:'Ananya Roy',   init:'AR', av:'av-teal',   level:'Fluent',     acc:88, wpm:105, sessions:11, done:6},
-  {name:'Dev Sharma',   init:'DS', av:'av-amber',  level:'Beginner',   acc:52, wpm:44,  sessions:5,  done:2},
-  {name:'Kavya Iyer',   init:'KI', av:'av-purple', level:'Advanced',   acc:96, wpm:138, sessions:18, done:9},
+// ══════════ DATA ══════════════════════════════════════════
+const SD = [
+  {name:'Arjun Kumar', init:'AK',av:'av-blue',  level:'Fluent',    acc:84,wpm:98, sessions:12,done:5},
+  {name:'Meera Singh', init:'MS',av:'av-teal',  level:'Advanced',  acc:94,wpm:130,sessions:15,done:8},
+  {name:'Ravi Nair',   init:'RN',av:'av-amber', level:'Developing',acc:61,wpm:58, sessions:7, done:3},
+  {name:'Priya Patel', init:'PP',av:'av-purple',level:'Beginner',  acc:48,wpm:38, sessions:4, done:1},
+  {name:'Sahil Khan',  init:'SK',av:'av-blue',  level:'Developing',acc:70,wpm:72, sessions:9, done:4},
+  {name:'Ananya Roy',  init:'AR',av:'av-teal',  level:'Fluent',    acc:88,wpm:105,sessions:11,done:6},
+  {name:'Dev Sharma',  init:'DS',av:'av-amber', level:'Beginner',  acc:52,wpm:44, sessions:5, done:2},
+  {name:'Kavya Iyer',  init:'KI',av:'av-purple',level:'Advanced',  acc:96,wpm:138,sessions:18,done:9},
 ];
-
-const STUDENT_PROFILES = {
-  Arjun: { init:'AK', av:'av-blue',   accHistory:[72,76,80,84], wpmHistory:[78,85,92,98], level:'Fluent',     streak:4, done:5 },
-  Meera: { init:'MS', av:'av-teal',   accHistory:[85,88,91,94], wpmHistory:[110,118,124,130], level:'Advanced', streak:7, done:8 },
-  Ravi:  { init:'RN', av:'av-amber',  accHistory:[50,54,58,61], wpmHistory:[40,48,53,58], level:'Developing', streak:2, done:3 },
+const PROF = {
+  Arjun:{init:'AK',av:'av-blue', accH:[72,76,80,84],wpmH:[78,85,92,98], level:'Fluent',   streak:4,done:5},
+  Meera:{init:'MS',av:'av-teal', accH:[85,88,91,94],wpmH:[110,118,124,130],level:'Advanced',streak:7,done:8},
+  Ravi: {init:'RN',av:'av-amber',accH:[50,54,58,61],wpmH:[40,48,53,58], level:'Developing',streak:2,done:3},
 };
-
+const HIST = {
+  Arjun:[{t:'Monsoon Magic',acc:92,wpm:112,d:'Today'},{t:'The Tunnel',acc:84,wpm:98,d:'Yesterday'},{t:'The Lost Kite',acc:79,wpm:90,d:'2 days ago'}],
+  Meera:[{t:'Journey to the Deep Sea',acc:96,wpm:138,d:'Today'},{t:'The Tunnel',acc:94,wpm:132,d:'Yesterday'}],
+  Ravi: [{t:'The Brave Little Firefly',acc:63,wpm:60,d:'Today'},{t:'Monsoon Magic',acc:58,wpm:55,d:'2 days ago'}],
+};
 const STORIES = [
-  { id:'tunnel',   title:'The Tunnel',         subject:'English', diff:'Medium', emoji:'🌿', bg:'#C8E6A0', desc:'A boy explores a jungle railway tunnel and befriends its watchman.' },
-  { id:'water',    title:'The Water Cycle',    subject:'Science', diff:'Easy',   emoji:'💧', bg:'#B5D4F4', desc:'How water evaporates, condenses and falls back as rain.' },
-  { id:'monsoon',  title:'Monsoon Magic',      subject:'English', diff:'Easy',   emoji:'🌧️', bg:'#9FE1CB', desc:'A village child experiences the joy of the first monsoon rains.' },
-  { id:'desert',   title:'The Desert Fox',     subject:'EVS',     diff:'Easy',   emoji:'🦊', bg:'#F5C4B3', desc:'A young fox learns to survive in the scorching Thar Desert.' },
-  { id:'ashoka',   title:"Ashoka's Empire",   subject:'History', diff:'Medium', emoji:'🏛️', bg:'#FAC775', desc:'The rise of Emperor Ashoka and his message of peace and dharma.' },
-  { id:'solar',    title:'The Solar System',   subject:'Science', diff:'Hard',   emoji:'🪐', bg:'#CECBF6', desc:'A journey through the eight planets, moons, and the vast cosmos.' },
+  {id:'tunnel',  title:'The Tunnel',               subject:'English',diff:'Medium',emoji:'🌿',bg:'#C8E6A0',desc:'A boy and a watchman share stories by a jungle railway.'},
+  {id:'kite',    title:'The Lost Kite',             subject:'English',diff:'Easy',  emoji:'🪁',bg:'#B5D4F4',desc:'Aryan searches his neighbourhood for his beloved red kite.'},
+  {id:'firefly', title:'The Brave Little Firefly',  subject:'English',diff:'Easy',  emoji:'✨',bg:'#FAEEDA',desc:'A tiny firefly lights up an entire dark forest with courage.'},
+  {id:'monsoon', title:'Monsoon Magic',             subject:'English',diff:'Easy',  emoji:'🌧️',bg:'#9FE1CB',desc:'The joy of the first monsoon rains in a small village.'},
+  {id:'deepsea', title:'Journey to the Deep Sea',   subject:'Science',diff:'Medium',emoji:'🐋',bg:'#CECBF6',desc:'Dive into ocean depths and meet creatures of the abyss.'},
+  {id:'water',   title:'The Water Cycle',           subject:'Science',diff:'Easy',  emoji:'💧',bg:'#E6F1FB',desc:'How water travels from ocean to cloud to rain and back.'},
+  {id:'desert',  title:'The Desert Fox',            subject:'EVS',    diff:'Easy',  emoji:'🦊',bg:'#F5C4B3',desc:'A young fox learns to survive the scorching Thar Desert.'},
+  {id:'ashoka',  title:"Ashoka's Message",          subject:'History',diff:'Medium',emoji:'🏛️',bg:'#FAC775',desc:'Ashoka gives up war and spreads a message of peace.'},
 ];
 
-const STORY_CONTENT = {
-  tunnel: [
-    { text: "It was almost noon, and the jungle was very still, very silent. Heat waves shimmered along the railway embankment where it cut a path through the tall evergreen trees.", emoji:'🌿', bg:'#C8E6A0' },
-    { text: "Suraj stood near the cutting, waiting for the midday train. He was waiting so that he could watch the steam engine come roaring out of the tunnel.", emoji:'🧒', bg:'#d4ebc0' },
-    { text: "The steam engine shot out of the tunnel, snorting and puffing like some green, black, and gold dragon. Showering sparks left and right, it roared a challenge to the jungle.", emoji:'🚂', bg:'#d6e8d0' },
-    { text: "Suraj began walking into the tunnel. When he had gone about twenty yards, it became pitch dark. The walls were damp and sticky. A bat flew past.", emoji:'🕳️', bg:'#2a2a3e' },
-    { text: "Coming straight from the darkness into the light, Suraj was dazzled. He looked up at the hillside and saw a flash of orange and gold — a long swishing tail between the trees.", emoji:'🐆', bg:'#c8e6a0' },
-    { text: "About fifteen metres from the tunnel stood the watchman's hut. Marigolds grew in front, and at the back there was a small vegetable patch. It was the watchman's duty to inspect the tunnel every day.", emoji:'🏡', bg:'#e8f0d8' },
-    { text: "Welcome, welcome. I don't often have visitors. Sit down and tell me why you were inspecting my tunnel. You could come back tonight and watch the night mail come through.", emoji:'👴', bg:'#e5f0d5' },
-  ],
-  water: [
-    { text: "The sun heats up water in rivers, lakes, and oceans, turning it slowly into water vapour. This invisible process is called evaporation, and it happens all around us every day.", emoji:'☀️', bg:'#E6F1FB' },
-    { text: "As water vapour rises high into the sky, it cools down and turns back into tiny water droplets. These droplets gather together to form the clouds we see floating above.", emoji:'☁️', bg:'#B5D4F4' },
-    { text: "When clouds collect too many water droplets, the water falls back to Earth as rain, snow, or hail. Scientists call this process precipitation.", emoji:'🌧️', bg:'#85B7EB' },
-    { text: "Rainwater flows over the land into rivers and streams, or soaks deep into the ground to become groundwater. Plants absorb it through their roots to grow and survive.", emoji:'🌱', bg:'#c8e6a0' },
-    { text: "The water cycle never stops. The same water has been cycling around our planet for billions of years. The water you drink today may once have been drunk by a dinosaur!", emoji:'🔄', bg:'#E1F5EE' },
-  ],
-  monsoon: [
-    { text: "For weeks, the sky had been white and heavy with heat. Then one afternoon, a cool wind swept through the village, rattling the leaves of the old neem trees.", emoji:'💨', bg:'#E1F5EE' },
-    { text: "The first drop hit the dusty ground with a loud smack. Then another. Then a thousand drops at once, and the whole village burst into laughter and song.", emoji:'💦', bg:'#9FE1CB' },
-    { text: "Rani ran outside with her arms outstretched, face turned up to the sky. The rain smelled like the earth waking up after a long, long sleep.", emoji:'🌧️', bg:'#5DCAA5' },
-    { text: "The frogs came out from nowhere, croaking joyfully in the puddles. The peacock on the temple roof spread his magnificent tail and danced in the rain.", emoji:'🦚', bg:'#c8e6a0' },
-    { text: "That night, falling asleep to the steady sound of rain on the roof, Rani smiled. The monsoon had come at last. The fields would be green again.", emoji:'🌿', bg:'#E1F5EE' },
-  ],
-  desert: [
-    { text: "In the golden sands of the Thar Desert, a small fox kit took her very first steps outside the burrow. The sun was already blazing, even though it was only early morning.", emoji:'🦊', bg:'#FAEEDA' },
-    { text: "The desert fox had large, pointed ears — much bigger than those of a city fox. These helped her stay cool by letting the body heat escape into the dry desert air.", emoji:'👂', bg:'#FAC775' },
-    { text: "At night, the desert became cool and full of life. The fox hunted lizards and insects under the bright moonlight, her soft padded feet completely silent on the warm sand.", emoji:'🌙', bg:'#1a1200' },
-    { text: "By morning she was safely back in her underground burrow. In the Thar Desert, every single creature has found its own clever way to survive the scorching heat of the day.", emoji:'🏜️', bg:'#F5C4B3' },
-  ],
+// ══════════ STORY LINES (call & response) ════════════════
+// speaker:'user' = student reads aloud + mic tracks
+// speaker:'app'  = TTS reads aloud automatically
+const LINES = {
+tunnel:[
+  {s:'user',e:'🌿',bg:'#C8E6A0',t:"It was almost noon, and the jungle was very still, very silent."},
+  {s:'app', e:'☀️',bg:'#d4ebc0',t:"Heat waves shimmered along the railway embankment where it cut a path through the tall evergreen trees."},
+  {s:'user',e:'🧒',bg:'#C8E6A0',t:"Suraj stood near the cutting, waiting for the midday train. He was not catching it — he wanted to watch."},
+  {s:'app', e:'🔊',bg:'#d4ebc0',t:"He heard, in the distance, the shrill whistle of the engine. A sound like distant thunder issued from the tunnel."},
+  {s:'user',e:'🚂',bg:'#C8E6A0',t:"The steam engine shot out of the tunnel, snorting and puffing like a green, black, and gold dragon."},
+  {s:'app', e:'✨',bg:'#d4ebc0',t:"Showering sparks left and right, it roared a challenge to the jungle. Then it was gone, leaving only smoke."},
+  {s:'user',e:'🕳️',bg:'#2a2a3e',t:"Suraj walked into the tunnel. When he had gone about twenty yards, it became pitch dark."},
+  {s:'app', e:'🦇',bg:'#1a1a2e',t:"The walls were damp and sticky. A bat flew past. A lizard scuttled between the railway lines."},
+  {s:'user',e:'🐆',bg:'#C8E6A0',t:"Coming into the light, he saw a flash of orange and gold — a long swishing tail between the trees."},
+  {s:'app', e:'🏡',bg:'#e8f0d8',t:"About fifteen metres from the tunnel stood the watchman's hut, with bright marigolds growing in front."},
+  {s:'user',e:'👴',bg:'#e5f0d5',t:"Welcome, welcome. I don't often have visitors. Sit down — it is truly my tunnel. I have only lent it to the Government."},
+  {s:'app', e:'🌙',bg:'#0d1b3e',t:"There is one train during the day, and one during the night. Come back tonight and watch the night mail come through."},
+],
+kite:[
+  {s:'user',e:'🪁',bg:'#B5D4F4',t:"Aryan's red kite had broken free from its string and sailed away over the rooftops."},
+  {s:'app', e:'😢',bg:'#dceefb',t:"He had made that kite himself — every fold, every tail, every careful knot — and now it was gone."},
+  {s:'user',e:'🏃',bg:'#B5D4F4',t:"He ran down the street, eyes fixed on the red speck growing smaller in the wide blue sky."},
+  {s:'app', e:'🌳',bg:'#dceefb',t:"The kite dipped, swooped, and finally tangled itself high in the branches of the old banyan tree by the temple."},
+  {s:'user',e:'👦',bg:'#B5D4F4',t:"Aryan stopped beneath the tree, staring up helplessly. The kite was far too high to reach."},
+  {s:'app', e:'👴',bg:'#dceefb',t:"An old man sitting on the temple steps smiled warmly. That tree catches one kite every week, he said."},
+  {s:'user',e:'🙏',bg:'#B5D4F4',t:"Aryan asked everyone he passed — the chai vendor, the flower seller, the school watchman."},
+  {s:'app', e:'🌸',bg:'#dceefb',t:"Nobody could help, but everyone smiled. A lost kite, they said, always finds its way to someone who needs it."},
+  {s:'user',e:'💨',bg:'#B5D4F4',t:"That evening the wind shifted. Slowly, the kite untangled itself from the branches."},
+  {s:'app', e:'🪁',bg:'#dceefb',t:"It floated gently down and landed right at Aryan's feet, as if it had come home on its own."},
+  {s:'user',e:'😄',bg:'#B5D4F4',t:"Aryan laughed and held the kite close. Some things, he decided, are worth waiting for."},
+  {s:'app', e:'🌅',bg:'#dceefb',t:"The next day he flew it again — higher than ever, with a stronger string and an even bigger smile."},
+],
+firefly:[
+  {s:'user',e:'🌑',bg:'#1a1200',t:"Deep in the forest, when the moon hid behind the clouds, everything became completely dark."},
+  {s:'app', e:'😨',bg:'#2a2010',t:"The animals huddled together, afraid to move. Even the tall trees seemed to shiver in the darkness."},
+  {s:'user',e:'✨',bg:'#FAEEDA',t:"But one tiny firefly was not afraid. She opened her wings and let her little light shine."},
+  {s:'app', e:'💡',bg:'#fdf0d5',t:"Her glow was small — just a flicker — but in total darkness, even a flicker can change everything."},
+  {s:'user',e:'🐿️',bg:'#FAEEDA',t:"The squirrel saw her light and felt brave enough to look around. The rabbit uncurled from its hiding place."},
+  {s:'app', e:'🦉',bg:'#fdf0d5',t:"The owl ruffled his feathers and let out a warm, deep hoot that echoed through the dark trees."},
+  {s:'user',e:'✨',bg:'#FAEEDA',t:"One by one, more fireflies woke up. Each one added their own small light to the forest night."},
+  {s:'app', e:'🌟',bg:'#fdf0d5',t:"Soon the entire forest was glowing — hundreds of soft lights twinkling like stars among the trees."},
+  {s:'user',e:'🦋',bg:'#FAEEDA',t:"The butterflies began to dance. The crickets began to sing. The forest was alive again."},
+  {s:'app', e:'💛',bg:'#fdf0d5',t:"All because one small firefly was brave enough to shine when everything around her was dark."},
+],
+monsoon:[
+  {s:'user',e:'☀️',bg:'#E1F5EE',t:"For weeks the sky had been white and heavy. The earth was dry and cracked with thirst."},
+  {s:'app', e:'💨',bg:'#c8f0e4',t:"Then one afternoon, a cool wind swept through the village, rattling the leaves of the old neem trees."},
+  {s:'user',e:'🌧️',bg:'#E1F5EE',t:"The first drop hit the dusty ground with a loud smack. Then another. Then a thousand drops at once."},
+  {s:'app', e:'💃',bg:'#c8f0e4',t:"Rani ran outside with her arms wide open, face turned up to the sky, laughing into the falling rain."},
+  {s:'user',e:'🌍',bg:'#E1F5EE',t:"The rain smelled like the earth waking up after a long, long sleep."},
+  {s:'app', e:'🐸',bg:'#c8f0e4',t:"Frogs appeared from nowhere, croaking joyfully in the puddles that formed within minutes."},
+  {s:'user',e:'🦚',bg:'#E1F5EE',t:"The peacock on the temple roof spread his magnificent tail and danced in the falling rain."},
+  {s:'app', e:'🌾',bg:'#c8f0e4',t:"In the fields, the farmers raised their hands to the sky, tears mixing with the raindrops on their faces."},
+  {s:'user',e:'🌿',bg:'#E1F5EE',t:"By evening the whole village was green, as if someone had painted it fresh overnight."},
+  {s:'app', e:'⭐',bg:'#c8f0e4',t:"That night, falling asleep to the steady sound of rain on the roof, Rani smiled. The monsoon had come."},
+],
+deepsea:[
+  {s:'user',e:'🌊',bg:'#CECBF6',t:"Below the sparkling surface of the ocean lies a world most humans have never seen."},
+  {s:'app', e:'🐠',bg:'#dddaf8',t:"At two hundred metres deep, sunlight fades to a dim blue glow, and strange creatures begin to appear."},
+  {s:'user',e:'🦑',bg:'#CECBF6',t:"Giant squid drift through the darkness, their enormous eyes searching for prey in the deep."},
+  {s:'app', e:'💡',bg:'#dddaf8',t:"Many deep-sea creatures make their own light — called bioluminescence — to attract food in the darkness."},
+  {s:'user',e:'🐟',bg:'#CECBF6',t:"The anglerfish dangles a glowing lure above its head like a lantern in the blackness."},
+  {s:'app', e:'🌋',bg:'#dddaf8',t:"Hydrothermal vents on the ocean floor shoot boiling water into the sea, supporting entire ecosystems."},
+  {s:'user',e:'🦐',bg:'#CECBF6',t:"Even at the very bottom, tiny shrimp and strange worms survive, feeding on marine snow drifting from above."},
+  {s:'app', e:'🐋',bg:'#dddaf8',t:"The blue whale's deep, rumbling song travels thousands of kilometres through the ocean."},
+  {s:'user',e:'🔬',bg:'#CECBF6',t:"Scientists estimate that over eighty percent of the ocean remains completely unexplored."},
+  {s:'app', e:'🚀',bg:'#dddaf8',t:"We know more about the surface of the moon than we do about the deepest parts of our own ocean."},
+],
+water:[
+  {s:'user',e:'☀️',bg:'#E6F1FB',t:"Every day the sun heats the surface of oceans, rivers, and lakes all around the world."},
+  {s:'app', e:'💨',bg:'#cee4f8',t:"This heat turns liquid water into invisible water vapour, which rises slowly up into the sky."},
+  {s:'user',e:'🌡️',bg:'#E6F1FB',t:"As the vapour rises higher and higher, the air around it gets cooler and cooler."},
+  {s:'app', e:'☁️',bg:'#cee4f8',t:"The vapour then condenses into millions of tiny water droplets, which cluster to form clouds."},
+  {s:'user',e:'🌧️',bg:'#E6F1FB',t:"When the clouds grow heavy, water falls back to Earth as rain, snow, sleet, or hail."},
+  {s:'app', e:'🌱',bg:'#cee4f8',t:"Plants absorb rainwater through their roots. Rivers carry it to the sea. Some soaks into the ground."},
+  {s:'user',e:'🔄',bg:'#E6F1FB',t:"Then the sun heats it all over again, and the whole cycle begins once more — endlessly."},
+  {s:'app', e:'🦕',bg:'#cee4f8',t:"This cycle has been running for four billion years. The water you drink today may once have been swallowed by a dinosaur."},
+],
+desert:[
+  {s:'user',e:'🦊',bg:'#FAEEDA',t:"In the golden sands of the Thar Desert, a fox kit took her very first steps outside the burrow."},
+  {s:'app', e:'☀️',bg:'#fdf0d5',t:"The sun was already blazing. By midday, the sand would be hot enough to burn bare feet."},
+  {s:'user',e:'👂',bg:'#FAEEDA',t:"The desert fox had enormous ears — much bigger than those of any city fox you have ever seen."},
+  {s:'app', e:'🌡️',bg:'#fdf0d5',t:"Those great ears act like radiators, releasing body heat into the dry air and keeping her perfectly cool."},
+  {s:'user',e:'🦎',bg:'#FAEEDA',t:"During the scorching afternoon, she rested safely deep in her cool underground burrow."},
+  {s:'app', e:'🌙',bg:'#1a1200',t:"At night the desert cooled and came alive. She hunted lizards and insects under the bright full moon."},
+  {s:'user',e:'💧',bg:'#FAEEDA',t:"She rarely needed to drink water — she got most of it from the food she ate each night."},
+  {s:'app', e:'🌅',bg:'#fdf0d5',t:"At dawn the fox returned to her burrow as the sky turned gold and pink over the silent dunes."},
+],
+ashoka:[
+  {s:'user',e:'⚔️',bg:'#FAC775',t:"Two thousand three hundred years ago, a powerful king named Ashoka ruled over most of India."},
+  {s:'app', e:'🏛️',bg:'#fde9b8',t:"He commanded a vast army and had conquered many kingdoms. His name made his enemies tremble with fear."},
+  {s:'user',e:'⚔️',bg:'#FAC775',t:"Then came the Battle of Kalinga, where over a hundred thousand soldiers were killed."},
+  {s:'app', e:'😢',bg:'#fde9b8',t:"Ashoka walked through the battlefield and saw nothing but grief — weeping women, dying men, burning villages."},
+  {s:'user',e:'💔',bg:'#FAC775',t:"He had won the battle. But he felt no joy at all — only deep, overwhelming sorrow."},
+  {s:'app', e:'🕊️',bg:'#fde9b8',t:"That day Ashoka put down his sword and vowed never to fight a war of conquest again."},
+  {s:'user',e:'🌸',bg:'#FAC775',t:"He turned to the teachings of the Buddha — compassion, non-violence, and kindness to all living things."},
+  {s:'app', e:'📜',bg:'#fde9b8',t:"He carved his new laws onto rocks and pillars across his empire so that everyone could read them."},
+  {s:'user',e:'🏥',bg:'#FAC775',t:"He built hospitals for people and for animals. He planted trees along roads to give shade to travellers."},
+  {s:'app', e:'💧',bg:'#fde9b8',t:"He dug wells so that villagers would always have clean water, even in the driest summer months."},
+  {s:'user',e:'🌍',bg:'#FAC775',t:"Ashoka sent messengers as far as Egypt and Greece to spread his message of peace and dharma."},
+  {s:'app', e:'🇮🇳',bg:'#fde9b8',t:"Today his symbol — the Ashoka Chakra — sits at the centre of India's national flag, a reminder of his great vision."},
+],
 };
 
-const HISTORY = {
-  Arjun: [
-    { title:'Monsoon Magic',   acc:92, wpm:112, date:'Today' },
-    { title:'The Tunnel',      acc:84, wpm:98,  date:'Yesterday' },
-    { title:'The Desert Fox',  acc:78, wpm:88,  date:'2 days ago' },
-  ],
-  Meera: [
-    { title:'The Tunnel',      acc:96, wpm:138, date:'Today' },
-    { title:'The Water Cycle', acc:94, wpm:132, date:'Yesterday' },
-    { title:'Monsoon Magic',   acc:92, wpm:128, date:'3 days ago' },
-  ],
-  Ravi: [
-    { title:'The Desert Fox',  acc:61, wpm:58,  date:'Today' },
-    { title:'Monsoon Magic',   acc:58, wpm:54,  date:'2 days ago' },
-  ],
-};
+// ══════════ STATE ═════════════════════════════════════════
+let user=null, story=null;
+let lineIdx=0, wordIdx=0, correct=0, errors=0, totalWords=0;
+let sessionStart=null;
+let recognizing=false, recognition=null;
+let speaking=false;
+const synth=window.speechSynthesis;
 
-// ─── STATE ────────────────────────────────────────────
-let currentUser = null;
-let currentStory = null;
-let rScene = 0, rWordIdx = 0, rCorrect = 0, rErrors = 0, rTotalWords = 0;
-let rSessionStart = null, rSceneStart = null;
-let recognizing = false, recognition = null;
+// ══════════ NAVIGATION ═══════════════════════════════════
+function showScr(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function goLogin(){stopListen();stopSpeak();showScr('scrLogin');}
 
-// ─── NAVIGATION ───────────────────────────────────────
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
-}
-function goLogin() { stopListening(); showScreen('screenLogin'); }
-
-function loginAs(role, name) {
-  currentUser = { role, name };
-  if (role === 'teacher') {
-    showScreen('screenTeacher');
-    renderAttentionList();
-    renderStudentList('', '');
-    renderLibrary('', '');
-  } else {
-    const p = STUDENT_PROFILES[name] || STUDENT_PROFILES.Arjun;
-    document.getElementById('sGreeting').textContent = 'Hello, ' + name + '! 👋';
-    const av = document.getElementById('sAvatar');
-    av.textContent = p.init;
-    av.className = 'avatar ' + p.av;
-    showScreen('screenStudent');
-    renderStudentStories('');
-    renderStudentProgress();
+function login(role,name){
+  user={role,name};
+  if(role==='teacher'){showScr('scrTeacher');renderAtt();renderSt('','');renderLib('','');}
+  else{
+    const p=PROF[name]||PROF.Arjun;
+    document.getElementById('sGreet').textContent='Hello, '+name+' 👋';
+    const av=document.getElementById('sAv');av.textContent=p.init;av.className='avatar '+p.av;
+    showScr('scrStudent');renderSStories('');renderProg();
   }
 }
 
-// ─── TEACHER TABS ─────────────────────────────────────
-function tTab(el, id) {
-  el.parentNode.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  ['t-overview','t-students','t-library','t-assign'].forEach(x => {
-    const d = document.getElementById(x);
-    if (d) d.style.display = (x === id) ? 'block' : 'none';
-  });
+function tTab(el,id){
+  el.parentNode.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  ['ov','st','li','as'].forEach(x=>{const d=document.getElementById('t-'+x);if(d)d.style.display=x===id?'block':'none';});
 }
-function sTab(el, id) {
-  el.parentNode.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  ['s-home','s-progress'].forEach(x => {
-    const d = document.getElementById(x);
-    if (d) d.style.display = (x === id) ? 'block' : 'none';
-  });
+function sTab(el,id){
+  el.parentNode.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  ['ho','pr'].forEach(x=>{const d=document.getElementById('s-'+x);if(d)d.style.display=x===id?'block':'none';});
 }
 
-// ─── TEACHER RENDERS ──────────────────────────────────
-function renderAttentionList() {
-  const list = document.getElementById('t-attention');
-  const needs = STUDENTS.filter(s => s.acc < 65 || s.wpm < 55);
-  if (!needs.length) { list.innerHTML = '<div class="attention-empty">✓ All students are on track!</div>'; return; }
-  list.innerHTML = needs.map(s => `
-    <div class="student-row">
-      <div class="avatar ${s.av}" style="width:32px;height:32px;font-size:11px">${s.init}</div>
-      <div style="flex:1"><div class="student-name">${s.name}</div><div class="student-sub">Accuracy: ${s.acc}% · Speed: ${s.wpm} wpm · ${s.sessions} sessions</div></div>
-      <span class="level-badge lv-beg">${s.level}</span>
-    </div>`).join('');
+// ══════════ MIC PERMISSION ═══════════════════════════════
+async function askMic(){
+  const btn=document.getElementById('micBtn'),st=document.getElementById('micSt');
+  btn.textContent='Requesting…';
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({audio:true});
+    s.getTracks().forEach(t=>t.stop());
+    btn.textContent='✓ Microphone allowed!';btn.style.background='#0F6E56';
+    st.style.color='#0F6E56';st.textContent='Great — now sign in below.';
+    document.getElementById('micBox').style.borderColor='#1D9E75';
+  }catch(e){
+    btn.style.background='#A32D2D';btn.textContent='Blocked — try again';
+    st.style.color='var(--red)';
+    st.textContent=e.name==='NotAllowedError'?'Go to browser settings → Microphone → Allow this site → Refresh.':'Error: '+e.message;
+  }
 }
 
-function renderStudentList(search, level) {
-  const list = document.getElementById('studentList');
-  let data = STUDENTS.filter(s =>
-    (!search || s.name.toLowerCase().includes(search.toLowerCase())) &&
-    (!level || s.level === level)
-  );
-  list.innerHTML = data.map(s => {
-    const barColor = s.acc >= 80 ? '#1D9E75' : s.acc >= 65 ? '#EF9F27' : '#E24B4A';
-    const lvlCls = s.level === 'Advanced' ? 'lv-adv' : s.level === 'Fluent' ? 'lv-flu' : s.level === 'Developing' ? 'lv-dev' : 'lv-beg';
-    return `
-      <div class="student-row">
-        <div class="avatar ${s.av}" style="width:32px;height:32px;font-size:11px">${s.init}</div>
-        <div style="flex:1"><div class="student-name">${s.name}</div><div class="student-sub">${s.sessions} sessions · ${s.done} stories done</div></div>
-        <div style="text-align:right;min-width:90px">
-          <div style="font-size:10px;color:var(--text2);margin-bottom:2px">Accuracy</div>
-          <div class="acc-bar-wrap"><div class="acc-bar" style="width:${s.acc}%;background:${barColor}"></div></div>
-          <div style="font-size:10px;color:var(--text2);margin-top:1px">${s.acc}%</div>
+// ══════════ TEACHER ═══════════════════════════════════════
+function renderAtt(){
+  const el=document.getElementById('t-att');
+  const needs=SD.filter(s=>s.acc<65||s.wpm<55);
+  const lc=l=>l==='Advanced'?'lv-adv':l==='Fluent'?'lv-flu':l==='Developing'?'lv-dev':'lv-beg';
+  el.innerHTML=needs.length?needs.map(s=>`<div class="srow"><div class="avatar ${s.av}" style="width:30px;height:30px;font-size:11px">${s.init}</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${s.name}</div><div style="font-size:11px;color:var(--text2)">${s.acc}% · ${s.wpm} wpm</div></div><span class="lbadge lv-beg">${s.level}</span></div>`).join(''):'<div style="font-size:13px;color:var(--text2);padding:8px 0">✓ All students on track!</div>';
+}
+function renderSt(search,level){
+  const lc=l=>l==='Advanced'?'lv-adv':l==='Fluent'?'lv-flu':l==='Developing'?'lv-dev':'lv-beg';
+  const data=SD.filter(s=>(!search||s.name.toLowerCase().includes(search.toLowerCase()))&&(!level||s.level===level));
+  document.getElementById('stList').innerHTML=data.map(s=>`<div class="srow"><div class="avatar ${s.av}" style="width:30px;height:30px;font-size:11px">${s.init}</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${s.name}</div><div style="font-size:11px;color:var(--text2)">${s.sessions} sessions</div></div><div style="text-align:right;min-width:76px"><div class="abar"><div class="afill" style="width:${s.acc}%;background:${s.acc>=80?'#1D9E75':s.acc>=65?'#EF9F27':'#E24B4A'}"></div></div><div style="font-size:10px;color:var(--text2);margin-top:1px">${s.acc}%</div></div><span class="lbadge ${lc(s.level)}" style="margin-left:8px">${s.level}</span></div>`).join('');
+}
+function sCardHTML(s,clickable){
+  const dc=s.diff==='Easy'?'tag-easy':s.diff==='Medium'?'tag-med':'tag-hard';
+  const sc='tag-'+s.subject.toLowerCase();
+  const has=!!LINES[s.id];
+  return `<div class="scard" ${clickable&&has?`onclick="startStory('${s.id}')"`:''}  style="${!has&&clickable?'opacity:.55':''}"><div class="sthumb" style="background:${s.bg}">${s.emoji}</div><div class="sinfo"><div class="stitle">${s.title}</div><div class="sdesc">${s.desc}</div><div class="stags"><span class="tag ${sc}">${s.subject}</span><span class="tag ${dc}">${s.diff}</span></div></div></div>`;
+}
+function renderLib(subj,diff){document.getElementById('libGrid').innerHTML=STORIES.filter(s=>(!subj||s.subject===subj)&&(!diff||s.diff===diff)).map(s=>sCardHTML(s,false)).join('');}
+
+// ══════════ STUDENT ═══════════════════════════════════════
+function renderSStories(diff){document.getElementById('sGrid').innerHTML=STORIES.filter(s=>!diff||s.diff===diff).map(s=>sCardHTML(s,true)).join('');}
+function renderProg(){
+  const name=user.name,p=PROF[name]||PROF.Arjun;
+  const acc=p.accH[p.accH.length-1],wpm=p.wpmH[p.wpmH.length-1];
+  const ac=acc>=80?'good':acc>=65?'warn':'bad';
+  document.getElementById('sMet').innerHTML=`<div class="mc"><div class="ml">Accuracy</div><div class="mv ${ac}">${acc}%</div></div><div class="mc"><div class="ml">Speed</div><div class="mv">${wpm} wpm</div></div><div class="mc"><div class="ml">Done</div><div class="mv">${p.done}</div></div><div class="mc"><div class="ml">Streak 🔥</div><div class="mv warn">${p.streak}</div></div>`;
+  const hist=HIST[name]||[];
+  document.getElementById('sHist').innerHTML=hist.map(r=>`<div class="srow" style="justify-content:space-between"><div><div style="font-size:13px;font-weight:600">${r.t}</div><div style="font-size:11px;color:var(--text2)">${r.d}</div></div><div style="text-align:right"><div style="font-size:13px;font-weight:700;color:${r.acc>=80?'var(--green)':'var(--amber)'}">${r.acc}%</div><div style="font-size:11px;color:var(--text2)">${r.wpm} wpm</div></div></div>`).join('')||'<div style="font-size:13px;color:var(--text2);padding:8px 0">No history yet!</div>';
+  document.getElementById('sAcc').innerHTML=`<div style="display:flex;align-items:flex-end;gap:5px;height:55px">${p.accH.map((a,i)=>`<div style="display:flex;flex-direction:column;align-items:center;flex:1"><div style="width:100%;border-radius:3px 3px 0 0;background:${a>=80?'#1D9E75':a>=65?'#EF9F27':'#E24B4A'};height:${a*0.55}px"></div><div style="font-size:9px;color:var(--text2);margin-top:3px;text-align:center">Wk${i+1}<br><b>${a}%</b></div></div>`).join('')}</div>`;
+}
+
+// ══════════ READER ════════════════════════════════════════
+function startStory(id){
+  const s=STORIES.find(x=>x.id===id),lines=LINES[id];
+  if(!s||!lines){alert('Coming soon!');return;}
+  story={s,lines};lineIdx=0;wordIdx=0;correct=0;errors=0;totalWords=0;sessionStart=Date.now();
+  document.getElementById('rTitle').textContent=s.title;
+  document.getElementById('rMeta').textContent=s.subject+' · '+s.diff;
+  document.getElementById('readerDone').style.display='none';
+  document.getElementById('readerWrap').style.display='block';
+  showScr('scrReader');
+  updateMet();
+  buildReader();
+}
+function exitReader(){stopListen();stopSpeak();showScr(user.role==='teacher'?'scrTeacher':'scrStudent');}
+
+function getWords(t){return t.match(/\b[a-zA-Z']+\b/g)||[];}
+function norm(s){return s.toLowerCase().replace(/[^a-z0-9]/g,'');}
+function simScore(a,b){
+  a=norm(a);b=norm(b);
+  if(a===b)return 1;
+  if(a.startsWith(b)||b.startsWith(a))return .85;
+  let m=0;for(const c of a)if(b.includes(c))m++;
+  return m/Math.max(a.length,b.length);
+}
+function getLevel(acc,wpm){
+  if(acc>=92&&wpm>=120)return{label:'Advanced',cls:'lv-adv'};
+  if(acc>=80&&wpm>=90)return{label:'Fluent',cls:'lv-flu'};
+  if(acc>=65&&wpm>=55)return{label:'Developing',cls:'lv-dev'};
+  return{label:'Beginner',cls:'lv-beg'};
+}
+function updateMet(){
+  const tot=correct+errors,acc=tot>0?Math.round(correct/tot*100):null;
+  const el=(Date.now()-(sessionStart||Date.now()))/60000;
+  const wpm=(el>0.05&&totalWords>0)?Math.round(totalWords/el):null;
+  const ma=document.getElementById('rAcc');
+  if(acc!==null){ma.textContent=acc+'%';ma.className='mv '+(acc>=80?'good':acc>=65?'warn':'bad');}
+  if(wpm!==null){document.getElementById('rWpm').textContent=wpm;document.getElementById('rWpmTop').textContent=wpm+' wpm';}
+  document.getElementById('rWords').textContent=totalWords;
+  if(story)document.getElementById('rLine').textContent=(lineIdx+1)+'/'+story.lines.length;
+  if(acc!==null&&wpm!==null){const lv=getLevel(acc,wpm);const b=document.getElementById('rBadge');b.textContent=lv.label;b.className='lbadge '+lv.cls;}
+}
+
+// Build full reader — all lines listed, only active one expanded
+function buildReader(){
+  if(!story)return;
+  const wrap=document.getElementById('readerWrap');
+  const lines=story.lines;
+  document.getElementById('rPbar').style.width=Math.round(lineIdx/lines.length*100)+'%';
+
+  let html='';
+  lines.forEach((line,i)=>{
+    const isActive=i===lineIdx;
+    const isDone=i<lineIdx;
+    const isUser=line.s==='user';
+    const turnCls=isUser?'user-turn':'app-turn';
+    const doneCls=isDone?'line-done':'';
+    const activeCls=isActive?'active-card':'';
+
+    if(isDone){
+      // Collapsed done lines — just show text, no image
+      html+=`<div class="${turnCls} ${doneCls}" id="ln${i}">
+        <div class="line-card ${activeCls}">
+          <div class="line-body" style="padding:10px 14px">
+            <div class="line-speaker">${isUser?'🎤 You':'🔊 App'}</div>
+            <div class="line-text" style="font-size:14px;opacity:.7" id="lt${i}">${line.t}</div>
+          </div>
         </div>
-        <span class="level-badge ${lvlCls}" style="margin-left:12px">${s.level}</span>
       </div>`;
-  }).join('');
-}
-
-function renderLibrary(subj, diff) {
-  const grid = document.getElementById('libGrid');
-  let stories = STORIES.filter(s => (!subj || s.subject === subj) && (!diff || s.diff === diff));
-  grid.innerHTML = stories.map(s => storyCardHTML(s, false)).join('');
-}
-
-function storyCardHTML(s, clickable) {
-  const diffCls = s.diff === 'Easy' ? 'tag-easy' : s.diff === 'Medium' ? 'tag-medium' : 'tag-hard';
-  const subjCls = 'tag-' + s.subject.toLowerCase();
-  const onclick = clickable ? `onclick="startStory('${s.id}')"` : '';
-  const hasContent = !!STORY_CONTENT[s.id];
-  return `
-    <div class="story-card" ${onclick} style="${!hasContent && clickable ? 'opacity:0.6' : ''}">
-      <div class="story-thumb" style="background:${s.bg}">${s.emoji}</div>
-      <div class="story-info">
-        <div class="story-title">${s.title}</div>
-        <div class="story-desc">${s.desc}</div>
-        <div class="story-tags">
-          <span class="tag ${subjCls}">${s.subject}</span>
-          <span class="tag ${diffCls}">${s.diff}</span>
-          ${!hasContent && clickable ? '<span style="font-size:10px;color:var(--text3);margin-left:auto">Coming soon</span>' : ''}
-        </div>
-        ${clickable ? '<div class="mini-progress"><div class="mini-progress-fill" style="width:0%"></div></div>' : ''}
-      </div>
-    </div>`;
-}
-
-// ─── STUDENT RENDERS ──────────────────────────────────
-function renderStudentStories(diff) {
-  const grid = document.getElementById('sStoriesGrid');
-  let stories = STORIES.filter(s => !diff || s.diff === diff);
-  grid.innerHTML = stories.map(s => storyCardHTML(s, true)).join('');
-}
-
-function renderStudentProgress() {
-  const name = currentUser.name;
-  const p = STUDENT_PROFILES[name] || STUDENT_PROFILES.Arjun;
-  const acc = p.accHistory[p.accHistory.length - 1];
-  const wpm = p.wpmHistory[p.wpmHistory.length - 1];
-  const accColor = acc >= 80 ? 'good' : acc >= 65 ? 'warn' : 'bad';
-  const lvlCls = p.level === 'Advanced' ? 'lv-adv' : p.level === 'Fluent' ? 'lv-flu' : p.level === 'Developing' ? 'lv-dev' : 'lv-beg';
-
-  document.getElementById('sMetrics').innerHTML = `
-    <div class="metric-card"><div class="metric-label">Accuracy</div><div class="metric-val ${accColor}">${acc}%</div></div>
-    <div class="metric-card"><div class="metric-label">Speed (WPM)</div><div class="metric-val">${wpm}</div></div>
-    <div class="metric-card"><div class="metric-label">Stories done</div><div class="metric-val">${p.done}</div></div>
-    <div class="metric-card"><div class="metric-label">Day streak 🔥</div><div class="metric-val warn">${p.streak}</div></div>`;
-
-  const hist = HISTORY[name] || [];
-  document.getElementById('sHistory').innerHTML = hist.map(r => `
-    <div class="progress-hist-row">
-      <div><div class="progress-hist-title">${r.title}</div><div class="progress-hist-sub">${r.date}</div></div>
-      <div style="text-align:right"><div style="font-size:13px;font-weight:700;color:${r.acc>=80?'var(--green)':'var(--amber)'}">${r.acc}%</div><div style="font-size:11px;color:var(--text2)">${r.wpm} wpm</div></div>
-    </div>`).join('') || '<div class="attention-empty">No history yet — start reading!</div>';
-
-  document.getElementById('sAccTrend').innerHTML = `
-    <div class="acc-trend" style="display:flex;align-items:flex-end;gap:5px;height:55px;width:100%">
-      ${p.accHistory.map((a,i) => `
-        <div class="acc-trend-col" style="display:flex;flex-direction:column;align-items:center;flex:1">
-          <div class="acc-trend-bar" style="width:100%;height:${a*0.55}px;background:${a>=80?'#1D9E75':a>=65?'#EF9F27':'#E24B4A'};border-radius:3px 3px 0 0"></div>
-          <div class="acc-trend-lbl" style="font-size:9px;color:var(--text2);margin-top:3px;text-align:center">Wk ${i+1}<br><b>${a}%</b></div>
-        </div>`).join('')}
-    </div>`;
-}
-
-// ─── STORY READER ─────────────────────────────────────
-function startStory(id) {
-  const story = STORIES.find(s => s.id === id);
-  const content = STORY_CONTENT[id];
-  if (!story) return;
-  if (!content) { alert('This story is coming soon!'); return; }
-
-  currentStory = { story, content };
-  rScene = 0; rWordIdx = 0; rCorrect = 0; rErrors = 0; rTotalWords = 0;
-  rSessionStart = Date.now(); rSceneStart = null;
-
-  document.getElementById('readerTitle').textContent = story.title;
-  document.getElementById('readerMeta').textContent = story.subject + ' · ' + story.diff;
-  document.getElementById('readerFinished').style.display = 'none';
-  document.getElementById('readerContent').style.display = 'block';
-
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  document.getElementById('noSupportMsg').style.display = SR ? 'none' : 'block';
-
-  showScreen('screenReader');
-  updateReaderMetrics();
-  renderReaderScene();
-}
-
-function exitReader() {
-  stopListening();
-  if (currentUser.role === 'teacher') showScreen('screenTeacher');
-  else showScreen('screenStudent');
-}
-
-function getWords(text) { return text.match(/\b[a-zA-Z']+\b/g) || []; }
-function normalize(s) { return s.toLowerCase().replace(/[^a-z0-9]/g, ''); }
-function wordSimilarity(a, b) {
-  a = normalize(a); b = normalize(b);
-  if (a === b) return 1;
-  if (a.startsWith(b) || b.startsWith(a)) return 0.85;
-  if (a.includes(b) || b.includes(a)) return 0.75;
-  let matches = 0;
-  for (let c of a) if (b.includes(c)) matches++;
-  return matches / Math.max(a.length, b.length);
-}
-function getLevelInfo(acc, wpm) {
-  if (acc >= 92 && wpm >= 120) return { label: 'Advanced', cls: 'lv-adv' };
-  if (acc >= 80 && wpm >= 90)  return { label: 'Fluent',   cls: 'lv-flu' };
-  if (acc >= 65 && wpm >= 55)  return { label: 'Developing', cls: 'lv-dev' };
-  return { label: 'Beginner', cls: 'lv-beg' };
-}
-
-function updateReaderMetrics() {
-  const total = rCorrect + rErrors;
-  const acc = total > 0 ? Math.round(rCorrect / total * 100) : null;
-  const elapsedMin = (Date.now() - (rSessionStart || Date.now())) / 60000;
-  const wpm = (elapsedMin > 0.05 && rTotalWords > 0) ? Math.round(rTotalWords / elapsedMin) : null;
-
-  const mAcc = document.getElementById('rAcc');
-  if (acc !== null) {
-    mAcc.textContent = acc + '%';
-    mAcc.className = 'metric-val ' + (acc >= 80 ? 'good' : acc >= 65 ? 'warn' : 'bad');
-  }
-  if (wpm !== null) {
-    document.getElementById('rWpm').textContent = wpm;
-    document.getElementById('readerWpmTop').textContent = wpm + ' wpm';
-  }
-  document.getElementById('rWords').textContent = rTotalWords;
-  if (currentStory) document.getElementById('rSceneNum').textContent = (rScene + 1) + '/' + currentStory.content.length;
-
-  if (acc !== null && wpm !== null) {
-    const lvl = getLevelInfo(acc, wpm);
-    const b = document.getElementById('readerBadge');
-    b.textContent = lvl.label;
-    b.className = 'level-badge ' + lvl.cls;
-  }
-}
-
-function renderReaderScene() {
-  if (!currentStory) return;
-  const scenes = currentStory.content;
-  if (rScene >= scenes.length) { showFinished(); return; }
-
-  const sc = scenes[rScene];
-  const words = getWords(sc.text);
-  rWordIdx = 0; rSceneStart = null;
-
-  const progress = Math.round(rScene / scenes.length * 100);
-  document.getElementById('rProgressBar').style.width = progress + '%';
-  document.getElementById('rSceneNum').textContent = (rScene + 1) + '/' + scenes.length;
-
-  // Build highlighted text
-  let htmlText = sc.text;
-  // Replace each word with a placeholder
-  const usedWords = [];
-  htmlText = htmlText.replace(/\b([a-zA-Z']+)\b/g, (match) => {
-    const idx = usedWords.length;
-    usedWords.push(match);
-    return `@@${idx}@@`;
-  });
-  let rendered = '';
-  htmlText.split(/(@@\d+@@)/).forEach(part => {
-    const m = part.match(/@@(\d+)@@/);
-    if (m) rendered += `<span class="word" id="rw${m[1]}" onclick="tapWord(${m[1]})" style="${tapModeActive?'cursor:pointer':''}"> ${usedWords[parseInt(m[1])]}</span>`;
-    else rendered += part;
-  });
-
-  const isDark = sc.bg.startsWith('#1') || sc.bg.startsWith('#0') || sc.bg.startsWith('#2a');
-  const textOnImg = isDark ? '#ffffff' : '#1a1a1a';
-
-  document.getElementById('readerContent').innerHTML = `
-    <div class="card" style="padding:0;overflow:hidden">
-      <div class="scene-image" style="background:${sc.bg};color:${textOnImg}">${sc.emoji}</div>
-      <div class="scene-text-wrap">
-        <div class="scene-counter">Scene ${rScene + 1} of ${scenes.length} — read the text below aloud</div>
-        <div class="scene-text" id="rText" style="text-align:left">${rendered}</div>
-      </div>
-    </div>
-    <div class="transcript-box" id="rTranscript">
-      ${tapModeActive ? '✋ Tap each word in order as you read it aloud' : 'Press <strong>Start reading</strong> and read the sentence above out loud…'}
-    </div>
-    <div class="reader-controls">
-      <button class="btn btn-primary btn-lg" id="rBtn" onclick="toggleListen()" style="flex:1;justify-content:center;min-height:52px;font-size:16px">🎤 Start reading</button>
-      <button class="btn btn-sm" onclick="skipScene()" style="color:var(--text2);min-height:52px;padding:10px 16px">Skip →</button>
-    </div>
-    <div style="margin-top:6px"><span class="status-text" id="rStatus"></span></div>`;
-
-  highlightCurrentWord();
-}
-
-function highlightCurrentWord() {
-  if (!currentStory) return;
-  const words = getWords(currentStory.content[rScene].text);
-  for (let i = 0; i < words.length; i++) {
-    const el = document.getElementById('rw' + i);
-    if (!el) continue;
-    if (i < rWordIdx) el.className = 'word done';
-    else if (i === rWordIdx) el.className = 'word active';
-    else el.className = 'word';
-  }
-}
-
-// ─── SPEECH RECOGNITION ───────────────────────────────
-function toggleListen() {
-  if (tapModeActive) { 
-    const s = document.getElementById('rStatus');
-    if (s) s.textContent = 'Tap mode is ON — tap each word as you read it.';
-    return; 
-  }
-  recognizing ? stopListening() : startListening(); 
-}
-
-function startListening() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    const s = document.getElementById('rStatus');
-    if (s) s.textContent = '⚠️ Speech recognition not available — try Chrome.';
-    return;
-  }
-  if (!rSceneStart) rSceneStart = Date.now();
-  if (!rSessionStart) rSessionStart = Date.now();
-
-  recognition = new SR();
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.lang = 'en-IN'; // Indian English
-
-  recognition.onresult = (e) => {
-    let interim = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) processSpoken(e.results[i][0].transcript);
-      else interim += e.results[i][0].transcript;
-    }
-    const tb = document.getElementById('rTranscript');
-    if (tb) tb.textContent = interim || '…listening…';
-  };
-
-  recognition.onerror = (e) => {
-    if (e.error !== 'no-speech') {
-      const s = document.getElementById('rStatus');
-      if (s) s.textContent = 'Mic error: ' + e.error + '. Check browser mic permissions.';
-    }
-  };
-
-  recognition.onend = () => { if (recognizing) { try { recognition.start(); } catch(ex) {} } };
-
-  recognizing = true;
-  try { recognition.start(); } catch(ex) {}
-
-  const btn = document.getElementById('rBtn');
-  if (btn) btn.innerHTML = '<span class="mic-dot"></span> Listening… (click to stop)';
-  if (btn) btn.className = 'btn btn-listening btn-lg';
-
-  const s = document.getElementById('rStatus');
-  if (s) s.textContent = 'Speak clearly — read the highlighted word';
-  highlightCurrentWord();
-}
-
-function stopListening() {
-  recognizing = false;
-  if (recognition) { try { recognition.stop(); } catch(ex) {} recognition = null; }
-  const btn = document.getElementById('rBtn');
-  if (btn) { btn.innerHTML = '🎤 Start reading'; btn.className = 'btn btn-primary btn-lg'; }
-}
-
-function processSpoken(transcript) {
-  if (!currentStory) return;
-  const words = getWords(currentStory.content[rScene].text);
-  const spoken = transcript.trim().split(/\s+/).filter(Boolean);
-
-  for (const spk of spoken) {
-    if (rWordIdx >= words.length) break;
-    const target = words[rWordIdx];
-    const score = wordSimilarity(spk, target);
-    const el = document.getElementById('rw' + rWordIdx);
-
-    if (score >= 0.65) {
-      if (el) el.className = 'word done';
-      rCorrect++;
-    } else {
-      if (el) el.className = 'word err';
-      rErrors++;
-    }
-    rTotalWords++;
-    rWordIdx++;
-    updateReaderMetrics();
-
-    if (rWordIdx >= words.length) {
-      // Scene complete
-      stopListening();
-      const tb = document.getElementById('rTranscript');
-      if (tb) tb.textContent = '✓ Scene complete!';
-      const s = document.getElementById('rStatus');
-      if (s) {
-        const elapsed = (Date.now() - (rSceneStart || Date.now())) / 60000;
-        const sceneWpm = Math.round(words.length / Math.max(elapsed, 0.01));
-        s.textContent = `Scene done — ${sceneWpm} wpm`;
+    } else if(isActive){
+      // Active line — full with image and word spans if user turn
+      let textHTML=line.t;
+      if(isUser){
+        const words=getWords(line.t);
+        let tmp=line.t;
+        words.forEach((w,wi)=>{tmp=tmp.replace(w,`@@${wi}@@`);});
+        textHTML='';
+        tmp.split(/(@@\d+@@)/).forEach(p=>{
+          const m=p.match(/@@(\d+)@@/);
+          if(m)textHTML+=`<span class="word" id="w${m[1]}">${words[parseInt(m[1])]}</span>`;
+          else textHTML+=p;
+        });
       }
-      setTimeout(() => { rScene++; renderReaderScene(); }, 1400);
+      html+=`<div class="${turnCls}" id="ln${i}">
+        <div class="line-card ${activeCls}">
+          <div class="line-image" style="background:${line.bg}">${line.e}</div>
+          <div class="line-body">
+            <div class="line-speaker">
+              ${isUser?'🎤 Your turn — read this aloud':'🔊 App turn — listen carefully'}
+              <span class="turn-badge ${isUser?'turn-you':'turn-app'}">${isUser?'YOU':'APP'}</span>
+            </div>
+            <div class="line-text" id="lt${i}">${textHTML}</div>
+          </div>
+        </div>
+      </div>`;
+    } else {
+      // Upcoming lines — subtle preview
+      html+=`<div class="${turnCls}" id="ln${i}" style="opacity:.35">
+        <div class="line-card">
+          <div class="line-body" style="padding:8px 14px">
+            <div class="line-speaker" style="font-size:10px">${isUser?'🎤 Your turn':'🔊 App turn'}</div>
+            <div style="font-size:13px;color:var(--text2);font-family:Georgia,serif">${line.t.substring(0,60)}…</div>
+          </div>
+        </div>
+      </div>`;
+    }
+  });
+
+  // Controls
+  html+=`<div class="status-bar" id="sBr" style="margin-top:6px">
+    <div id="sDot"></div>
+    <div class="transcript" id="sTxt">—</div>
+  </div>
+  <div style="display:flex;gap:10px;margin-top:10px">
+    <button class="btn btn-primary btn-xl" id="mainBtn" onclick="handleBtn()" style="flex:1">—</button>
+    <button class="btn btn-sm" onclick="skipLine()" style="min-height:58px;padding:10px 16px">Skip →</button>
+  </div>`;
+
+  wrap.innerHTML=html;
+  setTimeout(()=>activateLine(),100);
+}
+
+function activateLine(){
+  if(!story)return;
+  const lines=story.lines;
+  if(lineIdx>=lines.length){showDone();return;}
+  // Scroll to active line
+  const el=document.getElementById('ln'+lineIdx);
+  if(el)setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),200);
+
+  const line=lines[lineIdx];
+  const isUser=line.s==='user';
+  const btn=document.getElementById('mainBtn');
+  const dot=document.getElementById('sDot');
+  const txt=document.getElementById('sTxt');
+
+  if(isUser){
+    btn.innerHTML=recognizing?'<span class="mic-dot"></span> Listening… tap to stop':'🎤 Tap to start reading';
+    btn.className=recognizing?'btn btn-red btn-xl':'btn btn-primary btn-xl';
+    btn.style.flex='1';
+    dot.innerHTML=recognizing?'<span class="mic-dot"></span>':'';
+    txt.textContent=recognizing?'Read the highlighted word aloud…':'Tap the button and read the green line aloud';
+    if(!recognizing)highlightW();
+  } else {
+    btn.innerHTML=speaking?'<span class="app-dot"></span> Speaking…':'🔊 Tap to hear again';
+    btn.className='btn btn-green btn-xl';
+    dot.innerHTML=speaking?'<span class="app-dot"></span>':'';
+    txt.textContent=speaking?'Listen carefully…':'Tap to replay this line';
+    if(!speaking)setTimeout(()=>speakLine(line.t),300);
+  }
+  document.getElementById('rPbar').style.width=Math.round(lineIdx/lines.length*100)+'%';
+  document.getElementById('rLine').textContent=(lineIdx+1)+'/'+story.lines.length;
+}
+
+function handleBtn(){
+  if(!story)return;
+  const line=story.lines[lineIdx];
+  if(line.s==='user'){recognizing?stopListen():startListen();activateLine();}
+  else{stopSpeak();speakLine(line.t);}
+}
+
+// ══════ SPEECH RECOGNITION ═══════════════════════════════
+function startListen(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){document.getElementById('sTxt').textContent='Use Chrome for speech recognition.';return;}
+  if(!sessionStart)sessionStart=Date.now();
+  recognition=new SR();recognition.continuous=true;recognition.interimResults=true;recognition.lang='en-IN';
+  recognition.onresult=(e)=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal)processSpoken(e.results[i][0].transcript);
+      else interim+=e.results[i][0].transcript;
+    }
+    const st=document.getElementById('sTxt');if(st)st.textContent=interim||'Listening…';
+  };
+  recognition.onerror=(e)=>{if(e.error!=='no-speech'){const s=document.getElementById('sTxt');if(s)s.textContent='Mic: '+e.error;}};
+  recognition.onend=()=>{if(recognizing){try{recognition.start();}catch(ex){}}};
+  recognizing=true;
+  try{recognition.start();}catch(ex){}
+  activateLine();
+}
+function stopListen(){
+  recognizing=false;
+  if(recognition){try{recognition.stop();}catch(ex){}recognition=null;}
+  activateLine();
+}
+function processSpoken(transcript){
+  if(!story)return;
+  const line=story.lines[lineIdx];
+  if(line.s!=='user')return;
+  const words=getWords(line.t);
+  const spoken=transcript.trim().split(/\s+/).filter(Boolean);
+  for(const spk of spoken){
+    if(wordIdx>=words.length)break;
+    const el=document.getElementById('w'+wordIdx);
+    const sc=simScore(spk,words[wordIdx]);
+    if(sc>=0.65){if(el)el.className='word done';correct++;}
+    else{if(el)el.className='word err';errors++;}
+    totalWords++;wordIdx++;
+    updateMet();
+    if(wordIdx>=words.length){
+      stopListen();
+      wordIdx=0;lineIdx++;
+      setTimeout(()=>buildReader(),600);
       return;
     }
-    highlightCurrentWord();
+    highlightW();
+  }
+}
+function highlightW(){
+  if(!story)return;
+  const words=getWords(story.lines[lineIdx].t);
+  for(let i=0;i<words.length;i++){
+    const el=document.getElementById('w'+i);if(!el)continue;
+    if(i<wordIdx)el.className='word done';
+    else if(i===wordIdx)el.className='word active';
+    else el.className='word';
   }
 }
 
-function skipScene() {
-  stopListening();
-  rScene++;
-  renderReaderScene();
+// ══════ TEXT-TO-SPEECH ════════════════════════════════════
+function speakLine(text){
+  if(!synth){advanceAfterApp();return;}
+  stopSpeak();
+  const utt=new SpeechSynthesisUtterance(text);
+  utt.lang='en-IN';utt.rate=0.88;utt.pitch=1.05;
+  const voices=synth.getVoices();
+  const pref=voices.find(v=>v.lang.startsWith('en')&&(v.name.includes('Google')||v.name.includes('Samantha')||v.name.includes('Karen')||v.name.includes('Daniel')));
+  if(pref)utt.voice=pref;
+  utt.onstart=()=>{speaking=true;activateLine();};
+  utt.onend=()=>{speaking=false;lineIdx++;setTimeout(()=>buildReader(),400);};
+  utt.onerror=()=>{speaking=false;lineIdx++;buildReader();};
+  speaking=true;synth.speak(utt);
+  activateLine();
+}
+function stopSpeak(){if(synth)synth.cancel();speaking=false;}
+function skipLine(){stopListen();stopSpeak();lineIdx++;buildReader();}
+
+// ══════ FINISH ════════════════════════════════════════════
+function showDone(){
+  stopListen();stopSpeak();
+  document.getElementById('rPbar').style.width='100%';
+  document.getElementById('readerWrap').style.display='none';
+  const tot=correct+errors,acc=tot>0?Math.round(correct/tot*100):0;
+  const el=(Date.now()-(sessionStart||Date.now()))/60000,wpm=el>0?Math.round(totalWords/Math.max(el,.01)):0;
+  const lv=getLevel(acc,wpm),col=acc>=80?'var(--green)':acc>=65?'var(--amber)':'var(--red)';
+  const msg=acc>=88?'🌟 Excellent! Your reading is clear and confident.'
+    :acc>=72?'👍 Good effort! Keep practising every day.'
+    :'💪 Great start — a little reading each day makes a big difference!';
+  document.getElementById('readerDone').style.display='block';
+  document.getElementById('readerDone').innerHTML=`
+  <div class="finish-card">
+    <div class="score-ring"><span class="score-num" style="color:${col}">${acc}%</span><span class="score-sub">accuracy</span></div>
+    <h2 style="font-size:20px;margin-bottom:6px">Story complete! 🎉</h2>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1.2rem">You finished <em>${story.s.title}</em></p>
+    <div class="g4" style="margin-bottom:1rem">
+      <div class="mc"><div class="ml">Accuracy</div><div class="mv" style="color:${col}">${acc}%</div></div>
+      <div class="mc"><div class="ml">Speed</div><div class="mv">${wpm} wpm</div></div>
+      <div class="mc"><div class="ml">Words</div><div class="mv">${totalWords}</div></div>
+      <div class="mc"><div class="ml">Lines</div><div class="mv">${story.lines.length}</div></div>
+    </div>
+    <span class="lbadge ${lv.cls}" style="font-size:13px;padding:5px 16px;display:inline-flex;margin-bottom:10px">${lv.label} reader</span>
+    <p style="font-size:13px;color:var(--text2);margin:8px 0 1.5rem">${msg}</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-primary btn-xl" style="width:auto;min-width:130px" onclick="startStory('${story.s.id}')">🔁 Again</button>
+      <button class="btn btn-xl" style="width:auto;min-width:130px" onclick="exitReader()">← Back</button>
+    </div>
+  </div>`;
+  updateMet();
 }
 
-function showFinished() {
-  stopListening();
-  document.getElementById('rProgressBar').style.width = '100%';
-  document.getElementById('readerContent').style.display = 'none';
-
-  const total = rCorrect + rErrors;
-  const acc = total > 0 ? Math.round(rCorrect / total * 100) : 0;
-  const elapsed = (Date.now() - (rSessionStart || Date.now())) / 60000;
-  const wpm = elapsed > 0 ? Math.round(rTotalWords / Math.max(elapsed, 0.01)) : 0;
-  const lvl = getLevelInfo(acc, wpm);
-  const accColor = acc >= 80 ? 'var(--green)' : acc >= 65 ? 'var(--amber)' : 'var(--red)';
-
-  const feedback = acc >= 88 ? '🌟 Excellent reading! Your teacher will be very proud.' :
-                   acc >= 72 ? '👍 Good effort! Keep practising a little every day.' :
-                   '💪 Great start! Reading every day will help you improve fast.';
-
-  const fd = document.getElementById('readerFinished');
-  fd.style.display = 'block';
-  fd.innerHTML = `
-    <div class="finish-card">
-      <div class="score-ring">
-        <span class="score-num" style="color:${accColor}">${acc}%</span>
-        <span class="score-sub">accuracy</span>
-      </div>
-      <h2 style="font-size:20px;margin-bottom:6px">Story complete! 🎉</h2>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:1.2rem">You finished reading <em>${currentStory.story.title}</em></p>
-      <div class="finish-grid">
-        <div class="finish-stat"><div class="finish-stat-val" style="color:${accColor}">${acc}%</div><div class="finish-stat-lbl">Accuracy</div></div>
-        <div class="finish-stat"><div class="finish-stat-val">${wpm}</div><div class="finish-stat-lbl">Words/min</div></div>
-        <div class="finish-stat"><div class="finish-stat-val">${rTotalWords}</div><div class="finish-stat-lbl">Words read</div></div>
-        <div class="finish-stat"><div class="finish-stat-val">${currentStory.content.length}</div><div class="finish-stat-lbl">Scenes</div></div>
-      </div>
-      <span class="level-badge ${lvl.cls}" style="font-size:13px;padding:5px 16px;margin-bottom:12px;display:inline-flex">${lvl.label} reader</span>
-      <p style="font-size:14px;color:var(--text2);margin:10px 0 1.5rem">${feedback}</p>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-primary btn-lg" onclick="startStory('${currentStory.story.id}')">🔁 Read again</button>
-        <button class="btn btn-lg" onclick="exitReader()">← Back to stories</button>
-      </div>
-    </div>`;
-
-  updateReaderMetrics();
-}
-
-// ─── INIT ─────────────────────────────────────────────
-renderStudentList('', '');
-renderLibrary('', '');
-
-
-
-
-// ─── MIC PERMISSION ───────────────────────────────────
-async function askMicPermission() {
-  const btn = document.getElementById('micBtn');
-  const status = document.getElementById('micStatus');
-  const box = document.getElementById('micPermBox');
-  if (btn) btn.textContent = 'Requesting...';
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(t => t.stop());
-    if (btn) btn.textContent = '✓ Microphone allowed!';
-    if (btn) btn.style.background = '#0F6E56';
-    if (status) { status.textContent = 'Great! Now sign in and start reading.'; status.style.color = '#0F6E56'; }
-    if (box) box.style.borderColor = '#1D9E75';
-  } catch(e) {
-    if (btn) btn.textContent = '✗ Permission denied — try again';
-    if (btn) btn.style.background = '#A32D2D';
-    if (status) { 
-      status.style.color = '#A32D2D';
-      if (e.name === 'NotAllowedError') {
-        status.innerHTML = 'Blocked. Go to Chrome address bar → click 🔒 → Site settings → Microphone → Allow → Refresh page.';
-      } else {
-        status.textContent = 'Error: ' + e.message;
-      }
-    }
-  }
-}
-
-// ─── TAP MODE ─────────────────────────────────────────
-let tapModeActive = false;
-
-function enableTapMode() {
-  tapModeActive = true;
-  
-  // If reader is open, rebuild scene with tap mode
-  if (currentStory) renderReaderScene();
-  else alert('Tap mode enabled! Start a story and tap each word after you read it.');
-}
-
-function tapWord(idx) {
-  if (!tapModeActive || !currentStory) return;
-  const words = getWords(currentStory.content[rScene].text);
-  if (idx !== rWordIdx) return; // must tap in order
-  const el = document.getElementById('rw' + idx);
-  if (el) el.className = 'word done';
-  rCorrect++;
-  rTotalWords++;
-  rWordIdx++;
-  updateReaderMetrics();
-  if (rWordIdx >= words.length) {
-    const tb = document.getElementById('rTranscript');
-    if (tb) tb.textContent = '✓ Scene complete!';
-    setTimeout(() => { rScene++; renderReaderScene(); }, 900);
-    return;
-  }
-  highlightCurrentWord();
-  // scroll active word into view
-  const next = document.getElementById('rw' + rWordIdx);
-  if (next) next.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-}
-
+// ══════ INIT ══════════════════════════════════════════════
+renderSt('','');
+renderLib('','');
+if(synth)synth.onvoiceschanged=()=>synth.getVoices();
 </script>
 </body>
 </html>
