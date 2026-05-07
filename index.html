@@ -44,6 +44,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .tag-history{background:var(--amber2);color:var(--amber)}
 .tag-evs{background:var(--green2);color:var(--green)}
 .tag-hindi{background:#FFE4E1;color:#8B1A1A}
+.tag-ncert{background:#FFF3CD;color:#7B5800}
+.ncert-unit{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.type-badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:600;background:var(--bg3);color:var(--text2)}
 .lbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
 .lv-adv{background:var(--teal2);color:var(--teal)}
 .lv-flu{background:var(--green2);color:var(--green)}
@@ -280,7 +283,7 @@ select,input[type=date],input[type=text]{width:100%;padding:8px 10px;border-radi
     </div>
   </div>
   <div class="page">
-    <div class="tabs"><div class="tab active" onclick="sTab(this,'ho')">My stories</div><div class="tab" onclick="sTab(this,'pr')">My progress</div></div>
+    <div class="tabs"><div class="tab active" onclick="sTab(this,'ho')">My stories</div><div class="tab" onclick="sTab(this,'ncert')">📚 NCERT English</div><div class="tab" onclick="sTab(this,'pr')">My progress</div></div>
     <div class="tab-body">
       <div id="s-ho">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -289,6 +292,27 @@ select,input[type=date],input[type=text]{width:100%;padding:8px 10px;border-radi
         </div>
         <div class="sgrid" id="sGrid"></div>
       </div>
+
+      <div id="s-ncert" style="display:none">
+        <div style="background:var(--amber2);border:1px solid var(--amber3);border-radius:var(--rl);padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+          <div style="font-size:28px">📖</div>
+          <div><div style="font-size:13px;font-weight:700;color:var(--amber)">Poorvi — NCERT English Grade 7</div><div style="font-size:12px;color:var(--amber);opacity:.8">Read chapters from your actual textbook aloud with the app</div></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">All chapters</div>
+          <select onchange="renderNCERT(this.value)" style="width:auto">
+            <option value="">All units</option>
+            <option value="Unit 1">Unit 1 — Learning Together</option>
+            <option value="Unit 2">Unit 2 — Wit and Humour</option>
+            <option value="Unit 3">Unit 3 — Dreams and Discoveries</option>
+            <option value="Unit 4">Unit 4 — Travel and Adventure</option>
+            <option value="Unit 5">Unit 5 — Bravehearts</option>
+          </select>
+        </div>
+        <div class="sgrid" id="ncertGrid"></div>
+        <div style="font-size:12px;color:var(--text3);text-align:center;margin-top:14px;padding:10px;border:1px dashed var(--border);border-radius:var(--r)">More chapters coming soon — share your textbook PDFs to add them!</div>
+      </div>
+
       <div id="s-pr" style="display:none">
         <div class="g4" style="margin-bottom:14px" id="sMet"></div>
         <div class="g2">
@@ -359,6 +383,20 @@ const STORIES = [
   {id:'chacha',  title:'चाचा का पत्र',              subject:'Hindi',  diff:'Easy',  emoji:'✉️', bg:'#FFE4E1',desc:'एक बच्चे को उसके प्यारे चाचा का पत्र आता है।'},
   {id:'barish',  title:'बारिश का मौसम',             subject:'Hindi',  diff:'Easy',  emoji:'🌧️', bg:'#E0F0FF',desc:'मोनू और सोनू बारिश में खेलते हैं।'},
   {id:'sher',    title:'शेर और चूहा',               subject:'Hindi',  diff:'Easy',  emoji:'🦁', bg:'#FFF3CD',desc:'एक छोटे चूहे ने बड़े शेर की मदद की।'},
+];
+
+// NCERT Poorvi Grade 7 chapters
+const NCERT_CHAPTERS = [
+  {id:'n_tunnel',   unit:'Unit 4',title:'The Tunnel',              type:'Story',  diff:'Medium',emoji:'🌿',bg:'#C8E6A0',desc:'Suraj explores a jungle railway tunnel and befriends the watchman Sunder Singh and his leopard.'},
+  {id:'n_travel',   unit:'Unit 4',title:'Travel',                  type:'Poem',   diff:'Easy',  emoji:'🚂',bg:'#E6F1FB',desc:'A poem about the joy of travel and exploration — a train as a symbol of new adventures.'},
+  {id:'n_conquering',unit:'Unit 4',title:'Conquering the Summit',  type:'Non-fiction',diff:'Medium',emoji:'🏔️',bg:'#CECBF6',desc:'The inspiring story of Arunima Sinha, the first female amputee to scale Mount Everest.'},
+  {id:'n_soldiers', unit:'Unit 5',title:'A Homage to Our Brave Soldiers',type:'Story',diff:'Hard',emoji:'🇮🇳',bg:'#FFE4B5',desc:'Two friends exchange letters about the National War Memorial and the brave soldiers it honours.'},
+  {id:'n_dear_soldiers',unit:'Unit 5',title:'My Dear Soldiers',   type:'Poem',   diff:'Easy',  emoji:'⭐',bg:'#FFF0E0',desc:'A heartfelt poem by A.P.J. Abdul Kalam honouring soldiers who guard India day and night.'},
+  {id:'n_abbakka',  unit:'Unit 5',title:'Rani Abbakka',            type:'Graphic Story',diff:'Medium',emoji:'⚔️',bg:'#FAEEDA',desc:'The fearless Queen Abbakka of Ullal who defied the Portuguese colonial forces on the west coast.'},
+  {id:'n_river',    unit:'Unit 1',title:'The Day the River Spoke', type:'Story',  diff:'Medium',emoji:'🌊',bg:'#B5D4F4',desc:'A river encourages Jahnavi to overcome her fears and pursue education boldly.'},
+  {id:'n_try_again',unit:'Unit 1',title:'Try Again',               type:'Poem',   diff:'Easy',  emoji:'💪',bg:'#EAF3DE',desc:'A powerful poem about resilience and the power of perseverance in facing challenges.'},
+  {id:'n_dolittle', unit:'Unit 2',title:'Animals, Birds, and Dr. Dolittle',type:'Story',diff:'Easy',emoji:'🐦',bg:'#E1F5EE',desc:'The amusing tale of a doctor who learns to speak animal language and treats their ailments.'},
+  {id:'n_paper_boats',unit:'Unit 3',title:'Paper Boats',           type:'Poem',   diff:'Easy',  emoji:'🚢',bg:'#9FE1CB',desc:'Rabindranath Tagore uses paper boats to symbolise dreams and the desire to connect with the unknown.'},
 ];
 
 // ══════════ STORY LINES (call & response) ════════════════
@@ -498,6 +536,70 @@ sher:[
 ],
 };
 
+
+// ══════════ NCERT CHAPTER LINES ════════════════════════
+const NCERT_LINES = {
+n_tunnel:[
+  {s:'app', e:'🌿',bg:'#C8E6A0',t:"It was almost noon, and the jungle was very still, very silent. Heat waves shimmered along the railway embankment where it cut a path through the tall evergreen trees."},
+  {s:'user',e:'🧒',bg:'#d4ebc0',t:"Suraj stood near the cutting, waiting for the midday train. He was not catching a train — he simply wanted to watch the steam engine come roaring out of the tunnel."},
+  {s:'app', e:'🚂',bg:'#C8E6A0',t:"The steam engine shot out of the tunnel, snorting and puffing like some green, black, and gold dragon, some beautiful monster out of Suraj's dreams. Showering sparks left and right, it roared a challenge to the jungle."},
+  {s:'user',e:'🕳️',bg:'#2a2a3e',t:"Suraj turned from his contemplation of the drifting smoke and began walking along the embankment towards the tunnel. The tunnel grew darker as he walked further into it."},
+  {s:'app', e:'🦇',bg:'#1a1a2e',t:"When he had gone about twenty yards, it became pitch dark. The walls were damp and sticky. A bat flew past. A lizard scuttled between the lines."},
+  {s:'user',e:'🐆',bg:'#C8E6A0',t:"Coming straight from the darkness into the light, Suraj was dazzled by the sudden glare. He looked up at the tree-covered hillside and thought he saw something moving between the trees."},
+  {s:'app', e:'✨',bg:'#d4ebc0',t:"It was just a flash of orange and gold, and a long swishing tail. It was there between the trees for a second or two, and then it was gone."},
+  {s:'user',e:'🏡',bg:'#e8f0d8',t:"About fifteen metres from the entrance to the tunnel stood the watchman's hut. Marigolds grew in front of the hut, and at the back there was a small vegetable patch."},
+  {s:'app', e:'👴',bg:'#e5f0d5',t:"Welcome, welcome. I don't often have visitors. Sit down for a while, and tell me why you were inspecting my tunnel. It is my tunnel — I have only lent it to the Government."},
+  {s:'user',e:'🐆',bg:'#C8E6A0',t:"It was a leopard you saw, said Sunder Singh. My leopard. It comes to this range for a few days every month. It minds its own business."},
+  {s:'app', e:'🌙',bg:'#0d1b3e',t:"There is one train during the day, and there is one train during the night. About nine o'clock, if it isn't late. You could come and sit here with me, if you like."},
+  {s:'user',e:'⭐',bg:'#1a2a4e',t:"Everyone goes to sleep in the afternoon, complained Suraj. My father lies down as soon as he has had his lunch. Well, said Sunder Singh, the animals also rest in the heat of the day."},
+],
+n_dear_soldiers:[
+  {s:'app', e:'🇮🇳',bg:'#FFF0E0',t:"Oh! Defenders of borders, you are great sons of my land. When we are all asleep, you still hold on to your deed."},
+  {s:'user',e:'❄️',bg:'#FFF0E0',t:"Windy season or snowy days, or scorching sun's sweltering rays — you are there guarding all the time awake."},
+  {s:'app', e:'🏔️',bg:'#FFF0E0',t:"Treading the lonely expanses as yogis, climbing the heights or striding the valleys, defending the deserts or guarding the marshes."},
+  {s:'user',e:'🌊',bg:'#FFF0E0',t:"Surveillance in seas and by securing the air — prime of your youth given to the nation!"},
+  {s:'app', e:'🙏',bg:'#FFF0E0',t:"Wind chimes of my land vibrate your feat. We pray for you brave men! May the Lord bless you all!"},
+  {s:'user',e:'⭐',bg:'#FFF0E0',t:"This poem was written by A.P.J. Abdul Kalam, the scientist and former President of India, as a heartfelt tribute to the soldiers who protect our nation."},
+],
+n_abbakka:[
+  {s:'app', e:'⚔️',bg:'#FAEEDA',t:"Hiriya Abbakka, the Queen of Ullal, lay on her deathbed. Her daughter Abbakka Devi was by her side. For years, Ullal had been forced to pay tribute to the Portuguese colonial power."},
+  {s:'user',e:'👑',bg:'#fde9b8',t:"Hush, Mother. You must not tire yourself with such thoughts. I am here. And I will not rest till I have driven them out of the West Coast!"},
+  {s:'app', e:'🏛️',bg:'#FAEEDA',t:"The next day, Abbakka Devi was crowned Queen of Ullal. She told her people: I need your wholehearted cooperation to make Ullal stronger, secure, and free!"},
+  {s:'user',e:'💪',bg:'#fde9b8',t:"I will stop paying tribute to the Portuguese. I will not sell them spices and cloth either. We are a sovereign country. We don't pay tribute to Portugal!"},
+  {s:'app', e:'🕊️',bg:'#FAEEDA',t:"Abbakka addressed a meeting of Rajas, urging them to unite. If we unite and fight, we could drive the Portuguese out of our land. But the Rajas said it was impossible."},
+  {s:'user',e:'🔥',bg:'#fde9b8',t:"I will have to fight the Portuguese alone. For fight them I will — single-handed, if need be! No one will cow me into surrender."},
+  {s:'app', e:'⚓',bg:'#FAEEDA',t:"Abbakka ordered merchant ships to be built. In alliance with the Zamorin of Kozhikode, she defied the Portuguese and established a hugely profitable trading relation with Arabia."},
+  {s:'user',e:'⚔️',bg:'#fde9b8',t:"Abbakka unleashed her forces and they attacked the Portuguese Fort. The Portuguese commander Ribero escaped with his life, vowing to return with help from Goa."},
+  {s:'app', e:'🏆',bg:'#FAEEDA',t:"For four days the battle raged, but the forces of Ullal were enough. The Portuguese beat a hasty retreat in defeat, never to trouble Ullal again."},
+  {s:'user',e:'🇮🇳',bg:'#fde9b8',t:"Mother, your dream has come true. Ullal is free! Rani Abbakka's courage and determination had driven out the colonial power — a victory that inspired all of India."},
+],
+n_try_again:[
+  {s:'app', e:'💪',bg:'#EAF3DE',t:"'Tis a lesson you should heed — try, try again. If at first you don't succeed, try, try again."},
+  {s:'user',e:'🌟',bg:'#c8e8b8',t:"Then your courage should appear, for, if you will persevere, you will conquer — never fear! Try, try again."},
+  {s:'app', e:'🎯',bg:'#EAF3DE',t:"Once or twice though you should fail, if you would at last prevail — try, try again. If we strive, 'tis no disgrace though we may not win the race."},
+  {s:'user',e:'🏆',bg:'#c8e8b8',t:"What should you do in that case? Try, try again. Time will bring you your reward — try, try again."},
+  {s:'app', e:'✨',bg:'#EAF3DE',t:"All that other folks can do, why with patience should not you? Only keep this rule in view — try, try again."},
+  {s:'user',e:'💡',bg:'#c8e8b8',t:"This poem by Eliza Cook reminds us that perseverance is the key to success. Every great achievement in life comes to those who refuse to give up when they face difficulty."},
+],
+n_paper_boats:[
+  {s:'app', e:'🚢',bg:'#9FE1CB',t:"Day by day I float my paper boats one by one down the running stream. In big black letters I write my name on them and the name of the village where I live."},
+  {s:'user',e:'🌊',bg:'#7cd4b8',t:"I hope that someone in some strange land will find them and know who I am. I load my little boats with shiuli flowers from our garden, and hope that these blooms of the dawn will be carried safely to land in the night."},
+  {s:'app', e:'☁️',bg:'#9FE1CB',t:"I launch my paper boats and look up into the sky and see the little clouds setting their white bulging sails. I know not what playmate of mine in the sky sends them down the air to race with my boats."},
+  {s:'user',e:'🌙',bg:'#7cd4b8',t:"When night comes I bury my face in my arms and dream that my paper boats float on and on under the midnight stars."},
+  {s:'app', e:'🌟',bg:'#9FE1CB',t:"The fairies of sleep are sailing in them, and the lading is their baskets full of dreams. This poem by Rabindranath Tagore captures the childhood joy of imagining faraway journeys through simple paper boats."},
+],
+n_soldiers:[
+  {s:'app', e:'🇮🇳',bg:'#FFE4B5',t:"Two friends, Soumya and Ananda, exchange letters about the National War Memorial in New Delhi. It is spread over forty acres near the iconic India Gate and honours India's brave soldiers."},
+  {s:'user',e:'🏛️',bg:'#ffd89a',t:"Each brick of the memorial is called a tablet, and it bears the names of soldiers who fought for India and made the supreme sacrifice in different wars from 1947 till date."},
+  {s:'app', e:'🕯️',bg:'#FFE4B5',t:"There are twenty-nine thousand tablets on which more than twenty-six thousand names of fallen soldiers have been etched. The eternal flame, the Amar Jawan Jyoti, burns day and night."},
+  {s:'user',e:'🎖️',bg:'#ffd89a',t:"Our teacher told us about the twenty-one bravehearts who were awarded the Param Vir Chakra — India's highest wartime gallantry medal — for their service to the nation."},
+  {s:'app', e:'💪',bg:'#FFE4B5',t:"Lance Naik Albert Ekka noticed an enemy machine gun inflicting heavy casualties on his company. With complete disregard to his personal safety, he charged the enemy bunker and silenced the gun."},
+  {s:'user',e:'🌸',bg:'#ffd89a',t:"Though seriously wounded, he continued to fight alongside his comrades, clearing bunker after bunker with undaunted courage, before making the supreme sacrifice."},
+  {s:'app', e:'🕊️',bg:'#FFE4B5',t:"I learnt a lot, but I also have to admit that the various discussions during the day brought tears to my eyes. It motivated me to live a life worthy of the sacrifices of our heroes."},
+  {s:'user',e:'🙏',bg:'#ffd89a',t:"I feel it is our duty to periodically visit such places to honour our valiant soldiers, who have made great sacrifices for us. Their sacrifices enable us to walk freely in our country without fear."},
+],
+};
+
 // ══════════ STATE ═════════════════════════════════════════
 let user=null, story=null;
 let lineIdx=0, wordIdx=0, correct=0, errors=0, totalWords=0;
@@ -527,7 +629,8 @@ function tTab(el,id){
 }
 function sTab(el,id){
   el.parentNode.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
-  ['ho','pr'].forEach(x=>{const d=document.getElementById('s-'+x);if(d)d.style.display=x===id?'block':'none';});
+  ['ho','ncert','pr'].forEach(x=>{const d=document.getElementById('s-'+x);if(d)d.style.display=x===id?'block':'none';});
+  if(id==='ncert') renderNCERT('');
 }
 
 // ══════════ MIC PERMISSION ═══════════════════════════════
@@ -569,6 +672,48 @@ function renderLib(subj,diff){document.getElementById('libGrid').innerHTML=STORI
 
 // ══════════ STUDENT ═══════════════════════════════════════
 function renderSStories(diff){document.getElementById('sGrid').innerHTML=STORIES.filter(s=>!diff||s.diff===diff).map(s=>sCardHTML(s,true)).join('');}
+
+function renderNCERT(unit){
+  const grid=document.getElementById('ncertGrid');
+  if(!grid)return;
+  const chapters=NCERT_CHAPTERS.filter(c=>!unit||c.unit===unit);
+  grid.innerHTML=chapters.map(c=>{
+    const has=!!NCERT_LINES[c.id];
+    const dc=c.diff==='Easy'?'tag-easy':c.diff==='Medium'?'tag-med':'tag-hard';
+    const tcls=c.type==='Poem'?'tag-science':c.type==='Non-fiction'?'tag-hist':'tag-eng';
+    return `<div class="scard" ${has?`onclick="startNCERT('${c.id}')"`:''}  style="${!has?'opacity:.55':''}">
+      <div class="sthumb" style="background:${c.bg};flex-direction:column;gap:4px">
+        <div style="font-size:40px">${c.emoji}</div>
+        <div class="ncert-unit">${c.unit}</div>
+      </div>
+      <div class="sinfo">
+        <div class="stitle">${c.title}</div>
+        <div class="sdesc">${c.desc}</div>
+        <div class="stags">
+          <span class="tag ${tcls}">${c.type}</span>
+          <span class="tag ${dc}">${c.diff}</span>
+          ${!has?'<span style="font-size:10px;color:var(--text3);margin-left:auto">Coming soon</span>':''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function startNCERT(id){
+  const chapter=NCERT_CHAPTERS.find(c=>c.id===id);
+  const lines=NCERT_LINES[id];
+  if(!chapter||!lines){alert('Coming soon!');return;}
+  // Reuse startStory logic with NCERT data
+  story={s:{id:chapter.id,title:chapter.title,subject:'English (NCERT)',diff:chapter.diff},lines};
+  lineIdx=0;wordIdx=0;correct=0;errors=0;totalWords=0;sessionStart=Date.now();
+  document.getElementById('rTitle').textContent=chapter.title;
+  document.getElementById('rMeta').textContent='Poorvi Grade 7 · '+chapter.unit+' · '+chapter.type;
+  document.getElementById('readerDone').style.display='none';
+  document.getElementById('readerWrap').style.display='block';
+  showScr('scrReader');
+  updateMet();
+  buildReader();
+}
 function renderProg(){
   const name=user.name,p=PROF[name]||PROF.Arjun;
   const acc=p.accH[p.accH.length-1],wpm=p.wpmH[p.wpmH.length-1];
