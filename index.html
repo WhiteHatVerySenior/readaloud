@@ -160,6 +160,25 @@ select,input[type=date],input[type=text]{width:100%;padding:8px 10px;border-radi
   .sgrid{grid-template-columns:1fr}
   .line-text{font-size:15px}
 }
+
+/* ═══ DARK MODE ═══ */
+body.dark{
+  --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#111113;
+  --text:#f2f2f7;--text2:#98989e;--text3:#48484a;
+  --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);
+  --blue2:#1b3a5a;--green2:#0d2a1e;--amber2:#2a1a00;--red2:#2a0a0a;--teal2:#0a1e17;
+}
+body.dark .scard:hover{box-shadow:0 4px 12px rgba(0,0,0,.5);}
+body.dark .finish-card{background:var(--bg);}
+body.dark .bbar{background:#3a5a8a;}
+body.dark select,body.dark input[type=date],body.dark input[type=text]{background:var(--bg2);color:var(--text);}
+
+/* ═══ VOCAB TOOLTIP ═══ */
+.vocab-word{border-bottom:2px dotted var(--amber3);cursor:pointer;transition:background .12s;border-radius:3px;display:inline;}
+.vocab-word:hover,.vocab-word:active{background:var(--amber2);}
+#vocabPop{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:520px;background:var(--bg);border:2px solid var(--amber3);border-radius:14px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.25);display:none;z-index:200;}
+#vocabPop.show{display:block;animation:popIn .15s ease;}
+@keyframes popIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 </style>
 </head>
 <body>
@@ -208,6 +227,7 @@ select,input[type=date],input[type=text]{width:100%;padding:8px 10px;border-radi
   <div class="topbar">
     <div><div class="topbar-title">📊 Dashboard</div><div class="topbar-sub">Ms. Priya · Class 7B</div></div>
     <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-sm" onclick="toggleDark()" id="darkBtnT" style="padding:5px 9px;font-size:15px" title="Dark mode">🌙</button>
       <div class="avatar av-purple">TP</div>
       <button class="btn btn-sm" onclick="goLogin()">Sign out</button>
     </div>
@@ -242,6 +262,7 @@ select,input[type=date],input[type=text]{width:100%;padding:8px 10px;border-radi
           </div>
         </div>
         <div class="card" style="margin-top:12px"><div class="card-title">Needs attention</div><div id="t-att"></div></div>
+        <div class="card" style="margin-top:12px"><div class="card-title">🔤 Top struggling words</div><div id="t-words" style="min-height:24px"></div></div>
       </div>
       <div id="t-st" style="display:none">
         <div style="display:flex;gap:8px;margin-bottom:12px">
@@ -278,6 +299,7 @@ select,input[type=date],input[type=text]{width:100%;padding:8px 10px;border-radi
   <div class="topbar">
     <div><div class="topbar-title" id="sGreet">Hello!</div><div class="topbar-sub">Class 7B · ReadAloud</div></div>
     <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-sm" onclick="toggleDark()" id="darkBtnS" style="padding:5px 9px;font-size:15px" title="Dark mode">🌙</button>
       <div class="avatar" id="sAv" style="background:#B5D4F4;color:#0C447C">AK</div>
       <button class="btn btn-sm" onclick="goLogin()">Sign out</button>
     </div>
@@ -334,6 +356,7 @@ select,input[type=date],input[type=text]{width:100%;padding:8px 10px;border-radi
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <span class="lbadge lv-flu" id="rBadge">—</span>
       <span style="font-size:12px;color:var(--text2)" id="rWpmTop">—</span>
+      <button class="btn btn-sm" onclick="toggleDark()" id="darkBtnR" style="padding:5px 9px;font-size:14px" title="Dark mode">🌙</button>
     </div>
   </div>
   <div class="page">
@@ -346,6 +369,18 @@ select,input[type=date],input[type=text]{width:100%;padding:8px 10px;border-radi
     <div class="pbar-wrap"><div class="pbar" id="rPbar" style="width:0%"></div></div>
     <div class="reader-wrap" id="readerWrap"></div>
     <div id="readerDone" style="display:none"></div>
+  </div>
+</div>
+
+<!-- VOCAB POPUP -->
+<div id="vocabPop" onclick="event.stopPropagation()">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+    <div style="flex:1">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);margin-bottom:5px">📖 Word meaning</div>
+      <div id="vocabWord" style="font-size:18px;font-weight:700;font-family:Georgia,serif;color:var(--text);margin-bottom:6px"></div>
+      <div id="vocabDef" style="font-size:13px;color:var(--text2);line-height:1.6"></div>
+    </div>
+    <button onclick="closeVocab()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3);padding:0 2px;line-height:1;flex-shrink:0">×</button>
   </div>
 </div>
 
@@ -600,6 +635,96 @@ n_soldiers:[
 ],
 };
 
+// ══════════ VOCABULARY ═══════════════════════════════════
+const VOCAB = {
+  tunnel:{
+    shimmered:'Gave off a soft, wavering light',
+    embankment:'A raised bank of earth built to carry a road or railway',
+    evergreen:'A tree or plant that keeps its leaves all year round',
+    contemplation:'Deep, quiet thinking',
+    marigolds:'Bright orange-yellow flowers common in Indian gardens',
+    dazzled:'Temporarily blinded by a sudden bright light',
+    scuttled:'Moved quickly with short, hurrying steps',
+    scrutiny:'Close and careful observation',
+  },
+  kite:{
+    tangled:'Twisted and caught up in a knot',
+    banyan:'A large Indian tree whose hanging branches grow into the ground',
+    vendor:'A person who sells things, usually on the street',
+    swooped:'Moved in a fast, curving dive through the air',
+    helplessly:'Without being able to do anything about it',
+  },
+  firefly:{
+    huddled:'Crowded closely together for warmth or safety',
+    bioluminescence:'Light produced naturally by a living creature',
+    flicker:'A small, quick, unsteady movement of light',
+    twinkling:'Shining with a quick, intermittent light',
+    courage:'The ability to do something even when you are afraid',
+  },
+  monsoon:{
+    magnificent:'Impressively beautiful or grand',
+    embankment:'A raised bank of earth built along a road or river',
+    parched:'Extremely dry, especially from heat',
+    shimmered:'Shone with a soft, wavering light',
+    shrill:'A high-pitched, piercing sound',
+  },
+  deepsea:{
+    bioluminescence:'Light produced naturally by a living creature',
+    hydrothermal:'Related to very hot water rising up through the earth',
+    ecosystem:'All living things in an area together with their environment',
+    abyss:'An extremely deep, seemingly bottomless space',
+    drifting:'Moving slowly and gently, carried by water or air',
+  },
+  water:{
+    evaporation:'The process of liquid changing into water vapour',
+    condensation:'Water vapour cooling and turning back into liquid droplets',
+    vapour:'A gas or mist formed when liquid is heated',
+    absorb:'To soak up or take something in fully',
+    endlessly:'Continuing forever without stopping',
+  },
+  desert:{
+    radiators:'Devices that release heat into the surrounding air',
+    burrow:'A hole or tunnel dug in the ground as an animal\'s home',
+    scorching:'Extremely and uncomfortably hot',
+    nocturnal:'Active during the night rather than during the day',
+    magnificent:'Impressively beautiful or grand',
+  },
+  ashoka:{
+    conquered:'Took control of a place or people by force',
+    compassion:'Deep sympathy for others\' suffering and a wish to help',
+    dharma:'Right and moral conduct; one\'s duty in life',
+    vowed:'Made a very serious and solemn promise',
+    embankment:'A raised bank of earth built along a road or river',
+    inscribed:'Carved or written into a hard surface like stone',
+  },
+  n_tunnel:{
+    shimmered:'Gave off a soft, wavering light',
+    embankment:'A raised bank of earth built to carry a road or railway',
+    evergreen:'Keeping leaves all year; never bare',
+    contemplation:'Deep, quiet thinking',
+    marigolds:'Bright orange-yellow garden flowers',
+    dazzled:'Temporarily blinded by sudden bright light',
+    scrutiny:'Close and careful observation',
+    leopard:'A large wild cat with spotted fur, found in Asia and Africa',
+  },
+  n_abbakka:{
+    tribute:'A payment demanded by a stronger ruler as a sign of submission',
+    sovereign:'Fully independent and self-governing',
+    defied:'Refused to obey; stood up against boldly',
+    undaunted:'Not discouraged by danger or difficulty',
+    colonial:'Relating to a country that has taken control of another territory',
+    alliance:'A formal agreement between groups to work together',
+  },
+  n_soldiers:{
+    sacrifice:'Giving up something precious for a greater cause',
+    gallantry:'Brave and heroic behaviour',
+    casualty:'A person killed or injured in a war or accident',
+    disregard:'To pay no attention to; ignore completely',
+    valiant:'Showing great courage, especially in battle',
+    periodically:'At regular intervals; from time to time',
+  },
+};
+
 // ══════════ STATE ═════════════════════════════════════════
 let user=null, story=null;
 let lineIdx=0, wordIdx=0, correct=0, errors=0, totalWords=0;
@@ -617,13 +742,76 @@ function isDone(id){
   return JSON.parse(localStorage.getItem('ra_done')||'[]').includes(id);
 }
 
+// ══════════ DARK MODE ════════════════════════════════════
+function toggleDark(){
+  const on=document.body.classList.toggle('dark');
+  localStorage.setItem('ra_dark',on?'1':'0');
+  const icon=on?'☀️':'🌙';
+  ['darkBtnT','darkBtnS','darkBtnR'].forEach(id=>{const b=document.getElementById(id);if(b)b.textContent=icon;});
+}
+function initDark(){
+  if(localStorage.getItem('ra_dark')==='1'){
+    document.body.classList.add('dark');
+    ['darkBtnT','darkBtnS','darkBtnR'].forEach(id=>{const b=document.getElementById(id);if(b)b.textContent='☀️';});
+  }
+}
+
+// ══════════ STRUGGLING WORDS ═════════════════════════════
+function logHardWord(name,word){
+  if(!word||word.length<4)return;
+  const key='ra_hard_'+name;
+  const h=JSON.parse(localStorage.getItem(key)||'{}');
+  h[word.toLowerCase()]=(h[word.toLowerCase()]||0)+1;
+  localStorage.setItem(key,JSON.stringify(h));
+}
+function getHardWords(name){
+  const h=JSON.parse(localStorage.getItem('ra_hard_'+name)||'{}');
+  return Object.entries(h).sort((a,b)=>b[1]-a[1]);
+}
+function renderHardWords(){
+  const el=document.getElementById('t-words');if(!el)return;
+  const agg={};
+  // Gather from all known students
+  ['Arjun','Meera','Ravi'].forEach(n=>{
+    const h=JSON.parse(localStorage.getItem('ra_hard_'+n)||'{}');
+    Object.entries(h).forEach(([w,c])=>{
+      if(!agg[w])agg[w]={count:0,students:new Set()};
+      agg[w].count+=c;agg[w].students.add(n);
+    });
+  });
+  const top=Object.entries(agg).sort((a,b)=>b[1].count-a[1].count).slice(0,12);
+  if(!top.length){el.innerHTML='<div style="font-size:13px;color:var(--text2);padding:6px 0">No data yet — students must complete sessions first.</div>';return;}
+  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:7px;padding:4px 0">${top.map(([w,d])=>`<span style="display:inline-flex;align-items:center;gap:5px;background:var(--red2);color:var(--red);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600"><span>${w}</span><span style="background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px">${d.count}×</span></span>`).join('')}</div><div style="font-size:11px;color:var(--text3);margin-top:8px">Errors logged across all reading sessions. More sessions = more accurate data.</div>`;
+}
+
+// ══════════ VOCABULARY TAP ════════════════════════════════
+function wrapVocab(html, storyId){
+  const vocab=VOCAB[storyId];
+  if(!vocab)return html;
+  // Replace whole words that have a definition — careful not to double-wrap
+  return html.replace(/\b([A-Za-z]{4,})\b/g,(match)=>{
+    const def=vocab[match.toLowerCase()];
+    if(!def)return match;
+    return `<span class="vocab-word" onclick="showVocab(event,'${match}','${def.replace(/'/g,'&#39;')}')">${match}</span>`;
+  });
+}
+function showVocab(e,word,def){
+  e.stopPropagation();
+  document.getElementById('vocabWord').textContent=word;
+  document.getElementById('vocabDef').textContent=def;
+  document.getElementById('vocabPop').classList.add('show');
+}
+function closeVocab(){document.getElementById('vocabPop').classList.remove('show');}
+// Tap anywhere else to close
+document.addEventListener('click',()=>closeVocab());
+
 // ══════════ NAVIGATION ═══════════════════════════════════
 function showScr(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
 function goLogin(){stopListen();stopSpeak();showScr('scrLogin');}
 
 function login(role,name){
   user={role,name};
-  if(role==='teacher'){showScr('scrTeacher');renderAtt();renderSt('','');renderLib('','');}
+  if(role==='teacher'){showScr('scrTeacher');renderAtt();renderSt('','');renderLib('','');renderHardWords();}
   else{
     const p=PROF[name]||PROF.Arjun;
     document.getElementById('sGreet').textContent='Hello, '+name+' 👋';
@@ -669,7 +857,19 @@ function renderAtt(){
 function renderSt(search,level){
   const lc=l=>l==='Advanced'?'lv-adv':l==='Fluent'?'lv-flu':l==='Developing'?'lv-dev':'lv-beg';
   const data=SD.filter(s=>(!search||s.name.toLowerCase().includes(search.toLowerCase()))&&(!level||s.level===level));
-  document.getElementById('stList').innerHTML=data.map(s=>`<div class="srow"><div class="avatar ${s.av}" style="width:30px;height:30px;font-size:11px">${s.init}</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${s.name}</div><div style="font-size:11px;color:var(--text2)">${s.sessions} sessions</div></div><div style="text-align:right;min-width:76px"><div class="abar"><div class="afill" style="width:${s.acc}%;background:${s.acc>=80?'#1D9E75':s.acc>=65?'#EF9F27':'#E24B4A'}"></div></div><div style="font-size:10px;color:var(--text2);margin-top:1px">${s.acc}%</div></div><span class="lbadge ${lc(s.level)}" style="margin-left:8px">${s.level}</span></div>`).join('');
+  document.getElementById('stList').innerHTML=data.map(s=>{
+    const hw=getHardWords(s.name.split(' ')[0]).slice(0,4);
+    const hwHtml=hw.length?`<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">${hw.map(([w,c])=>`<span style="background:var(--red2);color:var(--red);padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600">${w} <b>${c}×</b></span>`).join('')}</div>`:'';
+    return `<div class="srow" style="flex-direction:column;align-items:flex-start;gap:0">
+      <div style="display:flex;align-items:center;gap:10px;width:100%">
+        <div class="avatar ${s.av}" style="width:30px;height:30px;font-size:11px">${s.init}</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:600">${s.name}</div><div style="font-size:11px;color:var(--text2)">${s.sessions} sessions</div></div>
+        <div style="text-align:right;min-width:76px"><div class="abar"><div class="afill" style="width:${s.acc}%;background:${s.acc>=80?'#1D9E75':s.acc>=65?'#EF9F27':'#E24B4A'}"></div></div><div style="font-size:10px;color:var(--text2);margin-top:1px">${s.acc}%</div></div>
+        <span class="lbadge ${lc(s.level)}" style="margin-left:8px">${s.level}</span>
+      </div>
+      ${hwHtml}
+    </div>`;
+  }).join('');
 }
 function sCardHTML(s,clickable){
   const dc=s.diff==='Easy'?'tag-easy':s.diff==='Medium'?'tag-med':'tag-hard';
@@ -817,6 +1017,9 @@ function buildReader(){
       if(m)wordHTML+=`<span class="word" id="w${m[1]}">${words[parseInt(m[1])]}</span>`;
       else wordHTML+=p;
     });
+  } else {
+    // Not tracking word-by-word — apply vocab tap highlights
+    wordHTML = wrapVocab(cur.t, story.s.id);
   }
 
   const turnColor = listenMode ? '#854F0B' : (isUser ? '#185FA5' : '#0F6E56');
@@ -977,7 +1180,7 @@ function processSpoken(transcript){
     const el=document.getElementById('w'+wordIdx);
     const sc=simScore(spk,words[wordIdx]);
     if(sc>=0.65){if(el)el.className='word done';correct++;}
-    else{if(el)el.className='word err';errors++;}
+    else{if(el)el.className='word err';errors++;logHardWord(user?user.name:'',words[wordIdx]);}
     totalWords++;wordIdx++;
     updateMet();
     if(wordIdx>=words.length){
@@ -1171,6 +1374,7 @@ function playFull(id){
 renderSt('','');
 renderLib('','');
 if(synth)synth.onvoiceschanged=()=>synth.getVoices();
+initDark();
 </script>
 </body>
 </html>
