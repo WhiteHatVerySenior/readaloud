@@ -1227,39 +1227,28 @@ function startListen(){
 
   function _startRec(){
     if(!recognizing)return;
-    recognition = new SR();
-    recognition.continuous     = false;   // commit each utterance as final — more reliable
+    recognition=new SR();
+    recognition.continuous     = false;
     recognition.interimResults = true;
-    recognition.maxAlternatives = 3;
+    recognition.maxAlternatives= 1;
     recognition.lang = _isHindi ? 'hi-IN' : 'en-IN';
 
     recognition.onresult=(e)=>{
       const st=document.getElementById('sTxt');
-      let interim='';
       for(let i=e.resultIndex;i<e.results.length;i++){
         const res=e.results[i];
-        if(res.isFinal){
-          // Pick the alternative that best matches the expected word
-          let best=res[0].transcript;
-          if(res.length>1&&story){
-            const line=story.lines[lineIdx];
-            if(line&&line.s==='user'){
-              const words=getWords(line.t);
-              if(wordIdx<words.length){
-                let bestSc=-1;
-                for(let a=0;a<res.length;a++){
-                  const spks=res[a].transcript.trim().split(/\s+/).filter(Boolean);
-                  if(!spks.length)continue;
-                  const sc=simScore(spks[0],words[wordIdx]);
-                  if(sc>bestSc){bestSc=sc;best=res[a].transcript;}
-                }
-              }
-            }
-          }
-          processSpoken(best);
+        const transcript=res[0].transcript;
+        if(_isHindi){
+          // For Hindi: try to match on EVERY result (interim or final)
+          if(st) st.textContent='🎤 '+transcript;
+          processSpoken(transcript);
         } else {
-          interim+=res[0].transcript;
-          if(st) st.textContent='🎤 '+interim;
+          // English: only process final results
+          if(res.isFinal){
+            processSpoken(transcript);
+          } else {
+            if(st) st.textContent='🎤 '+transcript;
+          }
         }
       }
     };
@@ -1267,27 +1256,24 @@ function startListen(){
     recognition.onerror=(e)=>{
       const st=document.getElementById('sTxt');
       if(e.error==='no-speech'){
-        // With continuous=false, no-speech means a full utterance timeout.
-        // Just restart — don't skip the line.
-        if(recognizing) _startRec();
+        // Restart and keep waiting — don't skip line
+        if(recognizing) setTimeout(_startRec,200);
+      } else if(e.error==='aborted'||e.error==='interrupted'){
+        // intentional stop — do nothing
       } else if(e.error==='not-allowed'){
         if(st) st.textContent='❌ Microphone blocked — allow mic in browser settings';
         recognizing=false;
-      } else if(e.error==='network'){
-        if(st) st.textContent='❌ Network error — Hindi recognition needs internet';
-      } else if(e.error==='aborted'){
-        // Aborted intentionally (stopListen called) — do nothing
       } else {
         if(st) st.textContent='⚠️ Mic: '+e.error;
+        if(recognizing) setTimeout(_startRec,500);
       }
     };
 
-    // With continuous=false, onend fires after each result — restart to keep listening
     recognition.onend=()=>{
       if(recognizing) _startRec();
     };
 
-    try{ recognition.start(); }catch(ex){}
+    try{recognition.start();}catch(ex){}
   }
 
   recognizing=true;
@@ -1308,31 +1294,74 @@ function stopListen(){
 function processSpoken(transcript){
   if(!story)return;
   const line=story.lines[lineIdx];
-  if(line.s!=='user')return;
+  if(!line||line.s!=='user')return;
   const words=getWords(line.t);
   if(!words.length)return;
   const isHindi=/[ऀ-ॿ]/.test(line.t);
-  // Normalize transcript the same way we normalize expected words
-  const spokenRaw=transcript.normalize('NFC').trim().split(/\s+/).filter(Boolean);
-  const spoken=spokenRaw;
   const st=document.getElementById('sTxt');
+
+  if(isHindi){
+    // ── Hindi: sentence-level matching ──────────────────────────
+    // Chrome gives us the right text but isFinal is unreliable.
+    // We compare the whole recognized sentence against the whole expected line.
+    const normTr = transcript.normalize('NFC').trim().replace(/[।॥\s]+/g,' ');
+    const spokenWords = normTr.split(/\s+/).filter(Boolean);
+    const normLine = line.t.normalize('NFC').trim().replace(/[।॥\s]+/g,' ');
+    const lineWords = normLine.split(/\s+/).filter(Boolean);
+
+    // Match: for each expected word, find best spoken word
+    let matched=0;
+    const usedIdx=new Set();
+    const wordStatus=[];
+    for(let ei=0;ei<lineWords.length;ei++){
+      let bestSc=0,bestSi=-1;
+      for(let si=0;si<spokenWords.length;si++){
+        if(usedIdx.has(si))continue;
+        const sc=simScore(spokenWords[si],lineWords[ei]);
+        if(sc>bestSc){bestSc=sc;bestSi=si;}
+      }
+      const hit=bestSc>=0.45;
+      wordStatus.push(hit);
+      if(hit){matched++;usedIdx.add(bestSi);}
+    }
+
+    // Update word spans
+    for(let i=0;i<words.length;i++){
+      const el=document.getElementById('w'+i);
+      if(!el)continue;
+      el.className=wordStatus[i]?'word done':'word';
+    }
+
+    const ratio=lineWords.length>0?matched/lineWords.length:0;
+    if(st) st.textContent='✓ '+matched+'/'+lineWords.length+' words matched ('+Math.round(ratio*100)+'%)';
+
+    // If at least 60% of words matched, accept and advance
+    if(ratio>=0.6){
+      correct+=matched; errors+=(words.length-matched); totalWords+=words.length;
+      wordIdx=words.length;
+      updateMet();
+      stopListen();
+      wordIdx=0;lineIdx++;
+      setTimeout(()=>nextLine(),600);
+    }
+    // else: keep listening — mic restarts via onend→_startRec
+    return;
+  }
+
+  // ── English: sequential word-by-word matching ─────────────────
+  const spoken=transcript.toLowerCase().trim().split(/\s+/).filter(Boolean);
   for(const spk of spoken){
     if(wordIdx>=words.length)break;
     const el=document.getElementById('w'+wordIdx);
     const expected=words[wordIdx];
     const sc=simScore(spk,expected);
-    // Show heard vs expected in status bar for debugging
     if(st) st.textContent='Heard: "'+spk+'" | Expected: "'+expected+'" ('+Math.round(sc*100)+'%)';
-    // Hindi gets a slightly lower threshold (script variation is common)
-    const threshold=isHindi?0.50:0.65;
-    if(sc>=threshold){if(el)el.className='word done';correct++;}
+    if(sc>=0.65){if(el)el.className='word done';correct++;}
     else{if(el)el.className='word err';errors++;logHardWord(user?user.name:'',expected);}
     totalWords++;wordIdx++;
     updateMet();
     if(wordIdx>=words.length){
-      // Line complete — move to next
-      stopListen();
-      wordIdx=0;lineIdx++;
+      stopListen();wordIdx=0;lineIdx++;
       setTimeout(()=>nextLine(),500);
       return;
     }
