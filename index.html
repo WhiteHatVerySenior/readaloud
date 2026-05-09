@@ -404,20 +404,21 @@ body.dark select,body.dark input[type=date],body.dark input[type=text]{backgroun
       <div id="setProviderPill" class="el-pill el-off">OFF</div>
     </div>
 
-    <!-- ElevenLabs section -->
+    <!-- ElevenLabs / Cloudflare Worker section -->
     <div class="set-section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div>
           <div style="font-size:13px;font-weight:700">🎙️ ElevenLabs Neural Voice</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">Human-quality, expressive reading. Free: 10,000 chars/month.</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Human-quality, expressive reading via your Cloudflare Worker. API key stays hidden on server.</div>
         </div>
-        <a href="https://elevenlabs.io/sign-up" target="_blank" style="font-size:11px;color:var(--blue);font-weight:600;white-space:nowrap;margin-left:10px">Get free key →</a>
+        <a href="https://dash.cloudflare.com" target="_blank" style="font-size:11px;color:var(--blue);font-weight:600;white-space:nowrap;margin-left:10px">CF Dashboard →</a>
       </div>
 
       <div style="margin-bottom:10px">
-        <div class="set-label">API Key</div>
-        <input id="elKeyInput" type="password" placeholder="Paste your ElevenLabs API key…" autocomplete="off"
-          style="font-family:monospace;font-size:12px;letter-spacing:.04em">
+        <div class="set-label">Worker URL</div>
+        <input id="elKeyInput" type="url" placeholder="https://readaloud-tts.YOUR-NAME.workers.dev" autocomplete="off"
+          style="font-family:monospace;font-size:11px;letter-spacing:.02em">
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">Paste the URL of your deployed Cloudflare Worker. The ElevenLabs API key is stored securely on the Worker — never in the browser.</div>
       </div>
 
       <div style="margin-bottom:14px">
@@ -434,7 +435,7 @@ body.dark select,body.dark input[type=date],body.dark input[type=text]{backgroun
 
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-primary" style="flex:1;min-width:120px" onclick="saveElSettings()">✓ Save &amp; Enable</button>
-        <button class="btn btn-red btn-sm" id="elClearBtn" style="display:none" onclick="clearElSettings()">Remove key</button>
+        <button class="btn btn-red btn-sm" id="elClearBtn" style="display:none" onclick="clearElSettings()">Remove</button>
       </div>
       <div id="elSaveMsg" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--green)"></div>
     </div>
@@ -1042,10 +1043,19 @@ function exitReader(){stopListen();stopSpeak();autoMode=false;listenMode=false;s
 let autoMode = false;
 let listenMode = false;
 
-function getWords(t){return t.match(/\b[a-zA-Z\']+\b/g)||[];}
-function norm(s){return s.toLowerCase().replace(/[^a-z0-9]/g,'');}
+function getWords(t){
+  // Match Devanagari words (Hindi) OR English words
+  return t.match(/[ऀ-ॿ]+|[a-zA-Z']+/g)||[];
+}
+function norm(s){
+  // Hindi: keep Devanagari chars, strip punctuation (।॥ etc)
+  if(/[ऀ-ॿ]/.test(s)) return s.trim().replace(/[।॥,.!?'"()\s]/g,'');
+  // English: lowercase, strip punctuation
+  return s.toLowerCase().replace(/[^a-z0-9]/g,'');
+}
 function simScore(a,b){
   a=norm(a);b=norm(b);
+  if(!a||!b)return 0;
   if(a===b)return 1;
   if(a.startsWith(b)||b.startsWith(a))return .85;
   let m=0;for(const c of a)if(b.includes(c))m++;
@@ -1084,10 +1094,23 @@ function buildReader(){
   let wordHTML=cur.t;
   if(isUser && autoMode && !listenMode){
     const words=getWords(cur.t);
+    // Build word spans by splitting on token boundaries (works for Hindi & English)
+    // We replace each token with a placeholder, then swap in spans — using a
+    // regex built from the actual word list to avoid partial-match collisions.
     let tmp=cur.t;
-    words.forEach((w,wi)=>{tmp=tmp.replace(w,`@@${wi}@@`);});
+    // Replace each word with a positional placeholder @@N@@
+    // Walk through matches left-to-right using lastIndex to avoid double-matching
+    const allTokens = Array.from(tmp.matchAll(/[ऀ-ॿ]+|[a-zA-Z']+/g));
+    // Build the replaced string in one pass
+    let out='', cursor=0;
+    allTokens.forEach((match,wi)=>{
+      out += tmp.slice(cursor, match.index);  // text before this word
+      out += `@@${wi}@@`;
+      cursor = match.index + match[0].length;
+    });
+    out += tmp.slice(cursor);  // trailing punctuation / spaces
     wordHTML='';
-    tmp.split(/(@@\d+@@)/).forEach(p=>{
+    out.split(/(@@\d+@@)/).forEach(p=>{
       const m=p.match(/@@(\d+)@@/);
       if(m)wordHTML+=`<span class="word" id="w${m[1]}">${words[parseInt(m[1])]}</span>`;
       else wordHTML+=p;
@@ -1216,7 +1239,8 @@ function startListen(){
 
   recognition.onerror=(e)=>{
     if(e.error==='no-speech'){
-      // Silence for too long — auto advance
+      // Silence for too long — only skip if we're still in an active session
+      if(!autoMode && !listenMode) return;
       stopListen();
       lineIdx++;wordIdx=0;
       setTimeout(()=>nextLine(),500);
@@ -1319,7 +1343,15 @@ const webSpeechProvider = (function(){
     if (!all.length) return null;        // voices not loaded yet — browser uses default
     let best = null, bestScore = -1;
     if (lang === 'hi-IN') {
-      best = all.find(v => v.lang.startsWith('hi') || v.name.includes('Lekha')) || null;
+      // Priority: exact hi-IN > any Hindi > Google Hindi > Lekha (macOS)
+      const HINDI_PREFS = ['Lekha','Google Hindi','hi-IN','hi_IN'];
+      for (const pref of HINDI_PREFS) {
+        best = all.find(v => v.name.includes(pref) || v.lang === pref || v.lang.startsWith('hi'));
+        if (best) break;
+      }
+      // If still nothing found, let the browser pick — don't return null,
+      // because null means "use whatever default" which may produce wrong lang
+      if (!best) best = all.find(v => v.lang.startsWith('hi')) || null;
     } else {
       all.forEach(v => {
         if (!v.lang.startsWith('en')) return;
@@ -1468,31 +1500,120 @@ const webSpeechProvider = (function(){
 //   stop() { if (this._audio) { this._audio.pause(); this._audio.currentTime = 0; } }
 // };
 
-// ── ElevenLabs provider ──────────────────────────────────
-const elevenLabsProvider = (function(){
-  const _cache = {};   // text → blob URL (persists for session)
-  let _audio   = null;
-  let _aborted = false;
+// ── ElevenLabs provider (via Cloudflare Worker + R2 cache) ───
+//
+// Audio caching hierarchy (fastest → slowest):
+//   1. In-memory map  (_memCache)  — same tab, instant
+//   2. IndexedDB      (idb)        — same device across sessions, ~5ms
+//   3. Cloudflare R2  (via Worker) — any device, already generated audio
+//   4. ElevenLabs API (via Worker) — new audio, stored in R2 for future use
+//
+// The browser NEVER sees the ElevenLabs API key.
+// Set WORKER_URL below to your deployed Cloudflare Worker URL.
+// ─────────────────────────────────────────────────────────────
 
-  async function _fetchAudio(text, lang) {
-    const key     = localStorage.getItem('el_key');
+// ▶ SET THIS after deploying your Cloudflare Worker:
+const WORKER_URL = localStorage.getItem('ra_worker_url') || '';
+// e.g. 'https://readaloud-tts.YOUR_SUBDOMAIN.workers.dev'
+// Users can also set it in Settings and it persists in localStorage.
+
+// ── IndexedDB helper (audio blob storage) ────────────────────
+const _idb = (function () {
+  const DB_NAME    = 'readaloud_audio';
+  const STORE_NAME = 'blobs';
+  const DB_VERSION = 1;
+  let _db = null;
+
+  function open() {
+    if (_db) return Promise.resolve(_db);
+    return new Promise((res, rej) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = e => e.target.result.createObjectStore(STORE_NAME);
+      req.onsuccess = e => { _db = e.target.result; res(_db); };
+      req.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  async function get(key) {
+    try {
+      const db = await open();
+      return new Promise((res, rej) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const req = tx.objectStore(STORE_NAME).get(key);
+        req.onsuccess = () => res(req.result || null);
+        req.onerror   = () => res(null);   // non-fatal
+      });
+    } catch { return null; }
+  }
+
+  async function put(key, blob) {
+    try {
+      const db = await open();
+      return new Promise((res) => {
+        const tx  = db.transaction(STORE_NAME, 'readwrite');
+        const req = tx.objectStore(STORE_NAME).put(blob, key);
+        req.onsuccess = () => res(true);
+        req.onerror   = () => res(false);
+      });
+    } catch { return false; }
+  }
+
+  return { get, put };
+})();
+
+// ── Provider ──────────────────────────────────────────────────
+const elevenLabsProvider = (function () {
+  const _memCache = {};   // cacheKey → blob URL  (in-memory, current tab)
+  let _audio      = null;
+  let _aborted    = false;
+
+  // Build a stable cache key (same logic as the Worker's SHA-256 key,
+  // but we use the raw string locally — the Worker uses the hash for R2).
+  function _cacheKey(text, lang, voiceId) {
+    return `${voiceId}|${lang}|${text.trim().toLowerCase()}`;
+  }
+
+  // Fetch audio from Worker (which checks R2 → ElevenLabs → stores in R2).
+  // Returns a blob URL.
+  async function _fetchFromWorker(text, lang) {
+    const workerUrl = localStorage.getItem('ra_worker_url') || WORKER_URL;
+    if (!workerUrl) throw new Error('No Worker URL configured');
+
     const voiceId = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
-    // Use multilingual model for Hindi; turbo for English (faster)
-    const model   = lang === 'hi-IN' ? 'eleven_multilingual_v2' : 'eleven_turbo_v2';
-    const res = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
-      {
-        method:  'POST',
-        headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          text,
-          model_id:       model,
-          voice_settings: { stability: 0.48, similarity_boost: 0.78, style: 0.12 }
-        })
-      }
-    );
-    if (!res.ok) throw new Error(`ElevenLabs ${res.status}`);
-    return URL.createObjectURL(await res.blob());
+    const res = await fetch(`${workerUrl}/tts`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ text: text.trim(), lang, voiceId }),
+    });
+    if (!res.ok) throw new Error(`Worker ${res.status}`);
+    const blob = await res.blob();
+    console.log(`[TTS] ${res.headers.get('X-Cache') === 'HIT' ? 'R2 hit ✓' : 'ElevenLabs fetch'}`);
+    return blob;
+  }
+
+  // Full fetch pipeline: memory → IndexedDB → Worker → ElevenLabs
+  async function _getAudioUrl(text, lang) {
+    const voiceId = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
+    const ck = _cacheKey(text, lang, voiceId);
+
+    // 1. Memory
+    if (_memCache[ck]) return _memCache[ck];
+
+    // 2. IndexedDB
+    const idbBlob = await _idb.get(ck);
+    if (idbBlob) {
+      const url = URL.createObjectURL(idbBlob);
+      _memCache[ck] = url;
+      return url;
+    }
+
+    // 3. Worker (R2 or fresh ElevenLabs)
+    const blob = await _fetchFromWorker(text, lang);
+    const url  = URL.createObjectURL(blob);
+    _memCache[ck] = url;
+    // Store in IndexedDB asynchronously (don't block playback)
+    _idb.put(ck, blob).catch(() => {});
+    return url;
   }
 
   function _play(url, onEnd, onError) {
@@ -1504,26 +1625,32 @@ const elevenLabsProvider = (function(){
 
   async function speak(text, lang, onEnd, onError) {
     _aborted = false;
-    const key = localStorage.getItem('el_key');
-    if (!key) { onError(); return; }                // no key → caller falls back
+    const workerUrl = localStorage.getItem('ra_worker_url') || WORKER_URL;
+    if (!workerUrl) { onError(); return; }   // no Worker URL → fall back to Web Speech
     try {
-      const cacheKey = lang + '|' + text.trim();
-      if (!_cache[cacheKey]) _cache[cacheKey] = await _fetchAudio(text, lang);
-      if (_aborted) return;                          // stop() called while fetching
-      _play(_cache[cacheKey], onEnd, onError);
-    } catch(err) {
-      console.warn('ElevenLabs error:', err.message);
-      if (!_aborted) onError();                      // triggers fallback in ttsSpeak
+      const url = await _getAudioUrl(text, lang);
+      if (_aborted) return;
+      _play(url, onEnd, onError);
+    } catch (err) {
+      console.warn('ElevenLabs provider error:', err.message);
+      if (!_aborted) onError();
     }
   }
 
-  // Silently pre-cache a line in the background (called while current line plays)
+  // Background pre-fetch for the next line (called while current line plays)
   async function prefetch(text, lang) {
-    const key = localStorage.getItem('el_key');
-    if (!key) return;
-    const cacheKey = lang + '|' + text.trim();
-    if (_cache[cacheKey]) return;                    // already cached
-    try { _cache[cacheKey] = await _fetchAudio(text, lang); } catch(_) {}
+    const workerUrl = localStorage.getItem('ra_worker_url') || WORKER_URL;
+    if (!workerUrl) return;
+    const voiceId = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
+    const ck = _cacheKey(text, lang, voiceId);
+    if (_memCache[ck]) return;               // already in memory
+    const idbBlob = await _idb.get(ck);
+    if (idbBlob) { _memCache[ck] = URL.createObjectURL(idbBlob); return; }
+    try {
+      const blob = await _fetchFromWorker(text, lang);
+      _memCache[ck] = URL.createObjectURL(blob);
+      _idb.put(ck, blob).catch(() => {});
+    } catch (_) {}
   }
 
   function stop() {
@@ -1535,19 +1662,19 @@ const elevenLabsProvider = (function(){
 })();
 
 // ── Provider registry ─────────────────────────────────────
-// ttsSpeak() auto-selects: ElevenLabs if key exists, else Web Speech.
-// Adding a new provider in future = implement its object above, then
-// add one line to the if-chain in ttsSpeak(). Nothing else changes.
+// ttsSpeak() auto-selects: ElevenLabs (via Worker) if Worker URL is set,
+// else falls back to Web Speech API.
+// Adding a new provider = implement its object above + one line here.
 
-function _activeProvider() {
-  return localStorage.getItem('el_key') ? elevenLabsProvider : webSpeechProvider;
+function _hasWorker() {
+  return !!(localStorage.getItem('ra_worker_url') || WORKER_URL);
 }
 
 function ttsSpeak(text, lang, onEnd, onError) {
-  if (localStorage.getItem('el_key')) {
-    // ElevenLabs with automatic Web Speech fallback on any error
+  if (_hasWorker()) {
+    // ElevenLabs via Cloudflare Worker, with automatic Web Speech fallback
     elevenLabsProvider.speak(text, lang, onEnd, () => {
-      console.warn('ElevenLabs failed — falling back to Web Speech');
+      console.warn('Worker/ElevenLabs failed — falling back to Web Speech');
       webSpeechProvider.speak(text, lang, onEnd, onError);
     });
   } else {
@@ -1561,7 +1688,7 @@ function ttsStop() {
 
 // Kick off background pre-fetch for the NEXT TTS line while current one plays
 function prefetchNextLine() {
-  if (!localStorage.getItem('el_key') || !story) return;
+  if (!_hasWorker() || !story) return;
   for (let i = lineIdx + 1; i < story.lines.length; i++) {
     const ln = story.lines[i];
     if (listenMode || ln.s === 'app') {
@@ -1574,13 +1701,11 @@ function prefetchNextLine() {
 
 // ── Settings UI ───────────────────────────────────────────
 function openSettings() {
-  // Populate fields from localStorage
-  const key     = localStorage.getItem('el_key') || '';
-  const voice   = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
-  document.getElementById('elKeyInput').value   = key ? '••••••••••••' + key.slice(-4) : '';
-  document.getElementById('elKeyInput').dataset.real = key;
+  const workerUrl = localStorage.getItem('ra_worker_url') || '';
+  const voice     = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
+  document.getElementById('elKeyInput').value   = workerUrl;
   document.getElementById('elVoiceInput').value = voice;
-  document.getElementById('elClearBtn').style.display = key ? 'inline-flex' : 'none';
+  document.getElementById('elClearBtn').style.display = workerUrl ? 'inline-flex' : 'none';
   _updateSettingsStatus();
   document.getElementById('settingsModal').classList.add('open');
 }
@@ -1589,36 +1714,33 @@ function closeSettings() {
   document.getElementById('elSaveMsg').textContent = '';
 }
 function saveElSettings() {
-  const inp     = document.getElementById('elKeyInput');
-  // If the user didn't type a new key (still shows masked), keep the real one
-  const newKey  = inp.value.includes('•') ? inp.dataset.real : inp.value.trim();
-  const voice   = document.getElementById('elVoiceInput').value;
-  const msg     = document.getElementById('elSaveMsg');
-  if (!newKey) { msg.style.color='var(--red)'; msg.textContent='Please paste your API key first.'; return; }
-  localStorage.setItem('el_key',   newKey);
-  localStorage.setItem('el_voice', voice);
-  inp.dataset.real = newKey;
+  const workerUrl = document.getElementById('elKeyInput').value.trim();
+  const voice     = document.getElementById('elVoiceInput').value;
+  const msg       = document.getElementById('elSaveMsg');
+  if (!workerUrl) { msg.style.color='var(--red)'; msg.textContent='Please paste your Worker URL first.'; return; }
+  if (!workerUrl.startsWith('https://')) { msg.style.color='var(--red)'; msg.textContent='URL must start with https://'; return; }
+  localStorage.setItem('ra_worker_url', workerUrl);
+  localStorage.setItem('el_voice',      voice);
   document.getElementById('elClearBtn').style.display = 'inline-flex';
   msg.style.color = 'var(--green)';
-  msg.textContent = '✓ ElevenLabs enabled! Voice will activate on next line.';
+  msg.textContent = '✓ Worker connected! Neural voice active on next line.';
   _updateSettingsStatus();
 }
 function clearElSettings() {
-  localStorage.removeItem('el_key');
+  localStorage.removeItem('ra_worker_url');
   localStorage.removeItem('el_voice');
   document.getElementById('elKeyInput').value = '';
-  document.getElementById('elKeyInput').dataset.real = '';
   document.getElementById('elClearBtn').style.display = 'none';
   const msg = document.getElementById('elSaveMsg');
   msg.style.color = 'var(--text2)';
-  msg.textContent = 'Key removed — switched back to system voice.';
+  msg.textContent = 'Worker removed — switched back to system voice.';
   _updateSettingsStatus();
 }
 function _updateSettingsStatus() {
-  const active   = !!localStorage.getItem('el_key');
-  const name     = document.getElementById('setProviderName');
-  const desc     = document.getElementById('setProviderDesc');
-  const pill     = document.getElementById('setProviderPill');
+  const active = _hasWorker();
+  const name   = document.getElementById('setProviderName');
+  const desc   = document.getElementById('setProviderDesc');
+  const pill   = document.getElementById('setProviderPill');
   if (active) {
     const voiceNames = {
       '21m00Tcm4TlvDq8ikWAM':'Rachel','EXAVITQu4vr4xnSDxMaL':'Bella',
@@ -1627,11 +1749,11 @@ function _updateSettingsStatus() {
     };
     const vName = voiceNames[localStorage.getItem('el_voice')] || 'Custom';
     name.textContent = '🎙️ ElevenLabs — ' + vName;
-    desc.textContent = 'Neural voice active. Falls back to system voice on error.';
+    desc.textContent = 'Neural voice via Cloudflare Worker. Falls back to system voice on error.';
     pill.textContent = 'ON'; pill.className = 'el-pill el-on';
   } else {
     name.textContent = '🔊 System voice';
-    desc.textContent = 'Web Speech API — built-in, works offline';
+    desc.textContent = 'Web Speech API — built-in, works offline. Add Worker URL for neural voice.';
     pill.textContent = 'OFF'; pill.className = 'el-pill el-off';
   }
 }
@@ -1640,8 +1762,10 @@ function _updateSettingsStatus() {
 
 // ── App-level speaker — calls TTS engine, handles line advance
 function speakLine(text){
-  // If no ElevenLabs key and Web Speech unavailable, auto-skip
-  if(!window.speechSynthesis && !localStorage.getItem('el_key')){
+  // If no Worker URL and Web Speech unavailable, auto-skip
+  // Always kill any existing TTS before starting a new one
+  ttsStop();
+  if(!window.speechSynthesis && !_hasWorker()){
     setTimeout(()=>{ lineIdx++; nextLine(); }, 1200);
     return;
   }
@@ -1651,7 +1775,7 @@ function speakLine(text){
   const dot = document.getElementById('sDot');
   const txt = document.getElementById('sTxt');
   if(dot) dot.innerHTML = '<span class="app-dot"></span>';
-  const _tag = localStorage.getItem('el_key') ? ' (11)' : ' (ws)';
+  const _tag = _hasWorker() ? ' (11)' : ' (ws)';
   if(txt) txt.textContent = (lang === 'hi-IN' ? 'सुनिए ध्यान से…' : 'Listen carefully…') + _tag;
 
   // Guard: only the first of (onEnd / fallback timer) may advance the line
