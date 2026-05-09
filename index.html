@@ -853,7 +853,6 @@ function buildReader(){
 // ── AUTO FLOW ─────────────────────────────────────────
 function startAuto(){
   autoMode=true;
-  buildReader();
   nextLine();
 }
 
@@ -1027,17 +1026,30 @@ function speakLine(text){
   if(dot) dot.innerHTML = '<span class="app-dot"></span>';
   if(txt) txt.textContent = isHindi ? 'सुनिए ध्यान से…' : 'Listen carefully…';
 
-  utt.onstart = ()=>{ speaking = true; };
-  utt.onend = ()=>{
+  // Guard against double-advance (onend + fallback both firing)
+  let done = false;
+  const advance = (pause) => {
+    if(done) return;
+    done = true;
+    clearTimeout(fallback);
     speaking = false;
     lineIdx++;
-    // Natural pause between lines — like a reader taking a breath
-    const pauseMs = 700 + Math.random() * 400;
-    setTimeout(()=>nextLine(), pauseMs);
+    setTimeout(()=>nextLine(), pause);
   };
-  utt.onerror = ()=>{ speaking=false; lineIdx++; setTimeout(()=>nextLine(),300); };
+  // Fallback: if Chrome never fires onend (known bug), advance after estimated duration
+  const estMs = text.split(' ').length * 650 + 2500;
+  const fallback = setTimeout(()=>advance(0), estMs);
+
+  utt.onstart = ()=>{ speaking = true; };
+  utt.onend   = ()=>{ advance(700 + Math.random() * 400); };
+  utt.onerror = ()=>{ advance(300); };
   speaking = true;
-  synth.speak(utt);
+
+  // Chrome fix: short delay after cancel() + resume() in case synth is paused
+  setTimeout(()=>{
+    if(synth.paused) synth.resume();
+    synth.speak(utt);
+  }, 50);
 }
 function stopSpeak(){ if(synth) synth.cancel(); speaking=false; }
 
