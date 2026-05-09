@@ -1224,18 +1224,32 @@ function startListen(){
   recognition=new SR();
   recognition.continuous=true;
   recognition.interimResults=true;
-  recognition.maxAlternatives=3;  // try multiple guesses — improves Hindi accuracy
+  recognition.maxAlternatives=3;
 
   const _isHindi = story && story.lines[lineIdx] && /[ऀ-ॿ]/.test(story.lines[lineIdx].t);
   recognition.lang = _isHindi ? 'hi-IN' : 'en-IN';
+
+  // For Hindi, Chrome often sends interim results but never isFinal.
+  // We debounce: if no new result for 1.2s after speaking, we process whatever was heard.
+  let _lastInterim = '';
+  let _debounce = null;
+
+  function _processInterim(){
+    if(_lastInterim && recognizing){
+      processSpoken(_lastInterim);
+      _lastInterim = '';
+    }
+  }
 
   recognition.onresult=(e)=>{
     let interim='';
     for(let i=e.resultIndex;i<e.results.length;i++){
       const result=e.results[i];
       if(result.isFinal){
-        // Try all alternatives — pick the one that best matches the expected word
-        let bestTranscript=result[0].transcript;
+        clearTimeout(_debounce);
+        _lastInterim='';
+        // Pick best alternative
+        let best=result[0].transcript;
         if(result.length>1 && story){
           const line=story.lines[lineIdx];
           if(line && line.s==='user'){
@@ -1246,25 +1260,39 @@ function startListen(){
                 const spks=result[a].transcript.trim().split(/\s+/).filter(Boolean);
                 if(!spks.length)continue;
                 const sc=simScore(spks[0],words[wordIdx]);
-                if(sc>bestSc){bestSc=sc;bestTranscript=result[a].transcript;}
+                if(sc>bestSc){bestSc=sc;best=result[a].transcript;}
               }
             }
           }
         }
-        processSpoken(bestTranscript);
+        processSpoken(best);
       } else {
         interim+=result[0].transcript;
       }
     }
-    // Show what Chrome is hearing in real time
     const st=document.getElementById('sTxt');
-    if(st&&interim) st.textContent='🎤 '+interim;
+    if(interim){
+      if(st) st.textContent='🎤 '+interim;
+      if(_isHindi){
+        // Hindi: Chrome rarely sends isFinal — debounce the interim as fallback
+        _lastInterim=interim;
+        clearTimeout(_debounce);
+        _debounce=setTimeout(_processInterim, 1200);
+      }
+    }
   };
 
   recognition.onerror=(e)=>{
     const st=document.getElementById('sTxt');
+    clearTimeout(_debounce);
     if(e.error==='no-speech'){
       if(!autoMode && !listenMode) return;
+      // If we have an unprocessed interim, try it before skipping
+      if(_lastInterim){
+        processSpoken(_lastInterim);
+        _lastInterim='';
+        return;  // don't skip — processSpoken may have completed the line
+      }
       if(st) st.textContent='⏭ No speech heard — skipping…';
       stopListen();
       lineIdx++;wordIdx=0;
@@ -1278,7 +1306,10 @@ function startListen(){
     }
   };
 
-  recognition.onend=()=>{if(recognizing){try{recognition.start();}catch(ex){}}};
+  recognition.onend=()=>{
+    clearTimeout(_debounce);
+    if(recognizing){try{recognition.start();}catch(ex){}}
+  };
   recognizing=true;
   try{recognition.start();}catch(ex){}
 
