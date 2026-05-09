@@ -1048,8 +1048,9 @@ function getWords(t){
   return t.match(/[ऀ-ॿ]+|[a-zA-Z']+/g)||[];
 }
 function norm(s){
-  // Hindi: keep Devanagari chars, strip punctuation (।॥ etc)
-  if(/[ऀ-ॿ]/.test(s)) return s.trim().replace(/[।॥,.!?'"()\s]/g,'');
+  // Hindi: normalize Unicode (NFC) so Chrome's recognition matches stored text,
+  // keep Devanagari chars, strip only punctuation
+  if(/[ऀ-ॿ]/.test(s)) return s.normalize('NFC').trim().replace(/[।॥,.!?'"()\s।]/g,'');
   // English: lowercase, strip punctuation
   return s.toLowerCase().replace(/[^a-z0-9]/g,'');
 }
@@ -1216,7 +1217,6 @@ function startListen(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){
     document.getElementById('sTxt').textContent='Speech recognition not available — use Chrome.';
-    // Auto-skip after 3s if no SR available
     setTimeout(()=>{lineIdx++;wordIdx=0;nextLine();},3000);
     return;
   }
@@ -1224,29 +1224,57 @@ function startListen(){
   recognition=new SR();
   recognition.continuous=true;
   recognition.interimResults=true;
-  const _isHindi = story && story.lines[lineIdx] && /[\u0900-\u097F]/.test(story.lines[lineIdx].t);
+  recognition.maxAlternatives=3;  // try multiple guesses — improves Hindi accuracy
+
+  const _isHindi = story && story.lines[lineIdx] && /[ऀ-ॿ]/.test(story.lines[lineIdx].t);
   recognition.lang = _isHindi ? 'hi-IN' : 'en-IN';
 
   recognition.onresult=(e)=>{
     let interim='';
     for(let i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal)processSpoken(e.results[i][0].transcript);
-      else interim+=e.results[i][0].transcript;
+      const result=e.results[i];
+      if(result.isFinal){
+        // Try all alternatives — pick the one that best matches the expected word
+        let bestTranscript=result[0].transcript;
+        if(result.length>1 && story){
+          const line=story.lines[lineIdx];
+          if(line && line.s==='user'){
+            const words=getWords(line.t);
+            if(wordIdx<words.length){
+              let bestSc=-1;
+              for(let a=0;a<result.length;a++){
+                const spks=result[a].transcript.trim().split(/\s+/).filter(Boolean);
+                if(!spks.length)continue;
+                const sc=simScore(spks[0],words[wordIdx]);
+                if(sc>bestSc){bestSc=sc;bestTranscript=result[a].transcript;}
+              }
+            }
+          }
+        }
+        processSpoken(bestTranscript);
+      } else {
+        interim+=result[0].transcript;
+      }
     }
+    // Show what Chrome is hearing in real time
     const st=document.getElementById('sTxt');
-    if(st)st.textContent=interim||'Listening…';
+    if(st&&interim) st.textContent='🎤 '+interim;
   };
 
   recognition.onerror=(e)=>{
+    const st=document.getElementById('sTxt');
     if(e.error==='no-speech'){
-      // Silence for too long — only skip if we're still in an active session
       if(!autoMode && !listenMode) return;
+      if(st) st.textContent='⏭ No speech heard — skipping…';
       stopListen();
       lineIdx++;wordIdx=0;
-      setTimeout(()=>nextLine(),500);
+      setTimeout(()=>nextLine(),600);
+    } else if(e.error==='not-allowed'){
+      if(st) st.textContent='❌ Microphone blocked — allow mic in browser settings';
+    } else if(e.error==='network'){
+      if(st) st.textContent='❌ Network error — Hindi recognition needs internet';
     } else {
-      const s=document.getElementById('sTxt');
-      if(s)s.textContent='Mic: '+e.error;
+      if(st) st.textContent='⚠️ Mic error: '+e.error;
     }
   };
 
@@ -1254,13 +1282,11 @@ function startListen(){
   recognizing=true;
   try{recognition.start();}catch(ex){}
 
-  // Update UI dot
   const dot=document.getElementById('sDot');
   const txt=document.getElementById('sTxt');
   if(dot)dot.innerHTML='<span class="mic-dot"></span>';
-  if(txt)txt.textContent='Listening — read the highlighted words aloud';
+  if(txt)txt.textContent=_isHindi?'🎤 बोलिए… (हिन्दी)':'🎤 Listening — read aloud';
 }
-
 function stopListen(){
   recognizing=false;
   if(recognition){try{recognition.stop();}catch(ex){}recognition=null;}
@@ -1273,13 +1299,23 @@ function processSpoken(transcript){
   const line=story.lines[lineIdx];
   if(line.s!=='user')return;
   const words=getWords(line.t);
-  const spoken=transcript.trim().split(/\s+/).filter(Boolean);
+  if(!words.length)return;
+  const isHindi=/[ऀ-ॿ]/.test(line.t);
+  // Normalize transcript the same way we normalize expected words
+  const spokenRaw=transcript.normalize('NFC').trim().split(/\s+/).filter(Boolean);
+  const spoken=spokenRaw;
+  const st=document.getElementById('sTxt');
   for(const spk of spoken){
     if(wordIdx>=words.length)break;
     const el=document.getElementById('w'+wordIdx);
-    const sc=simScore(spk,words[wordIdx]);
-    if(sc>=0.65){if(el)el.className='word done';correct++;}
-    else{if(el)el.className='word err';errors++;logHardWord(user?user.name:'',words[wordIdx]);}
+    const expected=words[wordIdx];
+    const sc=simScore(spk,expected);
+    // Show heard vs expected in status bar for debugging
+    if(st) st.textContent='Heard: "'+spk+'" | Expected: "'+expected+'" ('+Math.round(sc*100)+'%)';
+    // Hindi gets a slightly lower threshold (script variation is common)
+    const threshold=isHindi?0.50:0.65;
+    if(sc>=threshold){if(el)el.className='word done';correct++;}
+    else{if(el)el.className='word err';errors++;logHardWord(user?user.name:'',expected);}
     totalWords++;wordIdx++;
     updateMet();
     if(wordIdx>=words.length){
