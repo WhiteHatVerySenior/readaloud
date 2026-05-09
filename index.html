@@ -842,12 +842,6 @@ function buildReader(){
   </div>`;
 
   wrap.innerHTML=html;
-
-  // If auto mode is running, start the current line action
-  if(autoMode){
-    if(isUser) startListen();
-    // app turn is triggered by speakLine which was already called via nextLine()
-  }
 }
 
 // ── AUTO FLOW ─────────────────────────────────────────
