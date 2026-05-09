@@ -608,6 +608,15 @@ let recognizing=false, recognition=null;
 let speaking=false;
 const synth=window.speechSynthesis;
 
+// ══════════ COMPLETION TRACKING ══════════════════════════
+function markDone(id){
+  const d=JSON.parse(localStorage.getItem('ra_done')||'[]');
+  if(!d.includes(id)){d.push(id);localStorage.setItem('ra_done',JSON.stringify(d));}
+}
+function isDone(id){
+  return JSON.parse(localStorage.getItem('ra_done')||'[]').includes(id);
+}
+
 // ══════════ NAVIGATION ═══════════════════════════════════
 function showScr(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
 function goLogin(){stopListen();stopSpeak();showScr('scrLogin');}
@@ -666,7 +675,14 @@ function sCardHTML(s,clickable){
   const dc=s.diff==='Easy'?'tag-easy':s.diff==='Medium'?'tag-med':'tag-hard';
   const sc='tag-'+s.subject.toLowerCase();
   const has=!!LINES[s.id];
-  return `<div class="scard" ${clickable&&has?`onclick="startStory('${s.id}')"`:''}  style="${!has&&clickable?'opacity:.55':''}"><div class="sthumb" style="background:${s.bg}">${s.emoji}</div><div class="sinfo"><div class="stitle">${s.title}</div><div class="sdesc">${s.desc}</div><div class="stags"><span class="tag ${sc}">${s.subject}</span><span class="tag ${dc}">${s.diff}</span></div></div></div>`;
+  const done=isDone(s.id);
+  const listenBtn=clickable&&has&&done
+    ?`<button onclick="event.stopPropagation();playFull('${s.id}')" style="margin-left:auto;padding:3px 10px;font-size:11px;border-radius:20px;border:1px solid var(--amber3);background:var(--amber2);color:var(--amber);cursor:pointer;font-weight:700">🎧 Listen</button>`
+    :clickable&&has
+      ?`<span style="margin-left:auto;font-size:10px;color:var(--text3);padding:3px 8px;border-radius:20px;border:1px solid var(--border)">🔒 Read first</span>`
+      :'';
+  const prog=done?`<div class="mini-progress"><div class="mini-progress-fill" style="width:100%"></div></div>`:'';
+  return `<div class="scard" ${clickable&&has?`onclick="startStory('${s.id}')"`:''}  style="${!has&&clickable?'opacity:.55':''}"><div class="sthumb" style="background:${s.bg}">${s.emoji}</div><div class="sinfo"><div class="stitle">${s.title}</div><div class="sdesc">${s.desc}</div><div class="stags"><span class="tag ${sc}">${s.subject}</span><span class="tag ${dc}">${s.diff}</span>${listenBtn}</div>${prog}</div></div>`;
 }
 function renderLib(subj,diff){document.getElementById('libGrid').innerHTML=STORIES.filter(s=>(!subj||s.subject===subj)&&(!diff||s.diff===diff)).map(s=>sCardHTML(s,false)).join('');}
 
@@ -681,6 +697,13 @@ function renderNCERT(unit){
     const has=!!NCERT_LINES[c.id];
     const dc=c.diff==='Easy'?'tag-easy':c.diff==='Medium'?'tag-med':'tag-hard';
     const tcls=c.type==='Poem'?'tag-science':c.type==='Non-fiction'?'tag-hist':'tag-eng';
+    const done=isDone(c.id);
+    const listenBtn=has&&done
+      ?`<button onclick="event.stopPropagation();playFull('${c.id}')" style="margin-left:auto;padding:3px 10px;font-size:11px;border-radius:20px;border:1px solid var(--amber3);background:var(--amber2);color:var(--amber);cursor:pointer;font-weight:700">🎧 Listen</button>`
+      :has
+        ?`<span style="margin-left:auto;font-size:10px;color:var(--text3);padding:3px 8px;border-radius:20px;border:1px solid var(--border)">🔒 Read first</span>`
+        :'';
+    const prog=done?`<div class="mini-progress"><div class="mini-progress-fill" style="width:100%"></div></div>`:'';
     return `<div class="scard" ${has?`onclick="startNCERT('${c.id}')"`:''}  style="${!has?'opacity:.55':''}">
       <div class="sthumb" style="background:${c.bg};flex-direction:column;gap:4px">
         <div style="font-size:40px">${c.emoji}</div>
@@ -692,8 +715,9 @@ function renderNCERT(unit){
         <div class="stags">
           <span class="tag ${tcls}">${c.type}</span>
           <span class="tag ${dc}">${c.diff}</span>
-          ${!has?'<span style="font-size:10px;color:var(--text3);margin-left:auto">Coming soon</span>':''}
+          ${!has?'<span style="font-size:10px;color:var(--text3);margin-left:auto">Coming soon</span>':listenBtn}
         </div>
+        ${prog}
       </div>
     </div>`;
   }).join('');
@@ -737,10 +761,11 @@ function startStory(id){
   updateMet();
   buildReader();
 }
-function exitReader(){stopListen();stopSpeak();autoMode=false;showScr(user.role==='teacher'?'scrTeacher':'scrStudent');}
+function exitReader(){stopListen();stopSpeak();autoMode=false;listenMode=false;showScr(user.role==='teacher'?'scrTeacher':'scrStudent');}
 
 // Auto-flow state
 let autoMode = false;
+let listenMode = false;
 
 function getWords(t){return t.match(/\b[a-zA-Z\']+\b/g)||[];}
 function norm(s){return s.toLowerCase().replace(/[^a-z0-9]/g,'');}
@@ -782,7 +807,7 @@ function buildReader(){
   const isUser=cur.s==='user';
 
   let wordHTML=cur.t;
-  if(isUser && autoMode){
+  if(isUser && autoMode && !listenMode){
     const words=getWords(cur.t);
     let tmp=cur.t;
     words.forEach((w,wi)=>{tmp=tmp.replace(w,`@@${wi}@@`);});
@@ -794,11 +819,11 @@ function buildReader(){
     });
   }
 
-  const turnColor = isUser ? '#185FA5' : '#0F6E56';
-  const turnBg = isUser ? 'var(--blue2)' : 'var(--teal2)';
-  const turnLabel = isUser ? '🎤 Your turn — read aloud' : '🔊 App is reading…';
-  const turnBadge = isUser ? 'YOUR TURN' : 'APP TURN';
-  const badgeBg = isUser ? 'var(--blue)' : 'var(--green3)';
+  const turnColor = listenMode ? '#854F0B' : (isUser ? '#185FA5' : '#0F6E56');
+  const turnBg = listenMode ? 'var(--amber2)' : (isUser ? 'var(--blue2)' : 'var(--teal2)');
+  const turnLabel = listenMode ? '🎧 Listening…' : (isUser ? '🎤 Your turn — read aloud' : '🔊 App is reading…');
+  const turnBadge = listenMode ? 'LISTEN MODE' : (isUser ? 'YOUR TURN' : 'APP TURN');
+  const badgeBg = listenMode ? 'var(--amber)' : (isUser ? 'var(--blue)' : 'var(--green3)');
 
   let html=`
   <!-- PAST lines summary bar -->
@@ -834,11 +859,13 @@ function buildReader(){
 
   <!-- CONTROLS -->
   <div style="display:flex;gap:10px">
-    ${!autoMode
-      ? `<button class="btn btn-primary btn-xl" onclick="startAuto()" style="flex:1">▶ Start reading</button>`
-      : `<button class="btn btn-red btn-xl" onclick="pauseAuto()" style="flex:1" id="pauseBtn">${isUser?'⏸ Pause':'⏸ Pause'}</button>`
+    ${listenMode
+      ? `<button class="btn btn-red btn-xl" onclick="stopFullListen()" style="flex:1">⏹ Stop listening</button>`
+      : !autoMode
+        ? `<button class="btn btn-primary btn-xl" onclick="startAuto()" style="flex:1">▶ Start reading</button>`
+        : `<button class="btn btn-red btn-xl" onclick="pauseAuto()" style="flex:1" id="pauseBtn">⏸ Pause</button>`
     }
-    <button class="btn btn-sm" onclick="skipLine()" style="min-height:58px;padding:10px 16px">Skip →</button>
+    ${!listenMode?`<button class="btn btn-sm" onclick="skipLine()" style="min-height:58px;padding:10px 16px">Skip →</button>`:''}
   </div>`;
 
   wrap.innerHTML=html;
@@ -862,14 +889,16 @@ function pauseAuto(){
 
 function nextLine(){
   if(!story||!autoMode)return;
-  if(lineIdx>=story.lines.length){showDone();return;}
+  if(lineIdx>=story.lines.length){
+    if(listenMode) showListenDone(); else showDone();
+    return;
+  }
   const line=story.lines[lineIdx];
   updateMet();
   buildReader();
-  if(line.s==='app'){
+  if(listenMode||line.s==='app'){
     speakLine(line.t);
   } else {
-    // Small delay so UI settles before mic starts
     setTimeout(()=>startListen(),400);
   }
 }
@@ -1049,6 +1078,7 @@ function stopSpeak(){ if(synth) synth.cancel(); speaking=false; }
 // ── FINISH ────────────────────────────────────────────
 function showDone(){
   autoMode=false;stopListen();stopSpeak();
+  markDone(story.s.id);
   document.getElementById('rPbar').style.width='100%';
   document.getElementById('readerWrap').style.display='none';
   const tot=correct+errors,acc=tot>0?Math.round(correct/tot*100):0;
@@ -1057,6 +1087,8 @@ function showDone(){
   const msg=acc>=88?'🌟 Excellent! Your reading is clear and confident.'
     :acc>=72?'👍 Good effort! Keep practising every day.'
     :'💪 Great start — reading a little each day goes a long way!';
+  const sid=story.s.id;
+  const isNCERT=!!story.s.isNCERT;
   document.getElementById('readerDone').style.display='block';
   document.getElementById('readerDone').innerHTML=`
   <div class="finish-card">
@@ -1070,13 +1102,69 @@ function showDone(){
       <div class="mc"><div class="ml">Lines</div><div class="mv">${story.lines.length}</div></div>
     </div>
     <span class="lbadge ${lv.cls}" style="font-size:13px;padding:5px 16px;display:inline-flex;margin-bottom:10px">${lv.label} reader</span>
-    <p style="font-size:13px;color:var(--text2);margin:8px 0 1.5rem">${msg}</p>
+    <p style="font-size:13px;color:var(--text2);margin:8px 0 1rem">${msg}</p>
+    <div style="background:var(--amber2);border:1px solid var(--amber3);border-radius:var(--r);padding:12px 14px;margin-bottom:1.2rem;display:flex;align-items:center;gap:10px">
+      <span style="font-size:22px">🎧</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--amber)">Chapter unlocked for listening!</div>
+        <div style="font-size:11px;color:var(--amber);opacity:.8">You can now listen to the full chapter read aloud</div>
+      </div>
+      <button class="btn btn-sm" style="background:var(--amber);color:#fff;border-color:var(--amber);white-space:nowrap" onclick="playFull('${sid}')">🎧 Listen now</button>
+    </div>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <button class="btn btn-primary btn-xl" style="width:auto;min-width:130px" onclick="startStory(\'${story.s.id}\')">🔁 Again</button>
+      <button class="btn btn-primary btn-xl" style="width:auto;min-width:130px" onclick="${isNCERT?`startNCERT('${sid}')`:`startStory('${sid}')`}">🔁 Read again</button>
       <button class="btn btn-xl" style="width:auto;min-width:130px" onclick="exitReader()">← Back</button>
     </div>
   </div>`;
   updateMet();
+}
+
+function showListenDone(){
+  autoMode=false;listenMode=false;stopSpeak();
+  document.getElementById('rPbar').style.width='100%';
+  document.getElementById('readerWrap').style.display='none';
+  const sid=story.s.id;
+  const isNCERT=!!story.s.isNCERT;
+  document.getElementById('readerDone').style.display='block';
+  document.getElementById('readerDone').innerHTML=`
+  <div class="finish-card">
+    <div style="font-size:56px;margin-bottom:0.75rem">🎧</div>
+    <h2 style="font-size:20px;margin-bottom:6px">Finished listening!</h2>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1.5rem">You listened to the full chapter — <em>${story.s.title}</em></p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-primary btn-xl" style="width:auto;min-width:130px" onclick="playFull('${sid}')">🎧 Listen again</button>
+      <button class="btn btn-xl" style="width:auto;min-width:130px" onclick="${isNCERT?`startNCERT('${sid}')`:`startStory('${sid}')`}">📖 Read it</button>
+      <button class="btn btn-xl" style="width:auto;min-width:130px" onclick="exitReader()">← Back</button>
+    </div>
+  </div>`;
+}
+
+function stopFullListen(){
+  autoMode=false;listenMode=false;stopSpeak();
+  buildReader();
+  document.getElementById('sTxt').textContent='Listening stopped — press Read to continue.';
+}
+
+function playFull(id){
+  const s=STORIES.find(x=>x.id===id),lines=LINES[id];
+  const ch=NCERT_CHAPTERS.find(c=>c.id===id),nlines=NCERT_LINES[id];
+  if(s&&lines){
+    story={s,lines};
+    document.getElementById('rTitle').textContent=s.title;
+    document.getElementById('rMeta').textContent=s.subject+' · '+s.diff+' · 🎧 Listen mode';
+  } else if(ch&&nlines){
+    story={s:{id:ch.id,title:ch.title,subject:'English (NCERT)',diff:ch.diff,isNCERT:true},lines:nlines};
+    document.getElementById('rTitle').textContent=ch.title;
+    document.getElementById('rMeta').textContent=ch.unit+' · '+ch.type+' · 🎧 Listen mode';
+  } else { return; }
+  lineIdx=0;wordIdx=0;correct=0;errors=0;totalWords=0;sessionStart=Date.now();
+  listenMode=true;autoMode=true;
+  document.getElementById('readerDone').style.display='none';
+  document.getElementById('readerWrap').style.display='block';
+  showScr('scrReader');
+  updateMet();
+  if(synth){const u=new SpeechSynthesisUtterance('');u.volume=0;synth.speak(u);}
+  nextLine();
 }
 
 // ══════ INIT ══════════════════════════════════════════════
