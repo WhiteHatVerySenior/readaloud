@@ -1651,7 +1651,8 @@ function speakLine(text){
   const dot = document.getElementById('sDot');
   const txt = document.getElementById('sTxt');
   if(dot) dot.innerHTML = '<span class="app-dot"></span>';
-  if(txt) txt.textContent = lang === 'hi-IN' ? 'सुनिए ध्यान से…' : 'Listen carefully…';
+  const _tag = localStorage.getItem('el_key') ? ' (11)' : ' (ws)';
+  if(txt) txt.textContent = (lang === 'hi-IN' ? 'सुनिए ध्यान से…' : 'Listen carefully…') + _tag;
 
   // Guard: only the first of (onEnd / fallback timer) may advance the line
   let done = false;
