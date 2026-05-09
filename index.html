@@ -1044,8 +1044,9 @@ let autoMode = false;
 let listenMode = false;
 
 function getWords(t){
-  // Match Devanagari words (Hindi) OR English words
-  return t.match(/[ऀ-ॿ]+|[a-zA-Z']+/g)||[];
+  // Match Hindi words (Devanagari letters only, excluding dandas ।॥) OR English words
+  // U+0900-U+0963 and U+0966-U+097F cover letters/matras; U+0964-U+0965 are dandas
+  return t.match(/[ऀ-ॣ०-ॿ]+|[a-zA-Z']+/g)||[];
 }
 function norm(s){
   // Hindi: normalize Unicode (NFC) so Chrome's recognition matches stored text,
@@ -1221,102 +1222,81 @@ function startListen(){
     return;
   }
   if(!sessionStart)sessionStart=Date.now();
-  recognition=new SR();
-  recognition.continuous=true;
-  recognition.interimResults=true;
-  recognition.maxAlternatives=3;
 
   const _isHindi = story && story.lines[lineIdx] && /[ऀ-ॿ]/.test(story.lines[lineIdx].t);
-  recognition.lang = _isHindi ? 'hi-IN' : 'en-IN';
 
-  // For Hindi, Chrome often sends interim results but never isFinal.
-  // We debounce: if no new result for 1.2s after speaking, we process whatever was heard.
-  let _lastInterim = '';
-  let _debounce = null;
+  function _startRec(){
+    if(!recognizing)return;
+    recognition = new SR();
+    recognition.continuous     = false;   // commit each utterance as final — more reliable
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 3;
+    recognition.lang = _isHindi ? 'hi-IN' : 'en-IN';
 
-  function _processInterim(){
-    if(_lastInterim && recognizing){
-      processSpoken(_lastInterim);
-      _lastInterim = '';
-    }
-  }
-
-  recognition.onresult=(e)=>{
-    let interim='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      const result=e.results[i];
-      if(result.isFinal){
-        clearTimeout(_debounce);
-        _lastInterim='';
-        // Pick best alternative
-        let best=result[0].transcript;
-        if(result.length>1 && story){
-          const line=story.lines[lineIdx];
-          if(line && line.s==='user'){
-            const words=getWords(line.t);
-            if(wordIdx<words.length){
-              let bestSc=-1;
-              for(let a=0;a<result.length;a++){
-                const spks=result[a].transcript.trim().split(/\s+/).filter(Boolean);
-                if(!spks.length)continue;
-                const sc=simScore(spks[0],words[wordIdx]);
-                if(sc>bestSc){bestSc=sc;best=result[a].transcript;}
+    recognition.onresult=(e)=>{
+      const st=document.getElementById('sTxt');
+      let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const res=e.results[i];
+        if(res.isFinal){
+          // Pick the alternative that best matches the expected word
+          let best=res[0].transcript;
+          if(res.length>1&&story){
+            const line=story.lines[lineIdx];
+            if(line&&line.s==='user'){
+              const words=getWords(line.t);
+              if(wordIdx<words.length){
+                let bestSc=-1;
+                for(let a=0;a<res.length;a++){
+                  const spks=res[a].transcript.trim().split(/\s+/).filter(Boolean);
+                  if(!spks.length)continue;
+                  const sc=simScore(spks[0],words[wordIdx]);
+                  if(sc>bestSc){bestSc=sc;best=res[a].transcript;}
+                }
               }
             }
           }
+          processSpoken(best);
+        } else {
+          interim+=res[0].transcript;
+          if(st) st.textContent='🎤 '+interim;
         }
-        processSpoken(best);
+      }
+    };
+
+    recognition.onerror=(e)=>{
+      const st=document.getElementById('sTxt');
+      if(e.error==='no-speech'){
+        // With continuous=false, no-speech means a full utterance timeout.
+        // Just restart — don't skip the line.
+        if(recognizing) _startRec();
+      } else if(e.error==='not-allowed'){
+        if(st) st.textContent='❌ Microphone blocked — allow mic in browser settings';
+        recognizing=false;
+      } else if(e.error==='network'){
+        if(st) st.textContent='❌ Network error — Hindi recognition needs internet';
+      } else if(e.error==='aborted'){
+        // Aborted intentionally (stopListen called) — do nothing
       } else {
-        interim+=result[0].transcript;
+        if(st) st.textContent='⚠️ Mic: '+e.error;
       }
-    }
-    const st=document.getElementById('sTxt');
-    if(interim){
-      if(st) st.textContent='🎤 '+interim;
-      if(_isHindi){
-        // Hindi: Chrome rarely sends isFinal — debounce the interim as fallback
-        _lastInterim=interim;
-        clearTimeout(_debounce);
-        _debounce=setTimeout(_processInterim, 1200);
-      }
-    }
-  };
+    };
 
-  recognition.onerror=(e)=>{
-    const st=document.getElementById('sTxt');
-    clearTimeout(_debounce);
-    if(e.error==='no-speech'){
-      if(!autoMode && !listenMode) return;
-      // If we have an unprocessed interim, try it before skipping
-      if(_lastInterim){
-        processSpoken(_lastInterim);
-        _lastInterim='';
-        return;  // don't skip — processSpoken may have completed the line
-      }
-      if(st) st.textContent='⏭ No speech heard — skipping…';
-      stopListen();
-      lineIdx++;wordIdx=0;
-      setTimeout(()=>nextLine(),600);
-    } else if(e.error==='not-allowed'){
-      if(st) st.textContent='❌ Microphone blocked — allow mic in browser settings';
-    } else if(e.error==='network'){
-      if(st) st.textContent='❌ Network error — Hindi recognition needs internet';
-    } else {
-      if(st) st.textContent='⚠️ Mic error: '+e.error;
-    }
-  };
+    // With continuous=false, onend fires after each result — restart to keep listening
+    recognition.onend=()=>{
+      if(recognizing) _startRec();
+    };
 
-  recognition.onend=()=>{
-    clearTimeout(_debounce);
-    if(recognizing){try{recognition.start();}catch(ex){}}
-  };
+    try{ recognition.start(); }catch(ex){}
+  }
+
   recognizing=true;
-  try{recognition.start();}catch(ex){}
+  _startRec();
 
   const dot=document.getElementById('sDot');
   const txt=document.getElementById('sTxt');
-  if(dot)dot.innerHTML='<span class="mic-dot"></span>';
-  if(txt)txt.textContent=_isHindi?'🎤 बोलिए… (हिन्दी)':'🎤 Listening — read aloud';
+  if(dot) dot.innerHTML='<span class="mic-dot"></span>';
+  if(txt) txt.textContent=_isHindi?'🎤 बोलिए… (हिन्दी)':'🎤 Listening — read aloud';
 }
 function stopListen(){
   recognizing=false;
