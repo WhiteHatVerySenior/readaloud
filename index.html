@@ -1205,78 +1205,243 @@ function highlightW(){
   }
 }
 
-// ── TTS (app turn) ────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// TTS ENGINE
+// ────────────────────────────────────────────────────────────
+// Clean provider pattern. To swap to ElevenLabs or OpenAI:
+//   1. Implement the provider object (see stubs below)
+//   2. Change TTS_PROVIDER to its key — nothing else changes.
+//
+// Provider contract:
+//   .speak(text, lang, onEnd, onError) → void
+//   .stop()                            → void
+// ════════════════════════════════════════════════════════════
+
+// ── Web Speech provider ──────────────────────────────────
+const webSpeechProvider = (function(){
+  const syn = window.speechSynthesis;
+  const _voiceCache = {};     // lang → best Voice object
+  const _timers = [];         // pending inter-phrase timers
+  let   _stopped = false;
+
+  // Scored preference list — first name-match wins, higher score = better
+  const VOICE_PREFS = [
+    ['Google UK English Female', 100],
+    ['Google UK English Male',    90],
+    ['Microsoft Aria',            88],
+    ['Samantha',                  85],  // macOS
+    ['Karen',                     82],  // macOS Australian
+    ['Moira',                     78],  // macOS Irish
+    ['Daniel',                    75],  // macOS British male
+    ['Microsoft Zira',            68],
+    ['Google US English',         65],
+    ['Google',                    55],  // any other Google neural voice
+  ];
+
+  function pickVoice(lang) {
+    if (_voiceCache[lang]) return _voiceCache[lang];
+    const all = syn.getVoices();
+    if (!all.length) return null;        // voices not loaded yet — browser uses default
+    let best = null, bestScore = -1;
+    if (lang === 'hi-IN') {
+      best = all.find(v => v.lang.startsWith('hi') || v.name.includes('Lekha')) || null;
+    } else {
+      all.forEach(v => {
+        if (!v.lang.startsWith('en')) return;
+        const entry = VOICE_PREFS.find(([n]) => v.name.includes(n));
+        const sc    = entry ? entry[1] : (v.localService ? 4 : 12);
+        if (sc > bestScore) { best = v; bestScore = sc; }
+      });
+    }
+    if (best) _voiceCache[lang] = best;
+    return best;
+  }
+
+  // Split one line of text into speakable phrases:
+  //   • always split at sentence boundaries (. ! ?)
+  //   • also split at em-dash (—) for a dramatic beat inside a sentence
+  function toPhrases(text) {
+    const sentences = text.match(/[^.!?]+[.!?]*/g)?.map(s => s.trim()).filter(Boolean) || [text];
+    const out = [];
+    sentences.forEach(sent => {
+      const isQ  = sent.trimEnd().endsWith('?');
+      const isEx = sent.trimEnd().endsWith('!');
+      const parts = sent.split(/\s*—\s*/);        // em-dash → sub-phrases
+      parts.forEach((p, i) => {
+        p = p.trim();
+        if (!p) return;
+        out.push({
+          text:    p,
+          isQ,   isEx,
+          isDash:  parts.length > 1 && i < parts.length - 1,  // pause follows
+          sentEnd: i === parts.length - 1,                      // last chunk of sentence
+        });
+      });
+    });
+    return out;
+  }
+
+  // Per-phrase prosody: rate / pitch / volume
+  function getProsody(ph) {
+    const wc = ph.text.split(/\s+/).length;
+    let rate = 0.87, pitch = 1.0, volume = 1.0;
+
+    // Length-based rate: very short phrases land heavier; very long eases off
+    if      (wc <= 4)  rate = 0.81;
+    else if (wc <= 8)  rate = 0.85;
+    else if (wc > 18)  rate = 0.83;
+
+    if (ph.sentEnd) {
+      if (ph.isQ)  { pitch = 1.14; rate -= 0.03; }           // question rises
+      if (ph.isEx) { pitch = 1.09; rate += 0.03; }           // exclamation lifts
+      if (!ph.isQ && !ph.isEx) rate = Math.max(rate - 0.02, 0.74); // settle at end
+    }
+    if (ph.isDash) rate = Math.max(rate - 0.05, 0.73);       // slow before the drama
+
+    return { rate: Math.min(Math.max(rate, 0.72), 1.0), pitch, volume };
+  }
+
+  // Silence gap (ms) to insert after a phrase
+  function gapAfter(ph) {
+    if (ph.isDash)  return 380;  // em-dash — dramatic beat pause
+    return 0;                    // inter-sentence gap handled by speakLine
+  }
+
+  function stop() {
+    _stopped = true;
+    syn.cancel();
+    _timers.forEach(clearTimeout);
+    _timers.length = 0;
+  }
+
+  function speak(text, lang, onEnd, onError) {
+    if (!syn) { onError(); return; }
+    stop();
+    _stopped = false;
+
+    const phrases = toPhrases(text);
+    const voice   = pickVoice(lang);
+    let i = 0;
+
+    function next() {
+      if (_stopped) return;
+      if (i >= phrases.length) { onEnd(); return; }
+
+      const ph  = phrases[i];
+      const pro = getProsody(ph);
+      const utt = new SpeechSynthesisUtterance(ph.text);
+      utt.lang   = lang;
+      utt.rate   = pro.rate;
+      utt.pitch  = pro.pitch;
+      utt.volume = pro.volume;
+      if (voice) utt.voice = voice;
+
+      utt.onend = () => {
+        if (_stopped) return;
+        i++;
+        const gap = gapAfter(ph);
+        if (gap > 0) _timers.push(setTimeout(next, gap));
+        else next();
+      };
+      utt.onerror = e => {
+        if (_stopped || e.error === 'interrupted') return;
+        i++; next();    // skip broken phrase and carry on
+      };
+
+      if (syn.paused) syn.resume();
+      syn.speak(utt);
+    }
+    next();
+  }
+
+  return { speak, stop };
+})();
+
+// ── Future provider stubs — implement and uncomment to activate ──
+//
+// const elevenLabsProvider = {
+//   _audio: null,
+//   async speak(text, lang, onEnd, onError) {
+//     const res = await fetch('https://api.elevenlabs.io/v1/text-to-speech/VOICE_ID', {
+//       method: 'POST',
+//       headers: { 'xi-api-key': EL_API_KEY, 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ text, model_id: 'eleven_turbo_v2' })
+//     });
+//     const blob = await res.blob();
+//     this._audio = new Audio(URL.createObjectURL(blob));
+//     this._audio.onended = onEnd;
+//     this._audio.onerror = onError;
+//     this._audio.play();
+//   },
+//   stop() { if (this._audio) { this._audio.pause(); this._audio.currentTime = 0; } }
+// };
+//
+// const openAiProvider = {
+//   _audio: null,
+//   async speak(text, lang, onEnd, onError) {
+//     const res = await fetch('https://api.openai.com/v1/audio/speech', {
+//       method: 'POST',
+//       headers: { 'Authorization': 'Bearer ' + OAI_API_KEY, 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ model: 'tts-1-hd', voice: 'nova', input: text })
+//     });
+//     const blob = await res.blob();
+//     this._audio = new Audio(URL.createObjectURL(blob));
+//     this._audio.onended = onEnd;
+//     this._audio.onerror = onError;
+//     this._audio.play();
+//   },
+//   stop() { if (this._audio) { this._audio.pause(); this._audio.currentTime = 0; } }
+// };
+
+// ── Provider registry + active selection ─────────────────
+const TTS_PROVIDERS = {
+  webspeech:  webSpeechProvider,
+  // elevenlabs: elevenLabsProvider,   // ← uncomment when ready
+  // openai:     openAiProvider,       // ← uncomment when ready
+};
+const TTS_PROVIDER = 'webspeech';       // ← change this ONE line to switch providers
+
+function ttsSpeak(text, lang, onEnd, onError) {
+  (TTS_PROVIDERS[TTS_PROVIDER] || webSpeechProvider).speak(text, lang, onEnd, onError);
+}
+function ttsStop() {
+  (TTS_PROVIDERS[TTS_PROVIDER] || webSpeechProvider).stop();
+}
+
+// ════════════════════════════════════════════════════════════
+
+// ── App-level speaker — calls TTS engine, handles line advance
 function speakLine(text){
-  if(!synth){
-    setTimeout(()=>{lineIdx++;nextLine();},1200);
+  if(!window.speechSynthesis && TTS_PROVIDER === 'webspeech'){
+    setTimeout(()=>{ lineIdx++; nextLine(); }, 1200);
     return;
   }
-  stopSpeak();
-
-  // Detect language from current line
   const line = story ? story.lines[lineIdx] : null;
-  const isHindi = line && /[\u0900-\u097F]/.test(line.t);
-
-  // Break text into natural chunks at punctuation for more organic delivery
-  // We speak the full text but tune prosody carefully
-  const utt = new SpeechSynthesisUtterance(text);
-
-  if(isHindi){
-    utt.lang = 'hi-IN';
-    utt.rate = 0.82;
-    utt.pitch = 1.08;
-    const voices = synth.getVoices();
-    const pref = voices.find(v => v.lang.startsWith('hi') ||
-      v.name.toLowerCase().includes('hindi') ||
-      v.name.includes('Lekha'));
-    if(pref) utt.voice = pref;
-  } else {
-    utt.lang = 'en-IN';
-    // Vary rate slightly based on sentence length — shorter = slightly faster, longer = slower
-    const wordCount = text.split(' ').length;
-    utt.rate = wordCount < 8 ? 0.84 : wordCount < 14 ? 0.80 : 0.76;
-    utt.pitch = 1.0 + (Math.random() * 0.08); // tiny natural variation
-    const voices = synth.getVoices();
-    // Prefer warm, natural voices
-    const pref = voices.find(v => v.lang.startsWith('en') && (
-      v.name.includes('Samantha') ||   // macOS warm
-      v.name.includes('Karen') ||      // Australian natural
-      v.name.includes('Moira') ||      // Irish warm
-      v.name.includes('Google UK') ||
-      v.name.includes('Daniel') ||
-      v.name.includes('Google') 
-    ));
-    if(pref) utt.voice = pref;
-  }
+  const lang = (line && /[ऀ-ॿ]/.test(line.t)) ? 'hi-IN' : 'en-IN';
 
   const dot = document.getElementById('sDot');
   const txt = document.getElementById('sTxt');
   if(dot) dot.innerHTML = '<span class="app-dot"></span>';
-  if(txt) txt.textContent = isHindi ? 'सुनिए ध्यान से…' : 'Listen carefully…';
+  if(txt) txt.textContent = lang === 'hi-IN' ? 'सुनिए ध्यान से…' : 'Listen carefully…';
 
-  // Guard against double-advance (onend + fallback both firing)
+  // Guard: only the first of (onEnd / fallback timer) may advance the line
   let done = false;
   const advance = (pause) => {
     if(done) return;
-    done = true;
-    clearTimeout(fallback);
-    speaking = false;
-    lineIdx++;
-    setTimeout(()=>nextLine(), pause);
+    done = true; clearTimeout(fallback); speaking = false;
+    lineIdx++; setTimeout(()=>nextLine(), pause);
   };
-  // Fallback: if Chrome never fires onend (known bug), advance after estimated duration
-  const estMs = text.split(' ').length * 650 + 2500;
+  // Safety net: if the TTS engine never fires onEnd (Chrome bug), advance anyway
+  const estMs = text.split(/\s+/).length * 700 + 3500;
   const fallback = setTimeout(()=>advance(0), estMs);
 
-  utt.onstart = ()=>{ speaking = true; };
-  utt.onend   = ()=>{ advance(700 + Math.random() * 400); };
-  utt.onerror = ()=>{ advance(300); };
   speaking = true;
-
-  if(synth.paused) synth.resume();
-  synth.speak(utt);
+  ttsSpeak(text, lang,
+    ()=>{ advance(680 + Math.random()*320); },   // onEnd — natural post-line breath
+    ()=>{ advance(300); }                         // onError — quick skip
+  );
 }
-function stopSpeak(){ if(synth) synth.cancel(); speaking=false; }
+function stopSpeak(){ ttsStop(); speaking=false; }
 
 // ── FINISH ────────────────────────────────────────────
 function showDone(){
