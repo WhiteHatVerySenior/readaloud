@@ -161,6 +161,17 @@ select,input[type=date],input[type=text]{width:100%;padding:8px 10px;border-radi
   .line-text{font-size:15px}
 }
 
+/* ═══ SETTINGS MODAL ═══ */
+#settingsModal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:none;align-items:flex-end;justify-content:center;}
+#settingsModal.open{display:flex;animation:fadeIn .18s ease;}
+#settingsSheet{background:var(--bg);border-radius:18px 18px 0 0;width:100%;max-width:600px;padding:20px 18px 32px;max-height:88vh;overflow-y:auto;}
+#settingsSheet h3{font-size:16px;font-weight:800;margin-bottom:18px;}
+.set-section{border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;margin-bottom:12px;}
+.set-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);margin-bottom:6px;}
+.el-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:700;}
+.el-on{background:#EAF3DE;color:#0F6E56;}.el-off{background:var(--bg3);color:var(--text3);}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
 /* ═══ DARK MODE ═══ */
 body.dark{
   --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#111113;
@@ -227,6 +238,7 @@ body.dark select,body.dark input[type=date],body.dark input[type=text]{backgroun
   <div class="topbar">
     <div><div class="topbar-title">📊 Dashboard</div><div class="topbar-sub">Ms. Priya · Class 7B</div></div>
     <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-sm" onclick="openSettings()" style="padding:5px 9px;font-size:15px" title="Settings">⚙️</button>
       <button class="btn btn-sm" onclick="toggleDark()" id="darkBtnT" style="padding:5px 9px;font-size:15px" title="Dark mode">🌙</button>
       <div class="avatar av-purple">TP</div>
       <button class="btn btn-sm" onclick="goLogin()">Sign out</button>
@@ -299,6 +311,7 @@ body.dark select,body.dark input[type=date],body.dark input[type=text]{backgroun
   <div class="topbar">
     <div><div class="topbar-title" id="sGreet">Hello!</div><div class="topbar-sub">Class 7B · ReadAloud</div></div>
     <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-sm" onclick="openSettings()" style="padding:5px 9px;font-size:15px" title="Settings">⚙️</button>
       <button class="btn btn-sm" onclick="toggleDark()" id="darkBtnS" style="padding:5px 9px;font-size:15px" title="Dark mode">🌙</button>
       <div class="avatar" id="sAv" style="background:#B5D4F4;color:#0C447C">AK</div>
       <button class="btn btn-sm" onclick="goLogin()">Sign out</button>
@@ -356,6 +369,7 @@ body.dark select,body.dark input[type=date],body.dark input[type=text]{backgroun
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <span class="lbadge lv-flu" id="rBadge">—</span>
       <span style="font-size:12px;color:var(--text2)" id="rWpmTop">—</span>
+      <button class="btn btn-sm" onclick="openSettings()" style="padding:5px 9px;font-size:14px" title="Settings">⚙️</button>
       <button class="btn btn-sm" onclick="toggleDark()" id="darkBtnR" style="padding:5px 9px;font-size:14px" title="Dark mode">🌙</button>
     </div>
   </div>
@@ -369,6 +383,67 @@ body.dark select,body.dark input[type=date],body.dark input[type=text]{backgroun
     <div class="pbar-wrap"><div class="pbar" id="rPbar" style="width:0%"></div></div>
     <div class="reader-wrap" id="readerWrap"></div>
     <div id="readerDone" style="display:none"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settingsModal" onclick="closeSettings()">
+  <div id="settingsSheet" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <h3 style="margin:0">⚙️ Settings</h3>
+      <button onclick="closeSettings()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3);padding:0;line-height:1">×</button>
+    </div>
+
+    <!-- Active voice status -->
+    <div class="set-section" style="display:flex;align-items:center;gap:12px">
+      <div style="flex:1">
+        <div class="set-label">Active voice</div>
+        <div id="setProviderName" style="font-size:14px;font-weight:700;margin-top:2px">🔊 System voice</div>
+        <div id="setProviderDesc" style="font-size:11px;color:var(--text2);margin-top:3px">Web Speech API — built-in, works offline</div>
+      </div>
+      <div id="setProviderPill" class="el-pill el-off">OFF</div>
+    </div>
+
+    <!-- ElevenLabs section -->
+    <div class="set-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div>
+          <div style="font-size:13px;font-weight:700">🎙️ ElevenLabs Neural Voice</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Human-quality, expressive reading. Free: 10,000 chars/month.</div>
+        </div>
+        <a href="https://elevenlabs.io/sign-up" target="_blank" style="font-size:11px;color:var(--blue);font-weight:600;white-space:nowrap;margin-left:10px">Get free key →</a>
+      </div>
+
+      <div style="margin-bottom:10px">
+        <div class="set-label">API Key</div>
+        <input id="elKeyInput" type="password" placeholder="Paste your ElevenLabs API key…" autocomplete="off"
+          style="font-family:monospace;font-size:12px;letter-spacing:.04em">
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div class="set-label">Voice</div>
+        <select id="elVoiceInput">
+          <option value="21m00Tcm4TlvDq8ikWAM">Rachel — calm, clear (female) ⭐ recommended</option>
+          <option value="EXAVITQu4vr4xnSDxMaL">Bella — soft, gentle (female)</option>
+          <option value="AZnzlk1XvdvUeBnXmlld">Domi — warm, expressive (female)</option>
+          <option value="ErXwobaYiN019PkySvjV">Antoni — clear, friendly (male)</option>
+          <option value="TxGEqnHWrfWFTfGW9XjX">Josh — natural, conversational (male)</option>
+          <option value="VR6AewLTigWG4xSOukaG">Arnold — deep, authoritative (male)</option>
+        </select>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" style="flex:1;min-width:120px" onclick="saveElSettings()">✓ Save &amp; Enable</button>
+        <button class="btn btn-red btn-sm" id="elClearBtn" style="display:none" onclick="clearElSettings()">Remove key</button>
+      </div>
+      <div id="elSaveMsg" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--green)"></div>
+    </div>
+
+    <!-- Web Speech info -->
+    <div class="set-section" style="opacity:.7">
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px">🔊 Web Speech (default)</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.6">Always available. Works offline. Quality depends on your device — Chrome on Mac or Android usually has the best voices. No setup needed.</div>
+    </div>
   </div>
 </div>
 
@@ -1393,26 +1468,180 @@ const webSpeechProvider = (function(){
 //   stop() { if (this._audio) { this._audio.pause(); this._audio.currentTime = 0; } }
 // };
 
-// ── Provider registry + active selection ─────────────────
-const TTS_PROVIDERS = {
-  webspeech:  webSpeechProvider,
-  // elevenlabs: elevenLabsProvider,   // ← uncomment when ready
-  // openai:     openAiProvider,       // ← uncomment when ready
-};
-const TTS_PROVIDER = 'webspeech';       // ← change this ONE line to switch providers
+// ── ElevenLabs provider ──────────────────────────────────
+const elevenLabsProvider = (function(){
+  const _cache = {};   // text → blob URL (persists for session)
+  let _audio   = null;
+  let _aborted = false;
+
+  async function _fetchAudio(text, lang) {
+    const key     = localStorage.getItem('el_key');
+    const voiceId = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
+    // Use multilingual model for Hindi; turbo for English (faster)
+    const model   = lang === 'hi-IN' ? 'eleven_multilingual_v2' : 'eleven_turbo_v2';
+    const res = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      {
+        method:  'POST',
+        headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          text,
+          model_id:       model,
+          voice_settings: { stability: 0.48, similarity_boost: 0.78, style: 0.12 }
+        })
+      }
+    );
+    if (!res.ok) throw new Error(`ElevenLabs ${res.status}`);
+    return URL.createObjectURL(await res.blob());
+  }
+
+  function _play(url, onEnd, onError) {
+    _audio = new Audio(url);
+    _audio.onended = () => { if (!_aborted) onEnd(); };
+    _audio.onerror = () => { if (!_aborted) onError(); };
+    _audio.play().catch(onError);
+  }
+
+  async function speak(text, lang, onEnd, onError) {
+    _aborted = false;
+    const key = localStorage.getItem('el_key');
+    if (!key) { onError(); return; }                // no key → caller falls back
+    try {
+      const cacheKey = lang + '|' + text.trim();
+      if (!_cache[cacheKey]) _cache[cacheKey] = await _fetchAudio(text, lang);
+      if (_aborted) return;                          // stop() called while fetching
+      _play(_cache[cacheKey], onEnd, onError);
+    } catch(err) {
+      console.warn('ElevenLabs error:', err.message);
+      if (!_aborted) onError();                      // triggers fallback in ttsSpeak
+    }
+  }
+
+  // Silently pre-cache a line in the background (called while current line plays)
+  async function prefetch(text, lang) {
+    const key = localStorage.getItem('el_key');
+    if (!key) return;
+    const cacheKey = lang + '|' + text.trim();
+    if (_cache[cacheKey]) return;                    // already cached
+    try { _cache[cacheKey] = await _fetchAudio(text, lang); } catch(_) {}
+  }
+
+  function stop() {
+    _aborted = true;
+    if (_audio) { _audio.pause(); _audio.currentTime = 0; _audio = null; }
+  }
+
+  return { speak, stop, prefetch };
+})();
+
+// ── Provider registry ─────────────────────────────────────
+// ttsSpeak() auto-selects: ElevenLabs if key exists, else Web Speech.
+// Adding a new provider in future = implement its object above, then
+// add one line to the if-chain in ttsSpeak(). Nothing else changes.
+
+function _activeProvider() {
+  return localStorage.getItem('el_key') ? elevenLabsProvider : webSpeechProvider;
+}
 
 function ttsSpeak(text, lang, onEnd, onError) {
-  (TTS_PROVIDERS[TTS_PROVIDER] || webSpeechProvider).speak(text, lang, onEnd, onError);
+  if (localStorage.getItem('el_key')) {
+    // ElevenLabs with automatic Web Speech fallback on any error
+    elevenLabsProvider.speak(text, lang, onEnd, () => {
+      console.warn('ElevenLabs failed — falling back to Web Speech');
+      webSpeechProvider.speak(text, lang, onEnd, onError);
+    });
+  } else {
+    webSpeechProvider.speak(text, lang, onEnd, onError);
+  }
 }
 function ttsStop() {
-  (TTS_PROVIDERS[TTS_PROVIDER] || webSpeechProvider).stop();
+  elevenLabsProvider.stop();
+  webSpeechProvider.stop();
+}
+
+// Kick off background pre-fetch for the NEXT TTS line while current one plays
+function prefetchNextLine() {
+  if (!localStorage.getItem('el_key') || !story) return;
+  for (let i = lineIdx + 1; i < story.lines.length; i++) {
+    const ln = story.lines[i];
+    if (listenMode || ln.s === 'app') {
+      const lang = /[ऀ-ॿ]/.test(ln.t) ? 'hi-IN' : 'en-IN';
+      elevenLabsProvider.prefetch(ln.t, lang);
+      break;
+    }
+  }
+}
+
+// ── Settings UI ───────────────────────────────────────────
+function openSettings() {
+  // Populate fields from localStorage
+  const key     = localStorage.getItem('el_key') || '';
+  const voice   = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
+  document.getElementById('elKeyInput').value   = key ? '••••••••••••' + key.slice(-4) : '';
+  document.getElementById('elKeyInput').dataset.real = key;
+  document.getElementById('elVoiceInput').value = voice;
+  document.getElementById('elClearBtn').style.display = key ? 'inline-flex' : 'none';
+  _updateSettingsStatus();
+  document.getElementById('settingsModal').classList.add('open');
+}
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('open');
+  document.getElementById('elSaveMsg').textContent = '';
+}
+function saveElSettings() {
+  const inp     = document.getElementById('elKeyInput');
+  // If the user didn't type a new key (still shows masked), keep the real one
+  const newKey  = inp.value.includes('•') ? inp.dataset.real : inp.value.trim();
+  const voice   = document.getElementById('elVoiceInput').value;
+  const msg     = document.getElementById('elSaveMsg');
+  if (!newKey) { msg.style.color='var(--red)'; msg.textContent='Please paste your API key first.'; return; }
+  localStorage.setItem('el_key',   newKey);
+  localStorage.setItem('el_voice', voice);
+  inp.dataset.real = newKey;
+  document.getElementById('elClearBtn').style.display = 'inline-flex';
+  msg.style.color = 'var(--green)';
+  msg.textContent = '✓ ElevenLabs enabled! Voice will activate on next line.';
+  _updateSettingsStatus();
+}
+function clearElSettings() {
+  localStorage.removeItem('el_key');
+  localStorage.removeItem('el_voice');
+  document.getElementById('elKeyInput').value = '';
+  document.getElementById('elKeyInput').dataset.real = '';
+  document.getElementById('elClearBtn').style.display = 'none';
+  const msg = document.getElementById('elSaveMsg');
+  msg.style.color = 'var(--text2)';
+  msg.textContent = 'Key removed — switched back to system voice.';
+  _updateSettingsStatus();
+}
+function _updateSettingsStatus() {
+  const active   = !!localStorage.getItem('el_key');
+  const name     = document.getElementById('setProviderName');
+  const desc     = document.getElementById('setProviderDesc');
+  const pill     = document.getElementById('setProviderPill');
+  if (active) {
+    const voiceNames = {
+      '21m00Tcm4TlvDq8ikWAM':'Rachel','EXAVITQu4vr4xnSDxMaL':'Bella',
+      'AZnzlk1XvdvUeBnXmlld':'Domi','ErXwobaYiN019PkySvjV':'Antoni',
+      'TxGEqnHWrfWFTfGW9XjX':'Josh','VR6AewLTigWG4xSOukaG':'Arnold',
+    };
+    const vName = voiceNames[localStorage.getItem('el_voice')] || 'Custom';
+    name.textContent = '🎙️ ElevenLabs — ' + vName;
+    desc.textContent = 'Neural voice active. Falls back to system voice on error.';
+    pill.textContent = 'ON'; pill.className = 'el-pill el-on';
+  } else {
+    name.textContent = '🔊 System voice';
+    desc.textContent = 'Web Speech API — built-in, works offline';
+    pill.textContent = 'OFF'; pill.className = 'el-pill el-off';
+  }
 }
 
 // ════════════════════════════════════════════════════════════
 
 // ── App-level speaker — calls TTS engine, handles line advance
 function speakLine(text){
-  if(!window.speechSynthesis && TTS_PROVIDER === 'webspeech'){
+  // If no ElevenLabs key and Web Speech unavailable, auto-skip
+  if(!window.speechSynthesis && !localStorage.getItem('el_key')){
     setTimeout(()=>{ lineIdx++; nextLine(); }, 1200);
     return;
   }
@@ -1440,6 +1669,7 @@ function speakLine(text){
     ()=>{ advance(680 + Math.random()*320); },   // onEnd — natural post-line breath
     ()=>{ advance(300); }                         // onError — quick skip
   );
+  prefetchNextLine();   // background-fetch next TTS line while this one plays
 }
 function stopSpeak(){ ttsStop(); speaking=false; }
 
