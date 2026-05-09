@@ -847,6 +847,8 @@ function buildReader(){
 // ── AUTO FLOW ─────────────────────────────────────────
 function startAuto(){
   autoMode=true;
+  // Activate speech synthesis inside the user gesture so async calls later work
+  if(synth){ const u=new SpeechSynthesisUtterance(''); u.volume=0; synth.speak(u); }
   nextLine();
 }
 
@@ -1039,11 +1041,8 @@ function speakLine(text){
   utt.onerror = ()=>{ advance(300); };
   speaking = true;
 
-  // Chrome fix: short delay after cancel() + resume() in case synth is paused
-  setTimeout(()=>{
-    if(synth.paused) synth.resume();
-    synth.speak(utt);
-  }, 50);
+  if(synth.paused) synth.resume();
+  synth.speak(utt);
 }
 function stopSpeak(){ if(synth) synth.cancel(); speaking=false; }
 
