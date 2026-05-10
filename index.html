@@ -1731,15 +1731,8 @@ function _hasWorker() {
 }
 
 function ttsSpeak(text, lang, onEnd, onError) {
-  if (_hasWorker()) {
-    // ElevenLabs via Cloudflare Worker, with automatic Web Speech fallback
-    elevenLabsProvider.speak(text, lang, onEnd, () => {
-      console.warn('Worker/ElevenLabs failed — falling back to Web Speech');
-      webSpeechProvider.speak(text, lang, onEnd, onError);
-    });
-  } else {
-    webSpeechProvider.speak(text, lang, onEnd, onError);
-  }
+  // Only ElevenLabs via Cloudflare Worker — no Web Speech fallback
+  elevenLabsProvider.speak(text, lang, onEnd, onError);
 }
 function ttsStop() {
   elevenLabsProvider.stop();
@@ -1822,21 +1815,15 @@ function _updateSettingsStatus() {
 
 // ── App-level speaker — calls TTS engine, handles line advance
 function speakLine(text){
-  // If no Worker URL and Web Speech unavailable, auto-skip
   // Always kill any existing TTS before starting a new one
   ttsStop();
-  if(!window.speechSynthesis && !_hasWorker()){
-    setTimeout(()=>{ lineIdx++; nextLine(); }, 1200);
-    return;
-  }
   const line = story ? story.lines[lineIdx] : null;
   const lang = (line && /[ऀ-ॿ]/.test(line.t)) ? 'hi-IN' : 'en-IN';
 
   const dot = document.getElementById('sDot');
   const txt = document.getElementById('sTxt');
   if(dot) dot.innerHTML = '<span class="app-dot"></span>';
-  const _tag = _hasWorker() ? ' (11)' : ' (ws)';
-  if(txt) txt.textContent = (lang === 'hi-IN' ? 'सुनिए ध्यान से…' : 'Listen carefully…') + _tag;
+  if(txt) txt.textContent = (lang === 'hi-IN' ? 'सुनिए ध्यान से…' : 'Listen carefully…');
 
   // Guard: only the first of (onEnd / fallback timer) may advance the line
   let done = false;
