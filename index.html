@@ -1137,8 +1137,15 @@ function buildReader(){
 // ── AUTO FLOW ─────────────────────────────────────────
 function startAuto(){
   autoMode=true;
-  // Activate speech synthesis inside the user gesture so async calls later work
+  // Unlock Web Speech inside user gesture
   if(synth){ const u=new SpeechSynthesisUtterance(''); u.volume=0; synth.speak(u); }
+  // Unlock HTML Audio for ElevenLabs — Chrome blocks audio.play() after async gaps
+  // unless Audio has been touched inside a user gesture first
+  try{
+    const _unlock=new Audio();
+    _unlock.play().catch(()=>{});
+    window._audioUnlocked=true;
+  }catch(e){}
   nextLine();
 }
 
@@ -1656,7 +1663,24 @@ const elevenLabsProvider = (function () {
     _audio = new Audio(url);
     _audio.onended = () => { if (!_aborted) onEnd(); };
     _audio.onerror = () => { if (!_aborted) onError(); };
-    _audio.play().catch(onError);
+    // Chrome autoplay: if play() is blocked, show a tap-to-play prompt
+    const p = _audio.play();
+    if(p && p.catch){
+      p.catch(err=>{
+        if(_aborted) return;
+        // Autoplay blocked — show a visible prompt so user can tap to resume
+        const st=document.getElementById('sTxt');
+        if(st){
+          st.textContent='▶ Tap here to hear the audio';
+          st.style.cursor='pointer';
+          st.onclick=()=>{
+            st.onclick=null; st.style.cursor='';
+            _audio.play().catch(onError);
+          };
+        }
+        // Don't call onError — wait for user tap
+      });
+    }
   }
 
   async function speak(text, lang, onEnd, onError) {
