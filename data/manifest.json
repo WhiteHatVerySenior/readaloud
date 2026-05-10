@@ -1,0 +1,337 @@
+{
+  "version": 1,
+  "note": "Chapter manifest. Add a new chapter by dropping a JSON in chapters/ and adding an entry here. Chapters without a 'file' field render dimmed (coming soon).",
+  "books": [
+    {
+      "id": "g6-en-poorvi",
+      "grade": 6,
+      "subject": "English",
+      "title": "Poorvi",
+      "publisher": "NCERT",
+      "units": [
+        {
+          "id": "u1",
+          "title": "Fables and Folk Tales",
+          "chapters": [
+            {
+              "id": "g6-en-poorvi-u1-c1-dew",
+              "title": "A Bottle of Dew",
+              "type": "Story",
+              "diff": "Easy",
+              "emoji": "🍌",
+              "bg": "#EAF3DE",
+              "desc": "Sudha Murty's tale of a sage who tricks a man into discovering that hard work, not magic, creates true wealth.",
+              "author": "Sudha Murty",
+              "file": "chapters/g6-en-poorvi-u1-c1-dew.json"
+            },
+            {
+              "id": "g6-en-poorvi-u1-c2-raven",
+              "title": "The Raven and the Fox",
+              "type": "Poem",
+              "diff": "Easy",
+              "emoji": "🦊",
+              "bg": "#FAEEDA",
+              "desc": "Jean de La Fontaine's classic fable about flattery, vanity, and the cost of pride.",
+              "author": "Jean de La Fontaine"
+            },
+            {
+              "id": "g6-en-poorvi-u1-c3-rama",
+              "title": "Rama to the Rescue",
+              "type": "Graphic Story",
+              "diff": "Medium",
+              "emoji": "👮",
+              "bg": "#FFE4E1",
+              "desc": "A Tamil Nadu folktale where a clever couple use the village kotwal's name to outwit a thief at night.",
+              "author": "Folk tale (Tamil Nadu)"
+            }
+          ]
+        },
+        {
+          "id": "u2",
+          "title": "Friendship",
+          "chapters": [
+            {
+              "id": "g6-en-poorvi-u2-c1-best-friends",
+              "title": "The Unlikely Best Friends",
+              "type": "Story",
+              "diff": "Easy",
+              "emoji": "🐘",
+              "bg": "#E1F5EE",
+              "desc": "Gajaraj the elephant and Buntee the dog form a beautiful, unexpected friendship."
+            },
+            {
+              "id": "g6-en-poorvi-u2-c2-friends-prayer",
+              "title": "A Friend's Prayer",
+              "type": "Poem",
+              "diff": "Easy",
+              "emoji": "🙏",
+              "bg": "#EAF3DE",
+              "desc": "A poem on the importance of nurturing real, lasting friendships.",
+              "author": "Jill Wolf"
+            },
+            {
+              "id": "g6-en-poorvi-u2-c3-chair",
+              "title": "The Chair",
+              "type": "Story",
+              "diff": "Medium",
+              "emoji": "🪑",
+              "bg": "#E6F1FB",
+              "desc": "A grandfather helps Mario tell real friends from superficial ones."
+            }
+          ]
+        },
+        {
+          "id": "u3",
+          "title": "Nurturing Nature",
+          "chapters": [
+            {
+              "id": "g6-en-poorvi-u3-c1-neem",
+              "title": "Neem Baba",
+              "type": "Conversation",
+              "diff": "Easy",
+              "emoji": "🌳",
+              "bg": "#C8E6A0",
+              "desc": "Amber chats with the wise old neem tree and learns the many gifts the tree gives our country.",
+              "author": "S. I. Farooqi (adapted)"
+            },
+            {
+              "id": "g6-en-poorvi-u3-c2-bird-thought",
+              "title": "What a Bird Thought",
+              "type": "Poem",
+              "diff": "Easy",
+              "emoji": "🐦",
+              "bg": "#9FE1CB",
+              "desc": "A small bird's perspective on the wide, surprising world."
+            },
+            {
+              "id": "g6-en-poorvi-u3-c3-spices",
+              "title": "Spices that Heal Us",
+              "type": "Letter",
+              "diff": "Medium",
+              "emoji": "🌶️",
+              "bg": "#FAEEDA",
+              "desc": "A grandmother's letter on the everyday Indian spices with natural healing power."
+            }
+          ]
+        },
+        {
+          "id": "u4",
+          "title": "Sports and Wellness",
+          "chapters": [
+            {
+              "id": "g6-en-poorvi-u4-c1-change-of-heart",
+              "title": "Change of Heart",
+              "type": "Story",
+              "diff": "Medium",
+              "emoji": "⚽",
+              "bg": "#E6F1FB",
+              "desc": "Sportsmanship, fair play, and the joy of the game itself, not just the win."
+            },
+            {
+              "id": "g6-en-poorvi-u4-c2-winner",
+              "title": "The Winner",
+              "type": "Poem",
+              "diff": "Easy",
+              "emoji": "🏆",
+              "bg": "#FFF3CD",
+              "desc": "A poem capturing the joy and thrill of childhood outdoor games.",
+              "author": "Georgia Heard"
+            },
+            {
+              "id": "g6-en-poorvi-u4-c3-yoga",
+              "title": "Yoga — A Way of Life",
+              "type": "Non-fiction",
+              "diff": "Medium",
+              "emoji": "🧘",
+              "bg": "#EAF3DE",
+              "desc": "Yoga as a path to a healthy, well-balanced and disciplined life."
+            }
+          ]
+        },
+        {
+          "id": "u5",
+          "title": "Culture and Tradition",
+          "chapters": [
+            {
+              "id": "g6-en-poorvi-u5-c1-bharat",
+              "title": "Hamara Bharat — Incredible India!",
+              "type": "Narrative",
+              "diff": "Medium",
+              "emoji": "🇮🇳",
+              "bg": "#FFE4B5",
+              "desc": "Children from across India share stories of the country's rich craft heritage."
+            },
+            {
+              "id": "g6-en-poorvi-u5-c2-kites",
+              "title": "The Kites",
+              "type": "Poem",
+              "diff": "Easy",
+              "emoji": "🪁",
+              "bg": "#B5D4F4",
+              "desc": "A kite tells its own story of soaring with an unbreakable spirit.",
+              "author": "Daphne Lister"
+            },
+            {
+              "id": "g6-en-poorvi-u5-c3-ila",
+              "title": "Ila Sachani: Embroidering Dreams with her Feet",
+              "type": "Biography",
+              "diff": "Medium",
+              "emoji": "🧵",
+              "bg": "#FCEBEB",
+              "desc": "How a determined young girl turned challenges into success through traditional embroidery."
+            },
+            {
+              "id": "g6-en-poorvi-u5-c4-war-memorial",
+              "title": "National War Memorial",
+              "type": "Poem",
+              "diff": "Medium",
+              "emoji": "🕯️",
+              "bg": "#FFE4B5",
+              "desc": "A poem honouring the spirit behind India's National War Memorial."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "g7-en-misc",
+      "grade": 7,
+      "subject": "English",
+      "title": "Grade 7 — Sample Chapters",
+      "publisher": "NCERT",
+      "note": "Earlier demo entries. Re-organise into the right book once Grade 7's manifest is built.",
+      "units": [
+        {
+          "id": "u1",
+          "title": "Unit 1",
+          "chapters": [
+            {
+              "id": "g7-en-misc-u1-c1-river",
+              "title": "The Day the River Spoke",
+              "type": "Story",
+              "diff": "Medium",
+              "emoji": "🌊",
+              "bg": "#B5D4F4",
+              "desc": "A river encourages Jahnavi to overcome her fears and pursue education boldly."
+            },
+            {
+              "id": "g7-en-misc-u1-c2-try-again",
+              "title": "Try Again",
+              "type": "Poem",
+              "diff": "Easy",
+              "emoji": "💪",
+              "bg": "#EAF3DE",
+              "desc": "A powerful poem about resilience and the power of perseverance.",
+              "author": "Eliza Cook",
+              "file": "chapters/g7-en-misc-u1-c2-try-again.json"
+            }
+          ]
+        },
+        {
+          "id": "u2",
+          "title": "Unit 2",
+          "chapters": [
+            {
+              "id": "g7-en-misc-u2-c1-dolittle",
+              "title": "Animals, Birds, and Dr. Dolittle",
+              "type": "Story",
+              "diff": "Easy",
+              "emoji": "🐦",
+              "bg": "#E1F5EE",
+              "desc": "The amusing tale of a doctor who learns to speak animal language."
+            }
+          ]
+        },
+        {
+          "id": "u3",
+          "title": "Unit 3",
+          "chapters": [
+            {
+              "id": "g7-en-misc-u3-c1-paper-boats",
+              "title": "Paper Boats",
+              "type": "Poem",
+              "diff": "Easy",
+              "emoji": "🚢",
+              "bg": "#9FE1CB",
+              "desc": "Tagore's paper boats as a symbol of dreams and longing for the unknown.",
+              "author": "Rabindranath Tagore",
+              "file": "chapters/g7-en-misc-u3-c1-paper-boats.json"
+            }
+          ]
+        },
+        {
+          "id": "u4",
+          "title": "Unit 4",
+          "chapters": [
+            {
+              "id": "g7-en-misc-u4-c1-tunnel",
+              "title": "The Tunnel",
+              "type": "Story",
+              "diff": "Medium",
+              "emoji": "🌿",
+              "bg": "#C8E6A0",
+              "desc": "Suraj explores a jungle railway tunnel and befriends the watchman Sunder Singh and his leopard.",
+              "author": "Ruskin Bond",
+              "file": "chapters/g7-en-misc-u4-c1-tunnel.json"
+            },
+            {
+              "id": "g7-en-misc-u4-c2-travel",
+              "title": "Travel",
+              "type": "Poem",
+              "diff": "Easy",
+              "emoji": "🚂",
+              "bg": "#E6F1FB",
+              "desc": "A poem about the joy of travel and exploration."
+            },
+            {
+              "id": "g7-en-misc-u4-c3-conquering",
+              "title": "Conquering the Summit",
+              "type": "Non-fiction",
+              "diff": "Medium",
+              "emoji": "🏔️",
+              "bg": "#CECBF6",
+              "desc": "The story of Arunima Sinha, the first female amputee to scale Mount Everest."
+            }
+          ]
+        },
+        {
+          "id": "u5",
+          "title": "Unit 5",
+          "chapters": [
+            {
+              "id": "g7-en-misc-u5-c1-soldiers",
+              "title": "A Homage to Our Brave Soldiers",
+              "type": "Story",
+              "diff": "Hard",
+              "emoji": "🇮🇳",
+              "bg": "#FFE4B5",
+              "desc": "Two friends exchange letters about the National War Memorial.",
+              "file": "chapters/g7-en-misc-u5-c1-soldiers.json"
+            },
+            {
+              "id": "g7-en-misc-u5-c2-dear-soldiers",
+              "title": "My Dear Soldiers",
+              "type": "Poem",
+              "diff": "Easy",
+              "emoji": "⭐",
+              "bg": "#FFF0E0",
+              "desc": "A heartfelt poem honouring soldiers who guard India.",
+              "author": "A. P. J. Abdul Kalam",
+              "file": "chapters/g7-en-misc-u5-c2-dear-soldiers.json"
+            },
+            {
+              "id": "g7-en-misc-u5-c3-abbakka",
+              "title": "Rani Abbakka",
+              "type": "Graphic Story",
+              "diff": "Medium",
+              "emoji": "⚔️",
+              "bg": "#FAEEDA",
+              "desc": "The fearless Queen Abbakka of Ullal who defied the Portuguese.",
+              "file": "chapters/g7-en-misc-u5-c3-abbakka.json"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

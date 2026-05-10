@@ -1,0 +1,38 @@
+{
+  "id": "g7-en-misc-u3-c1-paper-boats",
+  "title": "Paper Boats",
+  "source": "Sample Grade 7, Unit 3 — Paper Boats",
+  "lines": [
+    {
+      "s": "app",
+      "e": "🚢",
+      "bg": "#9FE1CB",
+      "t": "Day by day I float my paper boats one by one down the running stream. In big black letters I write my name on them and the name of the village where I live."
+    },
+    {
+      "s": "user",
+      "e": "🌊",
+      "bg": "#7cd4b8",
+      "t": "I hope that someone in some strange land will find them and know who I am. I load my little boats with shiuli flowers from our garden, and hope that these blooms of the dawn will be carried safely to land in the night."
+    },
+    {
+      "s": "app",
+      "e": "☁️",
+      "bg": "#9FE1CB",
+      "t": "I launch my paper boats and look up into the sky and see the little clouds setting their white bulging sails. I know not what playmate of mine in the sky sends them down the air to race with my boats."
+    },
+    {
+      "s": "user",
+      "e": "🌙",
+      "bg": "#7cd4b8",
+      "t": "When night comes I bury my face in my arms and dream that my paper boats float on and on under the midnight stars."
+    },
+    {
+      "s": "app",
+      "e": "🌟",
+      "bg": "#9FE1CB",
+      "t": "The fairies of sleep are sailing in them, and the lading is their baskets full of dreams. This poem by Rabindranath Tagore captures the childhood joy of imagining faraway journeys through simple paper boats."
+    }
+  ],
+  "author": "Rabindranath Tagore"
+}

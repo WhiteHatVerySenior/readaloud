@@ -1,0 +1,44 @@
+{
+  "id": "g7-en-misc-u1-c2-try-again",
+  "title": "Try Again",
+  "source": "Sample Grade 7, Unit 1 — Try Again",
+  "lines": [
+    {
+      "s": "app",
+      "e": "💪",
+      "bg": "#EAF3DE",
+      "t": "'Tis a lesson you should heed — try, try again. If at first you don't succeed, try, try again."
+    },
+    {
+      "s": "user",
+      "e": "🌟",
+      "bg": "#c8e8b8",
+      "t": "Then your courage should appear, for, if you will persevere, you will conquer — never fear! Try, try again."
+    },
+    {
+      "s": "app",
+      "e": "🎯",
+      "bg": "#EAF3DE",
+      "t": "Once or twice though you should fail, if you would at last prevail — try, try again. If we strive, 'tis no disgrace though we may not win the race."
+    },
+    {
+      "s": "user",
+      "e": "🏆",
+      "bg": "#c8e8b8",
+      "t": "What should you do in that case? Try, try again. Time will bring you your reward — try, try again."
+    },
+    {
+      "s": "app",
+      "e": "✨",
+      "bg": "#EAF3DE",
+      "t": "All that other folks can do, why with patience should not you? Only keep this rule in view — try, try again."
+    },
+    {
+      "s": "user",
+      "e": "💡",
+      "bg": "#c8e8b8",
+      "t": "This poem by Eliza Cook reminds us that perseverance is the key to success. Every great achievement in life comes to those who refuse to give up when they face difficulty."
+    }
+  ],
+  "author": "Eliza Cook"
+}

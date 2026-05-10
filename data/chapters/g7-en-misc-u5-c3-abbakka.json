@@ -1,0 +1,75 @@
+{
+  "id": "g7-en-misc-u5-c3-abbakka",
+  "title": "Rani Abbakka",
+  "source": "Sample Grade 7, Unit 5 — Rani Abbakka",
+  "lines": [
+    {
+      "s": "app",
+      "e": "⚔️",
+      "bg": "#FAEEDA",
+      "t": "Hiriya Abbakka, the Queen of Ullal, lay on her deathbed. Her daughter Abbakka Devi was by her side. For years, Ullal had been forced to pay tribute to the Portuguese colonial power."
+    },
+    {
+      "s": "user",
+      "e": "👑",
+      "bg": "#fde9b8",
+      "t": "Hush, Mother. You must not tire yourself with such thoughts. I am here. And I will not rest till I have driven them out of the West Coast!"
+    },
+    {
+      "s": "app",
+      "e": "🏛️",
+      "bg": "#FAEEDA",
+      "t": "The next day, Abbakka Devi was crowned Queen of Ullal. She told her people: I need your wholehearted cooperation to make Ullal stronger, secure, and free!"
+    },
+    {
+      "s": "user",
+      "e": "💪",
+      "bg": "#fde9b8",
+      "t": "I will stop paying tribute to the Portuguese. I will not sell them spices and cloth either. We are a sovereign country. We don't pay tribute to Portugal!"
+    },
+    {
+      "s": "app",
+      "e": "🕊️",
+      "bg": "#FAEEDA",
+      "t": "Abbakka addressed a meeting of Rajas, urging them to unite. If we unite and fight, we could drive the Portuguese out of our land. But the Rajas said it was impossible."
+    },
+    {
+      "s": "user",
+      "e": "🔥",
+      "bg": "#fde9b8",
+      "t": "I will have to fight the Portuguese alone. For fight them I will — single-handed, if need be! No one will cow me into surrender."
+    },
+    {
+      "s": "app",
+      "e": "⚓",
+      "bg": "#FAEEDA",
+      "t": "Abbakka ordered merchant ships to be built. In alliance with the Zamorin of Kozhikode, she defied the Portuguese and established a hugely profitable trading relation with Arabia."
+    },
+    {
+      "s": "user",
+      "e": "⚔️",
+      "bg": "#fde9b8",
+      "t": "Abbakka unleashed her forces and they attacked the Portuguese Fort. The Portuguese commander Ribero escaped with his life, vowing to return with help from Goa."
+    },
+    {
+      "s": "app",
+      "e": "🏆",
+      "bg": "#FAEEDA",
+      "t": "For four days the battle raged, but the forces of Ullal were enough. The Portuguese beat a hasty retreat in defeat, never to trouble Ullal again."
+    },
+    {
+      "s": "user",
+      "e": "🇮🇳",
+      "bg": "#fde9b8",
+      "t": "Mother, your dream has come true. Ullal is free! Rani Abbakka's courage and determination had driven out the colonial power — a victory that inspired all of India."
+    }
+  ],
+  "vocab": {
+    "tribute": "A payment demanded by a stronger ruler as a sign of submission",
+    "sovereign": "Fully independent and self-governing",
+    "defied": "Refused to obey; stood up against boldly",
+    "undaunted": "Not discouraged by danger or difficulty",
+    "colonial": "Relating to a country that has taken control of another territory",
+    "alliance": "A formal agreement between groups to work together"
+  }
+}

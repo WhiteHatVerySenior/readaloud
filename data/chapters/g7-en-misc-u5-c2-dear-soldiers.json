@@ -1,0 +1,44 @@
+{
+  "id": "g7-en-misc-u5-c2-dear-soldiers",
+  "title": "My Dear Soldiers",
+  "source": "Sample Grade 7, Unit 5 — My Dear Soldiers",
+  "lines": [
+    {
+      "s": "app",
+      "e": "🇮🇳",
+      "bg": "#FFF0E0",
+      "t": "Oh! Defenders of borders, you are great sons of my land. When we are all asleep, you still hold on to your deed."
+    },
+    {
+      "s": "user",
+      "e": "❄️",
+      "bg": "#FFF0E0",
+      "t": "Windy season or snowy days, or scorching sun's sweltering rays — you are there guarding all the time awake."
+    },
+    {
+      "s": "app",
+      "e": "🏔️",
+      "bg": "#FFF0E0",
+      "t": "Treading the lonely expanses as yogis, climbing the heights or striding the valleys, defending the deserts or guarding the marshes."
+    },
+    {
+      "s": "user",
+      "e": "🌊",
+      "bg": "#FFF0E0",
+      "t": "Surveillance in seas and by securing the air — prime of your youth given to the nation!"
+    },
+    {
+      "s": "app",
+      "e": "🙏",
+      "bg": "#FFF0E0",
+      "t": "Wind chimes of my land vibrate your feat. We pray for you brave men! May the Lord bless you all!"
+    },
+    {
+      "s": "user",
+      "e": "⭐",
+      "bg": "#FFF0E0",
+      "t": "This poem was written by A.P.J. Abdul Kalam, the scientist and former President of India, as a heartfelt tribute to the soldiers who protect our nation."
+    }
+  ],
+  "author": "A. P. J. Abdul Kalam"
+}

@@ -1,0 +1,63 @@
+{
+  "id": "g7-en-misc-u5-c1-soldiers",
+  "title": "A Homage to Our Brave Soldiers",
+  "source": "Sample Grade 7, Unit 5 — A Homage to Our Brave Soldiers",
+  "lines": [
+    {
+      "s": "app",
+      "e": "🇮🇳",
+      "bg": "#FFE4B5",
+      "t": "Two friends, Soumya and Ananda, exchange letters about the National War Memorial in New Delhi. It is spread over forty acres near the iconic India Gate and honours India's brave soldiers."
+    },
+    {
+      "s": "user",
+      "e": "🏛️",
+      "bg": "#ffd89a",
+      "t": "Each brick of the memorial is called a tablet, and it bears the names of soldiers who fought for India and made the supreme sacrifice in different wars from 1947 till date."
+    },
+    {
+      "s": "app",
+      "e": "🕯️",
+      "bg": "#FFE4B5",
+      "t": "There are twenty-nine thousand tablets on which more than twenty-six thousand names of fallen soldiers have been etched. The eternal flame, the Amar Jawan Jyoti, burns day and night."
+    },
+    {
+      "s": "user",
+      "e": "🎖️",
+      "bg": "#ffd89a",
+      "t": "Our teacher told us about the twenty-one bravehearts who were awarded the Param Vir Chakra — India's highest wartime gallantry medal — for their service to the nation."
+    },
+    {
+      "s": "app",
+      "e": "💪",
+      "bg": "#FFE4B5",
+      "t": "Lance Naik Albert Ekka noticed an enemy machine gun inflicting heavy casualties on his company. With complete disregard to his personal safety, he charged the enemy bunker and silenced the gun."
+    },
+    {
+      "s": "user",
+      "e": "🌸",
+      "bg": "#ffd89a",
+      "t": "Though seriously wounded, he continued to fight alongside his comrades, clearing bunker after bunker with undaunted courage, before making the supreme sacrifice."
+    },
+    {
+      "s": "app",
+      "e": "🕊️",
+      "bg": "#FFE4B5",
+      "t": "I learnt a lot, but I also have to admit that the various discussions during the day brought tears to my eyes. It motivated me to live a life worthy of the sacrifices of our heroes."
+    },
+    {
+      "s": "user",
+      "e": "🙏",
+      "bg": "#ffd89a",
+      "t": "I feel it is our duty to periodically visit such places to honour our valiant soldiers, who have made great sacrifices for us. Their sacrifices enable us to walk freely in our country without fear."
+    }
+  ],
+  "vocab": {
+    "sacrifice": "Giving up something precious for a greater cause",
+    "gallantry": "Brave and heroic behaviour",
+    "casualty": "A person killed or injured in a war or accident",
+    "disregard": "To pay no attention to; ignore completely",
+    "valiant": "Showing great courage, especially in battle",
+    "periodically": "At regular intervals; from time to time"
+  }
+}
