@@ -1616,7 +1616,7 @@ const elevenLabsProvider = (function () {
   // Fetch audio from Worker (which checks R2 → ElevenLabs → stores in R2).
   // Returns a blob URL.
   async function _fetchFromWorker(text, lang) {
-    const workerUrl = localStorage.getItem('ra_worker_url') || WORKER_URL;
+    const workerUrl = (localStorage.getItem('ra_worker_url') || WORKER_URL).replace(/\/+$/, '');
     if (!workerUrl) throw new Error('No Worker URL configured');
 
     const voiceId = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
@@ -1658,7 +1658,7 @@ const elevenLabsProvider = (function () {
 
   async function speak(text, lang, onEnd, onError) {
     _aborted = false;
-    const workerUrl = localStorage.getItem('ra_worker_url') || WORKER_URL;
+    const workerUrl = (localStorage.getItem('ra_worker_url') || WORKER_URL).replace(/\/+$/, '');
     const st = document.getElementById('sTxt');
     if (!workerUrl) {
       if(st) st.textContent = '❌ No Worker URL set in Settings';
@@ -1709,7 +1709,7 @@ const elevenLabsProvider = (function () {
 
   // Background pre-fetch for the next line (called while current line plays)
   async function prefetch(text, lang) {
-    const workerUrl = localStorage.getItem('ra_worker_url') || WORKER_URL;
+    const workerUrl = (localStorage.getItem('ra_worker_url') || WORKER_URL).replace(/\/+$/, '');
     if (!workerUrl) return;
     const voiceId = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
     const ck = _cacheKey(text, lang, voiceId);
