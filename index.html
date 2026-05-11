@@ -1139,13 +1139,15 @@ function startAuto(){
   autoMode=true;
   // Unlock Web Speech inside user gesture
   if(synth){ const u=new SpeechSynthesisUtterance(''); u.volume=0; synth.speak(u); }
-  // Unlock HTML Audio for ElevenLabs — Chrome blocks audio.play() after async gaps
-  // unless Audio has been touched inside a user gesture first
+  // Create + resume AudioContext inside user gesture — stays unlocked for whole session
   try{
-    const _unlock=new Audio();
-    _unlock.play().catch(()=>{});
-    window._audioUnlocked=true;
-  }catch(e){}
+    if(!window._raAudioCtx){
+      window._raAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    }
+    if(window._raAudioCtx.state==='suspended'){
+      window._raAudioCtx.resume();
+    }
+  }catch(e){ console.warn('AudioContext init failed:',e); }
   nextLine();
 }
 
@@ -1660,25 +1662,34 @@ const elevenLabsProvider = (function () {
   }
 
   function _play(url, onEnd, onError) {
-    _audio = new Audio(url);
-    _audio.onended = () => { if (!_aborted) onEnd(); };
-    _audio.onerror = () => { if (!_aborted) onError(); };
-    // Chrome autoplay: if play() is blocked, show a tap-to-play prompt
-    const p = _audio.play();
-    if(p && p.catch){
-      p.catch(err=>{
-        if(_aborted) return;
-        // Autoplay blocked — show a visible prompt so user can tap to resume
-        const st=document.getElementById('sTxt');
-        if(st){
-          st.textContent='▶ Tap here to hear the audio';
-          st.style.cursor='pointer';
-          st.onclick=()=>{
-            st.onclick=null; st.style.cursor='';
-            _audio.play().catch(onError);
-          };
-        }
-        // Don't call onError — wait for user tap
+    // Use AudioContext to play — not blocked by Chrome autoplay policy
+    // (AudioContext is unlocked once during startAuto user gesture and stays active)
+    const ctx = window._raAudioCtx;
+    if(ctx){
+      fetch(url)
+        .then(r=>r.arrayBuffer())
+        .then(buf=>ctx.decodeAudioData(buf))
+        .then(decoded=>{
+          if(_aborted)return;
+          const src=ctx.createBufferSource();
+          src.buffer=decoded;
+          src.connect(ctx.destination);
+          src.onended=()=>{ if(!_aborted) onEnd(); };
+          _audio=src;
+          src.start(0);
+        })
+        .catch(err=>{
+          console.warn('AudioContext play failed:',err);
+          if(!_aborted) onError();
+        });
+    } else {
+      // Fallback: regular Audio element
+      _audio=new Audio(url);
+      _audio.onended=()=>{ if(!_aborted) onEnd(); };
+      _audio.onerror=()=>{ if(!_aborted) onError(); };
+      _audio.play().catch(err=>{
+        console.warn('Audio.play() blocked:',err);
+        if(!_aborted) onError();
       });
     }
   }
@@ -1715,7 +1726,11 @@ const elevenLabsProvider = (function () {
 
   function stop() {
     _aborted = true;
-    if (_audio) { _audio.pause(); _audio.currentTime = 0; _audio = null; }
+    if (_audio) {
+      try{ _audio.pause && _audio.pause(); }catch(e){}   // HTML Audio
+      try{ _audio.stop  && _audio.stop();  }catch(e){}   // AudioBufferSourceNode
+      _audio = null;
+    }
   }
 
   return { speak, stop, prefetch };
