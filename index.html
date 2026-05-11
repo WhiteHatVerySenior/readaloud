@@ -1137,8 +1137,9 @@ function buildReader(){
 // ── AUTO FLOW ─────────────────────────────────────────
 function startAuto(){
   autoMode=true;
-  // Unlock audio elements inside the user gesture (must be synchronous here)
-  elevenLabsProvider.warm();   // pre-unlocks the persistent HTML Audio element
+  // ⚠️ RULE 1 — warm() MUST stay here, inside a real user-tap handler.
+  // Moving this call anywhere else will break audio on lines 3, 5, 7… etc.
+  elevenLabsProvider.warm();
   if(synth){ const u=new SpeechSynthesisUtterance(''); u.volume=0; synth.speak(u); }
   nextLine();
 }
@@ -1603,13 +1604,27 @@ const _idb = (function () {
 })();
 
 // ── Provider ──────────────────────────────────────────────────
+// ╔══════════════════════════════════════════════════════════════════════════╗
+// ║  AUDIO PLAYBACK — THREE RULES THAT MUST NEVER BE BROKEN                ║
+// ║                                                                          ║
+// ║  1. elevenLabsProvider.warm() MUST be called inside startAuto()         ║
+// ║     (a real user-tap handler). It creates & unlocks the Audio element.  ║
+// ║     Moving it anywhere else will cause autoplay to be blocked.          ║
+// ║                                                                          ║
+// ║  2. _audio must NEVER be set to null inside stop().                     ║
+// ║     The element stays alive between lines so play() never needs a       ║
+// ║     fresh user gesture.                                                  ║
+// ║                                                                          ║
+// ║  3. speak() must NEVER create a new Audio(). It must always reuse       ║
+// ║     the persistent _audio element created by warm().                    ║
+// ║     Speech-recognition callbacks are NOT user gestures — a new          ║
+// ║     Audio().play() would be blocked by the browser on every line.       ║
+// ╚══════════════════════════════════════════════════════════════════════════╝
 const elevenLabsProvider = (function () {
   const _memCache = {};   // cacheKey → blob URL  (in-memory, current tab)
 
   // ONE persistent audio element, pre-unlocked during the user gesture.
   // We never destroy it — just pause and swap src between lines.
-  // This is the only reliable way to play audio without a direct user gesture
-  // on every line (speech-recognition callbacks are not user gestures).
   let _audio   = null;
   let _aborted = false;
 
@@ -1655,10 +1670,11 @@ const elevenLabsProvider = (function () {
   // browser marks it as "user-activated". All later play() calls on this same
   // element are then allowed without requiring another gesture.
   function warm() {
-    if (_audio) return;   // already warmed
+    if (_audio) return;   // already warmed — idempotent, safe to call multiple times
     _audio = new Audio();
+    _audio.volume = 1.0;            // always max — never let this drift
     _audio.src = _SILENT_AUDIO;
-    _audio.play().catch(() => {});
+    _audio.play().catch(() => {});  // ⚠️ RULE 1 — unlocks this element inside the user gesture
   }
 
   async function speak(text, lang, onEnd, onError) {
@@ -1670,8 +1686,8 @@ const elevenLabsProvider = (function () {
       onError(); return;
     }
 
-    // Make sure we have an audio element.
-    // warm() should have been called from the Start button, but guard anyway.
+    // ⚠️ RULE 3 — never create new Audio() here. Always reuse _audio.
+    // warm() should have been called from startAuto() (user gesture). Guard only.
     if (!_audio) warm();
 
     try {
@@ -1692,6 +1708,7 @@ const elevenLabsProvider = (function () {
         if(st) st.textContent = '❌ Play error code: ' + code;
         onError();
       };
+      _audio.volume = 1.0;
       _audio.src = url;
       _audio.play().catch(err => {
         if(_aborted) return;
@@ -1726,8 +1743,9 @@ const elevenLabsProvider = (function () {
       try { _audio.pause(); } catch(e) {}
       _audio.onended = null;
       _audio.onerror = null;
-      // Keep _audio alive — don't null it out.
-      // The element stays unlocked for the next play().
+      // ⚠️ RULE 2 — do NOT set _audio = null here.
+      // Keeping the element alive means every subsequent play() works
+      // without needing another user gesture.
     }
   }
 
