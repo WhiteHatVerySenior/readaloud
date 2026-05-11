@@ -1139,15 +1139,6 @@ function startAuto(){
   autoMode=true;
   // Unlock Web Speech inside user gesture
   if(synth){ const u=new SpeechSynthesisUtterance(''); u.volume=0; synth.speak(u); }
-  // Create + resume AudioContext inside user gesture — stays unlocked for whole session
-  try{
-    if(!window._raAudioCtx){
-      window._raAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
-    }
-    if(window._raAudioCtx.state==='suspended'){
-      window._raAudioCtx.resume();
-    }
-  }catch(e){ console.warn('AudioContext init failed:',e); }
   nextLine();
 }
 
@@ -1662,54 +1653,26 @@ const elevenLabsProvider = (function () {
   }
 
   function _play(url, onEnd, onError) {
-    const st = document.getElementById('sTxt');
-    const ctx = window._raAudioCtx;
-    if(ctx && ctx.state !== 'closed'){
-      fetch(url)
-        .then(r => r.arrayBuffer())
-        .then(buf => ctx.decodeAudioData(buf))
-        .then(decoded => {
-          if(_aborted) return;
-          const source = ctx.createBufferSource();
-          source.buffer = decoded;
-          source.connect(ctx.destination);
-          source.onended = () => { if(!_aborted) onEnd(); };
-          _audio = source;
-          source.start(0);
-          if(st) st.textContent = 'Listen carefully…';
-        })
-        .catch(err => {
-          if(_aborted) return;
-          if(st) st.textContent = '❌ Decode error: ' + err.message;
-          console.warn('AudioContext decode failed:', err);
-          onError();
-        });
-    } else {
-      // AudioContext not ready — likely page wasn't started via Start button
-      if(st) st.textContent = '❌ Tap ▶ Start reading first to unlock audio';
-      console.warn('AudioContext not ready. State:', ctx ? ctx.state : 'null');
-    }
+    _audio = new Audio(url);
+    _audio.onended = () => { if(!_aborted) onEnd(); };
+    _audio.onerror = () => { if(!_aborted) onError(); };
+    _audio.play().catch(err => {
+      console.warn('[EL] play() rejected:', err.message);
+      if(!_aborted) onError();
+    });
   }
 
   async function speak(text, lang, onEnd, onError) {
     _aborted = false;
     const workerUrl = localStorage.getItem('ra_worker_url') || WORKER_URL;
-    const st = document.getElementById('sTxt');
-    if (!workerUrl) {
-      if(st) st.textContent = '❌ No Worker URL — go to Settings ⚙️ and add it';
-      return;  // don't advance — wait for user to fix settings
-    }
+    if (!workerUrl) { onError(); return; }
     try {
-      if(st) st.textContent = '⏳ Fetching audio…';
       const url = await _getAudioUrl(text, lang);
       if (_aborted) return;
       _play(url, onEnd, onError);
     } catch (err) {
-      console.warn('ElevenLabs provider error:', err.message);
-      if(st) st.textContent = '❌ Audio error: ' + err.message;
-      // Don't call onError/skip — show the error so we can diagnose
-      // Auto-retry after 3s
-      if(!_aborted) setTimeout(()=>{ if(!_aborted) speak(text, lang, onEnd, onError); }, 3000);
+      console.warn('[EL] fetch/decode error:', err.message);
+      if (!_aborted) onError();
     }
   }
 
@@ -1859,7 +1822,13 @@ function speakLine(text){
   speaking = true;
   ttsSpeak(text, lang,
     ()=>{ advance(680 + Math.random()*320); },   // onEnd — natural post-line breath
-    ()=>{ advance(300); }                         // onError — quick skip
+    ()=>{                                         // onError — show error, don't skip
+      speaking = false;
+      clearTimeout(fallback);
+      done = true;
+      const et = document.getElementById('sTxt');
+      if(et) et.textContent = '❌ Audio failed — press Skip → to continue';
+    }
   );
   prefetchNextLine();   // background-fetch next TTS line while this one plays
 }
