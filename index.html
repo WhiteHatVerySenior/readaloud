@@ -1553,6 +1553,10 @@ const WORKER_URL = localStorage.getItem('ra_worker_url') || '';
 // e.g. 'https://readaloud-tts.YOUR_SUBDOMAIN.workers.dev'
 // Users can also set it in Settings and it persists in localStorage.
 
+// Tiny silent audio — used to unlock the Audio element on iOS Safari BEFORE
+// any async fetch. iOS requires audio.play() synchronously in the gesture handler.
+const _SILENT_AUDIO = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+
 // ── IndexedDB helper (audio blob storage) ────────────────────
 const _idb = (function () {
   const DB_NAME    = 'readaloud_audio';
@@ -1652,23 +1656,6 @@ const elevenLabsProvider = (function () {
     return url;
   }
 
-  function _play(url, onEnd, onError) {
-    const st = document.getElementById('sTxt');
-    _audio = new Audio(url);
-    _audio.onended = () => { if(!_aborted) onEnd(); };
-    _audio.onerror = (e) => {
-      if(_aborted) return;
-      const code = _audio.error ? _audio.error.code : '?';
-      if(st) st.textContent = '❌ Play error code: ' + code;
-      onError();
-    };
-    _audio.play().catch(err => {
-      if(_aborted) return;
-      if(st) st.textContent = '❌ play() blocked: ' + err.message;
-      onError();
-    });
-  }
-
   async function speak(text, lang, onEnd, onError) {
     _aborted = false;
     const workerUrl = localStorage.getItem('ra_worker_url') || WORKER_URL;
@@ -1677,12 +1664,42 @@ const elevenLabsProvider = (function () {
       if(st) st.textContent = '❌ No Worker URL set in Settings';
       onError(); return;
     }
+
+    // ── Pre-unlock audio BEFORE any await ────────────────────────────────────
+    // iOS Safari requires audio.play() to be called synchronously inside the
+    // user-gesture call stack. We're still synchronous here (no await yet), so
+    // creating and "touching" the Audio element now keeps it in the gesture window.
+    if (_audio) { try { _audio.pause(); } catch(e) {} }
+    _audio = new Audio();
+    _audio.src = _SILENT_AUDIO;
+    _audio.play().catch(() => {});  // may fail silently — that's fine
+    // ─────────────────────────────────────────────────────────────────────────
+
     try {
       if(st) st.textContent = '⏳ Loading audio…';
       const url = await _getAudioUrl(text, lang);
       if (_aborted) return;
       if(st) st.textContent = '▶ Playing…';
-      _play(url, onEnd, onError);
+
+      // Re-use the already-unlocked audio element (key for iOS Safari).
+      // Clear any stale handlers from the silent-audio phase before attaching real ones.
+      _audio.onended = null;
+      _audio.onerror = null;
+      _audio.pause();
+      _audio.onended = () => { if(!_aborted) onEnd(); };
+      _audio.onerror = () => {
+        if(_aborted) return;
+        const code = _audio && _audio.error ? _audio.error.code : '?';
+        if(st) st.textContent = '❌ Play error code: ' + code;
+        onError();
+      };
+      _audio.src = url;
+      _audio.load();
+      _audio.play().catch(err => {
+        if(_aborted) return;
+        if(st) st.textContent = '❌ play() blocked: ' + err.message;
+        onError();
+      });
     } catch (err) {
       console.warn('[EL] error:', err.message);
       if(st) st.textContent = '❌ Fetch error: ' + err.message;
