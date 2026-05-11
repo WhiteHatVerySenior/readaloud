@@ -966,6 +966,7 @@ async function startNCERT(id){
   const ch=meta.chapter, book=meta.book, unit=meta.unit;
   story={s:{id:ch.id,title:ch.title,subject:'English (NCERT)',diff:ch.diff,isNCERT:true}, lines:data.lines};
   lineIdx=0;wordIdx=0;correct=0;errors=0;totalWords=0;sessionStart=Date.now();
+  autoMode=false;listenMode=false;listenThenRead=false;ltrPhase=1;
   document.getElementById('rTitle').textContent=ch.title;
   document.getElementById('rMeta').textContent=`${book.title} G${book.grade} · ${unit.title} · ${ch.type}`;
   document.getElementById('readerDone').style.display='none';
@@ -989,6 +990,7 @@ function startStory(id){
   const s=STORIES.find(x=>x.id===id),lines=LINES[id];
   if(!s||!lines){alert('Coming soon!');return;}
   story={s,lines};lineIdx=0;wordIdx=0;correct=0;errors=0;totalWords=0;sessionStart=Date.now();
+  autoMode=false;listenMode=false;listenThenRead=false;ltrPhase=1;
   document.getElementById('rTitle').textContent=s.title;
   document.getElementById('rMeta').textContent=s.subject+' · '+s.diff;
   document.getElementById('readerDone').style.display='none';
@@ -997,11 +999,13 @@ function startStory(id){
   updateMet();
   buildReader();
 }
-function exitReader(){stopListen();stopSpeak();autoMode=false;listenMode=false;showScr(user.role==='teacher'?'scrTeacher':'scrStudent');}
+function exitReader(){stopListen();stopSpeak();autoMode=false;listenMode=false;listenThenRead=false;ltrPhase=1;showScr(user.role==='teacher'?'scrTeacher':'scrStudent');}
 
 // Auto-flow state
-let autoMode = false;
-let listenMode = false;
+let autoMode       = false;
+let listenMode     = false;   // teacher/direct: app reads entire chapter
+let listenThenRead = false;   // student mode: phase 1 = app reads all, phase 2 = student reads all
+let ltrPhase       = 1;       // 1 = listening phase, 2 = reading phase
 
 function getWords(t){
   // Match Hindi words (Devanagari letters only, excluding dandas ।॥) OR English words
@@ -1051,10 +1055,11 @@ function buildReader(){
   // Show current + a peek at next line only
   const cur=lines[lineIdx];
   const next=lines[lineIdx+1];
-  const isUser=cur.s==='user';
+  // In ltr phase 2 every line is the student's turn, regardless of s value
+  const isUser = cur.s==='user' || (listenThenRead && ltrPhase===2);
 
   let wordHTML=cur.t;
-  if(isUser && autoMode && !listenMode){
+  if(isUser && autoMode && !(listenThenRead && ltrPhase===1) && !listenMode){
     const words=getWords(cur.t);
     // Build word spans by splitting on token boundaries (works for Hindi & English)
     // We replace each token with a placeholder, then swap in spans — using a
@@ -1082,11 +1087,23 @@ function buildReader(){
     wordHTML = wrapVocab(cur.t, story.s.id);
   }
 
-  const turnColor = listenMode ? '#854F0B' : (isUser ? '#185FA5' : '#0F6E56');
-  const turnBg = listenMode ? 'var(--amber2)' : (isUser ? 'var(--blue2)' : 'var(--teal2)');
-  const turnLabel = listenMode ? '🎧 Listening…' : (isUser ? '🎤 Your turn — read aloud' : '🔊 App is reading…');
-  const turnBadge = listenMode ? 'LISTEN MODE' : (isUser ? 'YOUR TURN' : 'APP TURN');
-  const badgeBg = listenMode ? 'var(--amber)' : (isUser ? 'var(--blue)' : 'var(--green3)');
+  let turnColor, turnBg, turnLabel, turnBadge, badgeBg;
+  if(listenMode){
+    turnColor='#854F0B'; turnBg='var(--amber2)';
+    turnLabel='🎧 Listening…'; turnBadge='LISTEN MODE'; badgeBg='var(--amber)';
+  } else if(listenThenRead && ltrPhase===1){
+    turnColor='#0F6E56'; turnBg='var(--teal2)';
+    turnLabel='🎧 Listen carefully…'; turnBadge='PHASE 1 — LISTEN'; badgeBg='var(--green3)';
+  } else if(listenThenRead && ltrPhase===2){
+    turnColor='#185FA5'; turnBg='var(--blue2)';
+    turnLabel='🎤 Your turn — read aloud'; turnBadge='PHASE 2 — READ'; badgeBg='var(--blue)';
+  } else if(isUser){
+    turnColor='#185FA5'; turnBg='var(--blue2)';
+    turnLabel='🎤 Your turn — read aloud'; turnBadge='YOUR TURN'; badgeBg='var(--blue)';
+  } else {
+    turnColor='#0F6E56'; turnBg='var(--teal2)';
+    turnLabel='🔊 App is reading…'; turnBadge='APP TURN'; badgeBg='var(--green3)';
+  }
 
   let html=`
   <!-- PAST lines summary bar -->
@@ -1107,12 +1124,17 @@ function buildReader(){
   </div>
 
   <!-- NEXT LINE — subtle preview -->
-  ${next?`<div style="opacity:.35;border-radius:var(--rl);border:1px solid var(--border);overflow:hidden;margin-bottom:14px">
-    <div style="background:${next.s==='user'?'var(--blue2)':'var(--teal2)'};padding:10px 16px">
-      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;margin-bottom:4px">${next.s==='user'?'🎤 Next — your turn':'🔊 Next — app turn'}</div>
-      <div style="font-size:14px;color:var(--text2);font-family:Georgia,serif">${next.t.substring(0,70)}${next.t.length>70?'…':''}</div>
-    </div>
-  </div>`:''}
+  ${next?(()=>{
+    const nextUser = (listenThenRead && ltrPhase===2) ? true : next.s==='user';
+    // In ltr phase 1 the next line is always spoken by app
+    const nextUser1 = (listenThenRead && ltrPhase===1) ? false : nextUser;
+    return `<div style="opacity:.35;border-radius:var(--rl);border:1px solid var(--border);overflow:hidden;margin-bottom:14px">
+      <div style="background:${nextUser1?'var(--blue2)':'var(--teal2)'};padding:10px 16px">
+        <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;margin-bottom:4px">${nextUser1?'🎤 Next — your turn':'🔊 Next — app turn'}</div>
+        <div style="font-size:14px;color:var(--text2);font-family:Georgia,serif">${next.t.substring(0,70)}${next.t.length>70?'…':''}</div>
+      </div>
+    </div>`;
+  })():''}
 
   <!-- STATUS BAR -->
   <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:11px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px">
@@ -1123,10 +1145,13 @@ function buildReader(){
   <!-- CONTROLS -->
   <div style="display:flex;gap:10px">
     ${listenMode
-      ? `<button class="btn btn-red btn-xl" onclick="stopFullListen()" style="flex:1">⏹ Stop listening</button>`
-      : !autoMode
-        ? `<button class="btn btn-primary btn-xl" onclick="startAuto()" style="flex:1">▶ Start reading</button>`
-        : `<button class="btn btn-red btn-xl" onclick="pauseAuto()" style="flex:1" id="pauseBtn">⏸ Pause</button>`
+      ? `<button class="btn btn-red btn-xl" onclick="stopFullListen()" style="flex:1">⏹ Stop</button>`
+      : !autoMode && lineIdx===0
+        ? `<button class="btn btn-primary btn-xl" onclick="startAuto()" style="flex:1">▶ 1by1</button>
+           <button class="btn btn-xl" onclick="startListenThenRead()" style="flex:1">👂 Listen then Read</button>`
+        : !autoMode
+          ? `<button class="btn btn-primary btn-xl" onclick="resumeAuto()" style="flex:1">▶ Resume</button>`
+          : `<button class="btn btn-red btn-xl" onclick="pauseAuto()" style="flex:1" id="pauseBtn">⏸ Pause</button>`
     }
     ${!listenMode?`<button class="btn btn-sm" onclick="skipLine()" style="min-height:58px;padding:10px 16px">Skip →</button>`:''}
   </div>`;
@@ -1136,9 +1161,30 @@ function buildReader(){
 
 // ── AUTO FLOW ─────────────────────────────────────────
 function startAuto(){
-  autoMode=true;
+  // 1by1 mode — app and student alternate line by line
+  listenThenRead=false; ltrPhase=1;
+  autoMode=true; listenMode=false;
   // ⚠️ RULE 1 — warm() MUST stay here, inside a real user-tap handler.
   // Moving this call anywhere else will break audio on lines 3, 5, 7… etc.
+  elevenLabsProvider.warm();
+  if(synth){ const u=new SpeechSynthesisUtterance(''); u.volume=0; synth.speak(u); }
+  nextLine();
+}
+
+function startListenThenRead(){
+  // Phase 1: app reads entire chapter. Phase 2: student reads entire chapter.
+  listenThenRead=true; ltrPhase=1;
+  autoMode=true; listenMode=false;
+  // ⚠️ RULE 1 — warm() must be here in the user-tap handler
+  elevenLabsProvider.warm();
+  if(synth){ const u=new SpeechSynthesisUtterance(''); u.volume=0; synth.speak(u); }
+  nextLine();
+}
+
+function resumeAuto(){
+  // Resume whichever mode was active before pause — state is already set
+  autoMode=true;
+  // ⚠️ RULE 1 — warm() must be here in the user-tap handler
   elevenLabsProvider.warm();
   if(synth){ const u=new SpeechSynthesisUtterance(''); u.volume=0; synth.speak(u); }
   nextLine();
@@ -1149,22 +1195,41 @@ function pauseAuto(){
   stopListen();
   stopSpeak();
   buildReader();
-  document.getElementById('sTxt').textContent='Paused — press Start to continue';
+  document.getElementById('sTxt').textContent='Paused — press Resume to continue';
 }
 
 function nextLine(){
   if(!story||!autoMode)return;
   if(lineIdx>=story.lines.length){
-    if(listenMode) showListenDone(); else showDone();
+    if(listenMode){
+      showListenDone();
+    } else if(listenThenRead && ltrPhase===1){
+      // Phase 1 done — reset and start Phase 2 (student reads everything)
+      ltrPhase=2;
+      lineIdx=0; wordIdx=0; correct=0; errors=0; totalWords=0; sessionStart=Date.now();
+      updateMet();
+      buildReader();
+      const st=document.getElementById('sTxt');
+      if(st) st.textContent='🎤 Now read it yourself — starting in 3 seconds…';
+      setTimeout(()=>nextLine(), 3000);
+    } else {
+      showDone();
+    }
     return;
   }
   const line=story.lines[lineIdx];
   updateMet();
   buildReader();
-  if(listenMode||line.s==='app'){
+  if(listenMode || (listenThenRead && ltrPhase===1)){
+    // App speaks every line
     speakLine(line.t);
+  } else if(listenThenRead && ltrPhase===2){
+    // Student reads every line
+    setTimeout(()=>startListen(), 400);
   } else {
-    setTimeout(()=>startListen(),400);
+    // 1by1: follow the line's assigned speaker
+    if(line.s==='app') speakLine(line.t);
+    else setTimeout(()=>startListen(), 400);
   }
 }
 
@@ -1256,7 +1321,9 @@ function stopListen(){
 function processSpoken(transcript){
   if(!story)return;
   const line=story.lines[lineIdx];
-  if(!line||line.s!=='user')return;
+  if(!line) return;
+  // In ltr phase 2 the student reads every line (including what were 'app' lines)
+  if(line.s!=='user' && !(listenThenRead && ltrPhase===2)) return;
   const words=getWords(line.t);
   if(!words.length)return;
   const isHindi=/[ऀ-ॿ]/.test(line.t);
@@ -1773,9 +1840,10 @@ function ttsStop() {
 // Kick off background pre-fetch for the NEXT TTS line while current one plays
 function prefetchNextLine() {
   if (!_hasWorker() || !story) return;
+  if (listenThenRead && ltrPhase===2) return;  // phase 2 = student reads, no TTS to prefetch
   for (let i = lineIdx + 1; i < story.lines.length; i++) {
     const ln = story.lines[i];
-    if (listenMode || ln.s === 'app') {
+    if (listenMode || (listenThenRead && ltrPhase===1) || ln.s === 'app') {
       const lang = /[ऀ-ॿ]/.test(ln.t) ? 'hi-IN' : 'en-IN';
       elevenLabsProvider.prefetch(ln.t, lang);
       break;
