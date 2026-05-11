@@ -1662,49 +1662,54 @@ const elevenLabsProvider = (function () {
   }
 
   function _play(url, onEnd, onError) {
-    // Use AudioContext to play — not blocked by Chrome autoplay policy
-    // (AudioContext is unlocked once during startAuto user gesture and stays active)
+    const st = document.getElementById('sTxt');
     const ctx = window._raAudioCtx;
-    if(ctx){
+    if(ctx && ctx.state !== 'closed'){
       fetch(url)
-        .then(r=>r.arrayBuffer())
-        .then(buf=>ctx.decodeAudioData(buf))
-        .then(decoded=>{
-          if(_aborted)return;
-          const src=ctx.createBufferSource();
-          src.buffer=decoded;
-          src.connect(ctx.destination);
-          src.onended=()=>{ if(!_aborted) onEnd(); };
-          _audio=src;
-          src.start(0);
+        .then(r => r.arrayBuffer())
+        .then(buf => ctx.decodeAudioData(buf))
+        .then(decoded => {
+          if(_aborted) return;
+          const source = ctx.createBufferSource();
+          source.buffer = decoded;
+          source.connect(ctx.destination);
+          source.onended = () => { if(!_aborted) onEnd(); };
+          _audio = source;
+          source.start(0);
+          if(st) st.textContent = 'Listen carefully…';
         })
-        .catch(err=>{
-          console.warn('AudioContext play failed:',err);
-          if(!_aborted) onError();
+        .catch(err => {
+          if(_aborted) return;
+          if(st) st.textContent = '❌ Decode error: ' + err.message;
+          console.warn('AudioContext decode failed:', err);
+          onError();
         });
     } else {
-      // Fallback: regular Audio element
-      _audio=new Audio(url);
-      _audio.onended=()=>{ if(!_aborted) onEnd(); };
-      _audio.onerror=()=>{ if(!_aborted) onError(); };
-      _audio.play().catch(err=>{
-        console.warn('Audio.play() blocked:',err);
-        if(!_aborted) onError();
-      });
+      // AudioContext not ready — likely page wasn't started via Start button
+      if(st) st.textContent = '❌ Tap ▶ Start reading first to unlock audio';
+      console.warn('AudioContext not ready. State:', ctx ? ctx.state : 'null');
     }
   }
 
   async function speak(text, lang, onEnd, onError) {
     _aborted = false;
     const workerUrl = localStorage.getItem('ra_worker_url') || WORKER_URL;
-    if (!workerUrl) { onError(); return; }   // no Worker URL → fall back to Web Speech
+    const st = document.getElementById('sTxt');
+    if (!workerUrl) {
+      if(st) st.textContent = '❌ No Worker URL — go to Settings ⚙️ and add it';
+      return;  // don't advance — wait for user to fix settings
+    }
     try {
+      if(st) st.textContent = '⏳ Fetching audio…';
       const url = await _getAudioUrl(text, lang);
       if (_aborted) return;
       _play(url, onEnd, onError);
     } catch (err) {
       console.warn('ElevenLabs provider error:', err.message);
-      if (!_aborted) onError();
+      if(st) st.textContent = '❌ Audio error: ' + err.message;
+      // Don't call onError/skip — show the error so we can diagnose
+      // Auto-retry after 3s
+      if(!_aborted) setTimeout(()=>{ if(!_aborted) speak(text, lang, onEnd, onError); }, 3000);
     }
   }
 
