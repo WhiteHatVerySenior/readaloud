@@ -1653,25 +1653,39 @@ const elevenLabsProvider = (function () {
   }
 
   function _play(url, onEnd, onError) {
+    const st = document.getElementById('sTxt');
     _audio = new Audio(url);
     _audio.onended = () => { if(!_aborted) onEnd(); };
-    _audio.onerror = () => { if(!_aborted) onError(); };
+    _audio.onerror = (e) => {
+      if(_aborted) return;
+      const code = _audio.error ? _audio.error.code : '?';
+      if(st) st.textContent = '❌ Play error code: ' + code;
+      onError();
+    };
     _audio.play().catch(err => {
-      console.warn('[EL] play() rejected:', err.message);
-      if(!_aborted) onError();
+      if(_aborted) return;
+      if(st) st.textContent = '❌ play() blocked: ' + err.message;
+      onError();
     });
   }
 
   async function speak(text, lang, onEnd, onError) {
     _aborted = false;
     const workerUrl = localStorage.getItem('ra_worker_url') || WORKER_URL;
-    if (!workerUrl) { onError(); return; }
+    const st = document.getElementById('sTxt');
+    if (!workerUrl) {
+      if(st) st.textContent = '❌ No Worker URL set in Settings';
+      onError(); return;
+    }
     try {
+      if(st) st.textContent = '⏳ Loading audio…';
       const url = await _getAudioUrl(text, lang);
       if (_aborted) return;
+      if(st) st.textContent = '▶ Playing…';
       _play(url, onEnd, onError);
     } catch (err) {
-      console.warn('[EL] fetch/decode error:', err.message);
+      console.warn('[EL] error:', err.message);
+      if(st) st.textContent = '❌ Fetch error: ' + err.message;
       if (!_aborted) onError();
     }
   }
