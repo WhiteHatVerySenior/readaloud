@@ -1137,7 +1137,8 @@ function buildReader(){
 // ── AUTO FLOW ─────────────────────────────────────────
 function startAuto(){
   autoMode=true;
-  // Unlock Web Speech inside user gesture
+  // Unlock audio elements inside the user gesture (must be synchronous here)
+  elevenLabsProvider.warm();   // pre-unlocks the persistent HTML Audio element
   if(synth){ const u=new SpeechSynthesisUtterance(''); u.volume=0; synth.speak(u); }
   nextLine();
 }
@@ -1604,21 +1605,21 @@ const _idb = (function () {
 // ── Provider ──────────────────────────────────────────────────
 const elevenLabsProvider = (function () {
   const _memCache = {};   // cacheKey → blob URL  (in-memory, current tab)
-  let _audio      = null;
-  let _aborted    = false;
 
-  // Build a stable cache key (same logic as the Worker's SHA-256 key,
-  // but we use the raw string locally — the Worker uses the hash for R2).
+  // ONE persistent audio element, pre-unlocked during the user gesture.
+  // We never destroy it — just pause and swap src between lines.
+  // This is the only reliable way to play audio without a direct user gesture
+  // on every line (speech-recognition callbacks are not user gestures).
+  let _audio   = null;
+  let _aborted = false;
+
   function _cacheKey(text, lang, voiceId) {
     return `${voiceId}|${lang}|${text.trim().toLowerCase()}`;
   }
 
-  // Fetch audio from Worker (which checks R2 → ElevenLabs → stores in R2).
-  // Returns a blob URL.
   async function _fetchFromWorker(text, lang) {
     const workerUrl = (localStorage.getItem('ra_worker_url') || WORKER_URL).replace(/\/+$/, '');
     if (!workerUrl) throw new Error('No Worker URL configured');
-
     const voiceId = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
     const res = await fetch(`${workerUrl}/tts`, {
       method:  'POST',
@@ -1631,29 +1632,33 @@ const elevenLabsProvider = (function () {
     return blob;
   }
 
-  // Full fetch pipeline: memory → IndexedDB → Worker → ElevenLabs
   async function _getAudioUrl(text, lang) {
     const voiceId = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
     const ck = _cacheKey(text, lang, voiceId);
-
-    // 1. Memory
     if (_memCache[ck]) return _memCache[ck];
-
-    // 2. IndexedDB
     const idbBlob = await _idb.get(ck);
     if (idbBlob) {
       const url = URL.createObjectURL(idbBlob);
       _memCache[ck] = url;
       return url;
     }
-
-    // 3. Worker (R2 or fresh ElevenLabs)
     const blob = await _fetchFromWorker(text, lang);
     const url  = URL.createObjectURL(blob);
     _memCache[ck] = url;
-    // Store in IndexedDB asynchronously (don't block playback)
     _idb.put(ck, blob).catch(() => {});
     return url;
+  }
+
+  // ── warm() ────────────────────────────────────────────────────────────────
+  // Call this SYNCHRONOUSLY inside a user gesture (e.g. the Start button click).
+  // It creates the persistent Audio element and plays a silent clip so the
+  // browser marks it as "user-activated". All later play() calls on this same
+  // element are then allowed without requiring another gesture.
+  function warm() {
+    if (_audio) return;   // already warmed
+    _audio = new Audio();
+    _audio.src = _SILENT_AUDIO;
+    _audio.play().catch(() => {});
   }
 
   async function speak(text, lang, onEnd, onError) {
@@ -1665,15 +1670,9 @@ const elevenLabsProvider = (function () {
       onError(); return;
     }
 
-    // ── Pre-unlock audio BEFORE any await ────────────────────────────────────
-    // iOS Safari requires audio.play() to be called synchronously inside the
-    // user-gesture call stack. We're still synchronous here (no await yet), so
-    // creating and "touching" the Audio element now keeps it in the gesture window.
-    if (_audio) { try { _audio.pause(); } catch(e) {} }
-    _audio = new Audio();
-    _audio.src = _SILENT_AUDIO;
-    _audio.play().catch(() => {});  // may fail silently — that's fine
-    // ─────────────────────────────────────────────────────────────────────────
+    // Make sure we have an audio element.
+    // warm() should have been called from the Start button, but guard anyway.
+    if (!_audio) warm();
 
     try {
       if(st) st.textContent = '⏳ Loading audio…';
@@ -1681,8 +1680,8 @@ const elevenLabsProvider = (function () {
       if (_aborted) return;
       if(st) st.textContent = '▶ Playing…';
 
-      // Re-use the already-unlocked audio element (key for iOS Safari).
-      // Clear any stale handlers from the silent-audio phase before attaching real ones.
+      // Swap src on the persistent, already-unlocked element.
+      // Detach old handlers first so stale events don't fire.
       _audio.onended = null;
       _audio.onerror = null;
       _audio.pause();
@@ -1694,7 +1693,6 @@ const elevenLabsProvider = (function () {
         onError();
       };
       _audio.src = url;
-      _audio.load();
       _audio.play().catch(err => {
         if(_aborted) return;
         if(st) st.textContent = '❌ play() blocked: ' + err.message;
@@ -1707,13 +1705,12 @@ const elevenLabsProvider = (function () {
     }
   }
 
-  // Background pre-fetch for the next line (called while current line plays)
   async function prefetch(text, lang) {
     const workerUrl = (localStorage.getItem('ra_worker_url') || WORKER_URL).replace(/\/+$/, '');
     if (!workerUrl) return;
     const voiceId = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
     const ck = _cacheKey(text, lang, voiceId);
-    if (_memCache[ck]) return;               // already in memory
+    if (_memCache[ck]) return;
     const idbBlob = await _idb.get(ck);
     if (idbBlob) { _memCache[ck] = URL.createObjectURL(idbBlob); return; }
     try {
@@ -1726,13 +1723,15 @@ const elevenLabsProvider = (function () {
   function stop() {
     _aborted = true;
     if (_audio) {
-      try{ _audio.pause && _audio.pause(); }catch(e){}   // HTML Audio
-      try{ _audio.stop  && _audio.stop();  }catch(e){}   // AudioBufferSourceNode
-      _audio = null;
+      try { _audio.pause(); } catch(e) {}
+      _audio.onended = null;
+      _audio.onerror = null;
+      // Keep _audio alive — don't null it out.
+      // The element stays unlocked for the next play().
     }
   }
 
-  return { speak, stop, prefetch };
+  return { speak, stop, prefetch, warm };
 })();
 
 // ── Provider registry ─────────────────────────────────────
