@@ -1853,12 +1853,12 @@ function speakLine(text){
   speaking = true;
   ttsSpeak(text, lang,
     ()=>{ advance(680 + Math.random()*320); },   // onEnd — natural post-line breath
-    ()=>{                                         // onError — show error, don't skip
+    ()=>{                                         // onError — specific msg already set by speak()
       speaking = false;
       clearTimeout(fallback);
       done = true;
-      const et = document.getElementById('sTxt');
-      if(et) et.textContent = '❌ Audio failed — press Skip → to continue';
+      // DO NOT overwrite sTxt here — speak() already set a specific diagnostic message
+      // e.g. "❌ Fetch error: Worker 500" or "❌ play() blocked: NotAllowedError"
     }
   );
   prefetchNextLine();   // background-fetch next TTS line while this one plays
