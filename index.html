@@ -1,22 +1,2055 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🇮🇳 Indian States Top Trumps</title>
-<link rel="stylesheet" href="styles.css"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ReadAloud — Interactive Storybook</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f3;--bg3:#eeede9;
+  --text:#1a1a1a;--text2:#666660;--text3:#aaa9a4;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.2);
+  --blue:#185FA5;--blue2:#E6F1FB;--blue3:#378ADD;
+  --green:#0F6E56;--green2:#EAF3DE;--green3:#1D9E75;
+  --amber:#854F0B;--amber2:#FAEEDA;--amber3:#EF9F27;
+  --red:#A32D2D;--red2:#FCEBEB;--red3:#E24B4A;
+  --teal2:#E1F5EE;--teal:#085041;
+  --r:8px;--rl:14px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:var(--text);background:var(--bg3);min-height:100vh}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+.topbar{background:var(--bg);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px}
+.topbar-title{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.topbar-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.page{flex:1;padding:16px;max-width:780px;margin:0 auto;width:100%}
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;margin-bottom:12px}
+.card-title{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 18px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.btn:hover{background:var(--bg2)}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{background:#0C447C}
+.btn-green{background:var(--green3);color:#fff;border-color:var(--green3)}
+.btn-red{background:var(--red2);color:var(--red);border-color:#F09595}
+.btn-sm{padding:6px 13px;font-size:12px}
+.btn-xl{padding:16px 24px;font-size:17px;width:100%;border-radius:12px;min-height:58px}
+.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.tag-easy{background:var(--green2);color:var(--green)}
+.tag-med{background:var(--amber2);color:var(--amber)}
+.tag-hard{background:var(--red2);color:var(--red)}
+.tag-english{background:var(--teal2);color:var(--teal)}
+.tag-science{background:var(--blue2);color:var(--blue)}
+.tag-history{background:var(--amber2);color:var(--amber)}
+.tag-evs{background:var(--green2);color:var(--green)}
+.tag-hindi{background:#FFE4E1;color:#8B1A1A}
+.tag-ncert{background:#FFF3CD;color:#7B5800}
+.ncert-unit{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.type-badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:600;background:var(--bg3);color:var(--text2)}
+.lbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.lv-adv{background:var(--teal2);color:var(--teal)}
+.lv-flu{background:var(--green2);color:var(--green)}
+.lv-dev{background:var(--amber2);color:var(--amber)}
+.lv-beg{background:var(--red2);color:var(--red)}
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg);border-radius:var(--rl) var(--rl) 0 0;overflow-x:auto}
+.tab{padding:11px 16px;font-size:13px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:600;white-space:nowrap;transition:all .15s}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-body{background:var(--bg);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--rl) var(--rl);padding:16px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.mc{background:var(--bg2);border-radius:var(--r);padding:11px 13px}
+.ml{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.mv{font-size:22px;font-weight:800;color:var(--text)}
+.mv.good{color:var(--green)}.mv.warn{color:var(--amber)}.mv.bad{color:var(--red)}
+.pbar-wrap{height:5px;background:var(--bg3);border-radius:3px;margin-bottom:14px}
+.pbar{height:5px;background:var(--blue3);border-radius:3px;transition:width .4s}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.av-blue{background:#B5D4F4;color:#0C447C}
+.av-teal{background:#9FE1CB;color:#085041}
+.av-amber{background:#FAC775;color:#633806}
+.av-purple{background:#CECBF6;color:#3C3489}
+.sgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.scard{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:all .18s}
+.scard:hover{border-color:var(--blue3);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.scard:active{transform:scale(.98)}
+.sthumb{width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:48px}
+.sinfo{padding:10px 12px}
+.stitle{font-size:13px;font-weight:700;margin-bottom:3px}
+.sdesc{font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:7px}
+.stags{display:flex;gap:5px;flex-wrap:wrap}
+.srow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.srow:last-child{border-bottom:none}
+select,input[type=date],input[type=text]{width:100%;padding:8px 10px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:13px}
+.toast{background:var(--green2);border:1px solid #97C459;border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--green);margin-top:10px;display:none}
+.login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.login-box{width:100%;max-width:340px}
+.login-opt{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:var(--rl);border:1px solid var(--border);background:var(--bg);cursor:pointer;margin-bottom:9px;transition:all .15s;width:100%;text-align:left}
+.login-opt:hover{border-color:var(--blue3);background:var(--blue2)}
+.bchart{display:flex;align-items:flex-end;gap:5px;height:65px}
+.bcol{display:flex;flex-direction:column;align-items:center;flex:1}
+.bbar{width:100%;border-radius:4px 4px 0 0;background:#B5D4F4;min-height:3px}
+.blbl{font-size:9px;color:var(--text2);margin-top:3px;text-align:center}
+.lbrow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.lblbl{width:78px;font-size:12px;color:var(--text2)}
+.lbtrack{flex:1;height:8px;background:var(--bg3);border-radius:4px}
+.lbfill{height:8px;border-radius:4px}
+.abar{width:70px;height:5px;background:var(--bg3);border-radius:3px;margin-top:3px}
+.afill{height:5px;border-radius:3px}
+
+/* ═══ CALL & RESPONSE READER ═══ */
+.reader-wrap{display:flex;flex-direction:column;gap:10px}
+.line-card{border-radius:var(--rl);overflow:hidden;border:2px solid transparent;transition:border-color .3s}
+.line-body{padding:14px 16px}
+.line-image{width:100%;height:150px;display:flex;align-items:center;justify-content:center;font-size:76px}
+.line-speaker{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:flex;align-items:center;gap:7px}
+.line-text{font-size:20px;line-height:1.9;font-family:Georgia,serif}
+
+/* User turn colours */
+.user-turn .line-card{border-color:#B5D4F4}
+.user-turn .line-card.active-card{border-color:var(--blue);box-shadow:0 0 0 3px rgba(55,138,221,.15)}
+.user-turn .line-body{background:var(--blue2)}
+.user-turn .line-speaker{color:var(--blue)}
+
+/* App turn colours */
+.app-turn .line-card{border-color:#9FE1CB}
+.app-turn .line-card.active-card{border-color:var(--green3);box-shadow:0 0 0 3px rgba(29,158,117,.15)}
+.app-turn .line-body{background:var(--teal2)}
+.app-turn .line-speaker{color:var(--teal)}
+.app-turn .line-text{color:#0a3d2e}
+
+/* Completed line */
+.line-done .line-card{opacity:.4;border-color:var(--border)!important;box-shadow:none!important}
+.line-done .line-body{background:var(--bg2)!important}
+
+/* Word highlights */
+.word{display:inline;padding:2px 4px;border-radius:4px;transition:all .1s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.word.done{color:var(--green);background:rgba(29,158,117,.1)}
+.word.active{background:#FAC775;color:#412402;font-weight:700}
+.word.err{background:var(--red2);color:var(--red);text-decoration:underline wavy var(--red)}
+
+/* Status + mic dot */
+.status-bar{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:11px 14px;display:flex;align-items:center;gap:10px}
+.transcript{font-size:13px;color:var(--text2);font-style:italic;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mic-dot{width:10px;height:10px;border-radius:50%;background:var(--red3);display:inline-block;animation:pulse 1s infinite;flex-shrink:0}
+.app-dot{width:10px;height:10px;border-radius:50%;background:var(--green3);display:inline-block;animation:pulse .7s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+
+/* Turn badge */
+.turn-badge{padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;color:#fff}
+.turn-you{background:var(--blue)}
+.turn-app{background:var(--green3)}
+
+/* Finish */
+.finish-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:2rem 1.5rem;text-align:center}
+.score-ring{width:90px;height:90px;border-radius:50%;border:4px solid var(--green3);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem}
+.score-num{font-size:26px;font-weight:800;color:var(--green)}
+.score-sub{font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+
+@media(max-width:600px){
+  .g4{grid-template-columns:1fr 1fr}
+  .g2{grid-template-columns:1fr}
+  .page{padding:10px}
+  .line-text{font-size:17px}
+  .line-image{height:110px;font-size:58px}
+  .mv{font-size:18px}
+  .tab{padding:9px 12px;font-size:12px}
+  .btn-xl{font-size:15px;min-height:52px}
+}
+@media(max-width:380px){
+  .sgrid{grid-template-columns:1fr}
+  .line-text{font-size:15px}
+}
+
+/* ═══ SETTINGS MODAL ═══ */
+#settingsModal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:none;align-items:flex-end;justify-content:center;}
+#settingsModal.open{display:flex;animation:fadeIn .18s ease;}
+#settingsSheet{background:var(--bg);border-radius:18px 18px 0 0;width:100%;max-width:600px;padding:20px 18px 32px;max-height:88vh;overflow-y:auto;}
+#settingsSheet h3{font-size:16px;font-weight:800;margin-bottom:18px;}
+.set-section{border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;margin-bottom:12px;}
+.set-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);margin-bottom:6px;}
+.el-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:700;}
+.el-on{background:#EAF3DE;color:#0F6E56;}.el-off{background:var(--bg3);color:var(--text3);}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ═══ DARK MODE ═══ */
+body.dark{
+  --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#111113;
+  --text:#f2f2f7;--text2:#98989e;--text3:#48484a;
+  --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);
+  --blue2:#1b3a5a;--green2:#0d2a1e;--amber2:#2a1a00;--red2:#2a0a0a;--teal2:#0a1e17;
+}
+body.dark .scard:hover{box-shadow:0 4px 12px rgba(0,0,0,.5);}
+body.dark .finish-card{background:var(--bg);}
+body.dark .bbar{background:#3a5a8a;}
+body.dark select,body.dark input[type=date],body.dark input[type=text]{background:var(--bg2);color:var(--text);}
+
+/* ═══ VOCAB TOOLTIP ═══ */
+.vocab-word{border-bottom:2px dotted var(--amber3);cursor:pointer;transition:background .12s;border-radius:3px;display:inline;}
+.vocab-word:hover,.vocab-word:active{background:var(--amber2);}
+#vocabPop{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:520px;background:var(--bg);border:2px solid var(--amber3);border-radius:14px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.25);display:none;z-index:200;}
+#vocabPop.show{display:block;animation:popIn .15s ease;}
+@keyframes popIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+</style>
 </head>
 <body>
-<div class="app" id="app"></div>
 
-<script src="js/data.js"></script>
-<script src="js/state.js"></script>
-<script src="js/utils.js"></script>
-<script src="js/cards.js"></script>
-<script src="js/reactions.js"></script>
-<script src="js/cpu.js"></script>
-<script src="js/hotseat.js"></script>
-<script src="js/online.js"></script>
-<script src="js/app.js"></script>
+<!-- ═══ LOGIN ═══ -->
+<div id="scrLogin" class="screen active">
+  <div class="login-wrap">
+    <div class="login-box">
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="width:56px;height:56px;background:var(--blue2);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px">📖</div>
+        <div style="font-size:22px;font-weight:800;margin-bottom:4px">ReadAloud</div>
+        <div style="font-size:13px;color:var(--text2)">Call &amp; Response reading platform</div>
+      </div>
+
+      <div id="micBox" style="margin-bottom:14px;background:var(--green2);border:1px solid #97C459;border-radius:var(--rl);padding:14px;text-align:center">
+        <div style="font-size:14px;font-weight:700;color:#27500A;margin-bottom:4px">🎤 Allow microphone first</div>
+        <div style="font-size:12px;color:#3B6D11;margin-bottom:10px;line-height:1.5">Tap below — your browser will ask permission to listen while you read.</div>
+        <button id="micBtn" onclick="askMic()" style="background:var(--green3);color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;width:100%">🎤 Allow microphone</button>
+        <div id="micSt" style="font-size:12px;margin-top:8px;min-height:18px;line-height:1.5"></div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Sign in as</div>
+      <button class="login-opt" onclick="login('teacher','Priya')">
+        <div class="avatar av-purple">TP</div>
+        <div><div style="font-size:13px;font-weight:700">Ms. Priya Sharma</div><div style="font-size:11px;color:var(--text2)">Teacher · Class 7B</div></div>
+      </button>
+      <button class="login-opt" onclick="login('student','Arjun')">
+        <div class="avatar av-blue">AK</div>
+        <div><div style="font-size:13px;font-weight:700">Arjun Kumar</div><div style="font-size:11px;color:var(--text2)">Student · Fluent reader</div></div>
+      </button>
+      <button class="login-opt" onclick="login('student','Meera')">
+        <div class="avatar av-teal">MS</div>
+        <div><div style="font-size:13px;font-weight:700">Meera Singh</div><div style="font-size:11px;color:var(--text2)">Student · Advanced reader</div></div>
+      </button>
+      <button class="login-opt" onclick="login('student','Ravi')">
+        <div class="avatar av-amber">RN</div>
+        <div><div style="font-size:13px;font-weight:700">Ravi Nair</div><div style="font-size:11px;color:var(--text2)">Student · Developing reader</div></div>
+      </button>
+      <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px">Works best on Chrome (Android / iOS / desktop)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TEACHER ═══ -->
+<div id="scrTeacher" class="screen">
+  <div class="topbar">
+    <div><div class="topbar-title">📊 Dashboard</div><div class="topbar-sub">Ms. Priya · Class 7B</div></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-sm" onclick="openSettings()" style="padding:5px 9px;font-size:15px" title="Settings">⚙️</button>
+      <button class="btn btn-sm" onclick="toggleDark()" id="darkBtnT" style="padding:5px 9px;font-size:15px" title="Dark mode">🌙</button>
+      <div class="avatar av-purple">TP</div>
+      <button class="btn btn-sm" onclick="goLogin()">Sign out</button>
+    </div>
+  </div>
+  <div class="page">
+    <div class="tabs"><div class="tab active" onclick="tTab(this,'ov')">Overview</div><div class="tab" onclick="tTab(this,'st')">Students</div><div class="tab" onclick="tTab(this,'li')">Library</div><div class="tab" onclick="tTab(this,'as')">Assign</div></div>
+    <div class="tab-body">
+      <div id="t-ov">
+        <div class="g4" style="margin-bottom:14px">
+          <div class="mc"><div class="ml">Avg accuracy</div><div class="mv good">78%</div></div>
+          <div class="mc"><div class="ml">Avg speed</div><div class="mv">82 wpm</div></div>
+          <div class="mc"><div class="ml">Sessions today</div><div class="mv">11</div></div>
+          <div class="mc"><div class="ml">Stories done</div><div class="mv">34</div></div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-title">Level distribution</div>
+            <div class="lbrow"><span class="lblbl">Advanced</span><div class="lbtrack"><div class="lbfill" style="width:17%;background:#1D9E75"></div></div><b style="font-size:12px;color:var(--green)">4</b></div>
+            <div class="lbrow"><span class="lblbl">Fluent</span><div class="lbtrack"><div class="lbfill" style="width:33%;background:#5DCAA5"></div></div><b style="font-size:12px;color:var(--green)">8</b></div>
+            <div class="lbrow"><span class="lblbl">Developing</span><div class="lbtrack"><div class="lbfill" style="width:38%;background:#EF9F27"></div></div><b style="font-size:12px;color:var(--amber)">9</b></div>
+            <div class="lbrow"><span class="lblbl">Beginner</span><div class="lbtrack"><div class="lbfill" style="width:12%;background:#E24B4A"></div></div><b style="font-size:12px;color:var(--red)">3</b></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Weekly sessions</div>
+            <div class="bchart">
+              <div class="bcol"><div class="bbar" style="height:35%"></div><div class="blbl">Mon<br>7</div></div>
+              <div class="bcol"><div class="bbar" style="height:55%"></div><div class="blbl">Tue<br>12</div></div>
+              <div class="bcol"><div class="bbar" style="height:42%"></div><div class="blbl">Wed<br>9</div></div>
+              <div class="bcol"><div class="bbar" style="height:78%"></div><div class="blbl">Thu<br>17</div></div>
+              <div class="bcol"><div class="bbar" style="height:100%;background:var(--blue3)"></div><div class="blbl">Fri<br>22</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px"><div class="card-title">Needs attention</div><div id="t-att"></div></div>
+        <div class="card" style="margin-top:12px"><div class="card-title">🔤 Top struggling words</div><div id="t-words" style="min-height:24px"></div></div>
+      </div>
+      <div id="t-st" style="display:none">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" placeholder="Search…" oninput="renderSt(this.value,document.getElementById('lvlF').value)" style="flex:1">
+          <select id="lvlF" onchange="renderSt(document.querySelector('#t-st input').value,this.value)" style="width:auto"><option value="">All</option><option>Advanced</option><option>Fluent</option><option>Developing</option><option>Beginner</option></select>
+        </div>
+        <div class="card" style="padding:4px 14px"><div id="stList"></div></div>
+      </div>
+      <div id="t-li" style="display:none">
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <select onchange="renderLib(this.value,document.getElementById('libD').value)" style="flex:1"><option value="">All subjects</option><option>English</option><option>Science</option><option>History</option><option>EVS</option></select>
+          <select id="libD" onchange="renderLib(document.querySelector('#t-li select').value,this.value)" style="flex:1"><option value="">All levels</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
+        </div>
+        <div class="sgrid" id="libGrid"></div>
+      </div>
+      <div id="t-as" style="display:none">
+        <div class="card">
+          <div class="card-title">Assign a story</div>
+          <div style="display:flex;flex-direction:column;gap:11px;margin-top:4px">
+            <div><div style="font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:600">Story</div><select><option>The Tunnel</option><option>The Lost Kite</option><option>The Brave Little Firefly</option><option>Monsoon Magic</option><option>Journey to the Deep Sea</option><option>The Water Cycle</option><option>The Desert Fox</option><option>Ashoka's Message</option></select></div>
+            <div><div style="font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:600">Assign to</div><select><option>Entire Class 7B</option><option>Arjun Kumar</option><option>Meera Singh</option><option>Ravi Nair</option><option>Beginners group</option><option>Developing group</option></select></div>
+            <div><div style="font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:600">Due date</div><input type="date"></div>
+            <button class="btn btn-primary" onclick="document.getElementById('aToast').style.display='block';setTimeout(()=>document.getElementById('aToast').style.display='none',3000)">Assign story</button>
+            <div id="aToast" class="toast">Story assigned successfully!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ STUDENT HOME ═══ -->
+<div id="scrStudent" class="screen">
+  <div class="topbar">
+    <div><div class="topbar-title" id="sGreet">Hello!</div><div class="topbar-sub">Class 7B · ReadAloud</div></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-sm" onclick="openSettings()" style="padding:5px 9px;font-size:15px" title="Settings">⚙️</button>
+      <button class="btn btn-sm" onclick="toggleDark()" id="darkBtnS" style="padding:5px 9px;font-size:15px" title="Dark mode">🌙</button>
+      <div class="avatar" id="sAv" style="background:#B5D4F4;color:#0C447C">AK</div>
+      <button class="btn btn-sm" onclick="goLogin()">Sign out</button>
+    </div>
+  </div>
+  <div class="page">
+    <div class="tabs"><div class="tab active" onclick="sTab(this,'ho')">My stories</div><div class="tab" onclick="sTab(this,'ncert')">📚 NCERT English</div><div class="tab" onclick="sTab(this,'pr')">My progress</div></div>
+    <div class="tab-body">
+      <div id="s-ho">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">Stories</div>
+          <select onchange="renderSStories(this.value)" style="width:auto"><option value="">All</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
+        </div>
+        <div class="sgrid" id="sGrid"></div>
+      </div>
+
+      <div id="s-ncert" style="display:none">
+        <div style="background:var(--amber2);border:1px solid var(--amber3);border-radius:var(--rl);padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+          <div style="font-size:28px">📖</div>
+          <div><div style="font-size:13px;font-weight:700;color:var(--amber)">Poorvi — NCERT English Grade 6</div><div style="font-size:12px;color:var(--amber);opacity:.8">Read chapters from your actual textbook aloud with the app</div></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">All chapters</div>
+          <select id="ncertFilter" onchange="renderNCERT(this.value)" style="width:auto">
+            <option value="">All chapters</option>
+          </select>
+        </div>
+        <div class="sgrid" id="ncertGrid"></div>
+        <div style="font-size:12px;color:var(--text3);text-align:center;margin-top:14px;padding:10px;border:1px dashed var(--border);border-radius:var(--r)">More chapters coming soon — share your textbook PDFs to add them!</div>
+      </div>
+
+      <div id="s-pr" style="display:none">
+        <div class="g4" style="margin-bottom:14px" id="sMet"></div>
+        <div class="g2">
+          <div class="card"><div class="card-title">Reading history</div><div id="sHist"></div></div>
+          <div class="card"><div class="card-title">Accuracy trend</div><div id="sAcc"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ READER ═══ -->
+<div id="scrReader" class="screen">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px;min-width:0">
+      <button class="btn btn-sm" onclick="exitReader()">← Back</button>
+      <div style="min-width:0"><div class="topbar-title" id="rTitle">Story</div><div class="topbar-sub" id="rMeta">Subject</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+      <span class="lbadge lv-flu" id="rBadge">—</span>
+      <span style="font-size:12px;color:var(--text2)" id="rWpmTop">—</span>
+      <button class="btn btn-sm" onclick="openSettings()" style="padding:5px 9px;font-size:14px" title="Settings">⚙️</button>
+      <button class="btn btn-sm" onclick="toggleDark()" id="darkBtnR" style="padding:5px 9px;font-size:14px" title="Dark mode">🌙</button>
+    </div>
+  </div>
+  <div class="page">
+    <div class="g4" style="margin-bottom:12px">
+      <div class="mc"><div class="ml">Accuracy</div><div class="mv" id="rAcc">—</div></div>
+      <div class="mc"><div class="ml">Speed</div><div class="mv" id="rWpm">—</div></div>
+      <div class="mc"><div class="ml">Words</div><div class="mv" id="rWords">0</div></div>
+      <div class="mc"><div class="ml">Line</div><div class="mv" id="rLine">1</div></div>
+    </div>
+    <div class="pbar-wrap"><div class="pbar" id="rPbar" style="width:0%"></div></div>
+    <div class="reader-wrap" id="readerWrap"></div>
+    <div id="readerDone" style="display:none"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settingsModal" onclick="closeSettings()">
+  <div id="settingsSheet" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <h3 style="margin:0">⚙️ Settings</h3>
+      <button onclick="closeSettings()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3);padding:0;line-height:1">×</button>
+    </div>
+
+    <!-- Active voice status -->
+    <div class="set-section" style="display:flex;align-items:center;gap:12px">
+      <div style="flex:1">
+        <div class="set-label">Active voice</div>
+        <div id="setProviderName" style="font-size:14px;font-weight:700;margin-top:2px">🔊 System voice</div>
+        <div id="setProviderDesc" style="font-size:11px;color:var(--text2);margin-top:3px">Web Speech API — built-in, works offline</div>
+      </div>
+      <div id="setProviderPill" class="el-pill el-off">OFF</div>
+    </div>
+
+    <!-- ElevenLabs / Cloudflare Worker section -->
+    <div class="set-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div>
+          <div style="font-size:13px;font-weight:700">🎙️ ElevenLabs Neural Voice</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Human-quality, expressive reading via your Cloudflare Worker. API key stays hidden on server.</div>
+        </div>
+        <a href="https://dash.cloudflare.com" target="_blank" style="font-size:11px;color:var(--blue);font-weight:600;white-space:nowrap;margin-left:10px">CF Dashboard →</a>
+      </div>
+
+      <div style="margin-bottom:10px">
+        <div class="set-label">Worker URL</div>
+        <input id="elKeyInput" type="url" placeholder="https://readaloud-tts.YOUR-NAME.workers.dev" autocomplete="off"
+          style="font-family:monospace;font-size:11px;letter-spacing:.02em">
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">Paste the URL of your deployed Cloudflare Worker. The ElevenLabs API key is stored securely on the Worker — never in the browser.</div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div class="set-label">Voice</div>
+        <select id="elVoiceInput">
+          <option value="21m00Tcm4TlvDq8ikWAM">Rachel — calm, clear (female) ⭐ recommended</option>
+          <option value="EXAVITQu4vr4xnSDxMaL">Bella — soft, gentle (female)</option>
+          <option value="AZnzlk1XvdvUeBnXmlld">Domi — warm, expressive (female)</option>
+          <option value="ErXwobaYiN019PkySvjV">Antoni — clear, friendly (male)</option>
+          <option value="TxGEqnHWrfWFTfGW9XjX">Josh — natural, conversational (male)</option>
+          <option value="VR6AewLTigWG4xSOukaG">Arnold — deep, authoritative (male)</option>
+        </select>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" style="flex:1;min-width:120px" onclick="saveElSettings()">✓ Save &amp; Enable</button>
+        <button class="btn btn-red btn-sm" id="elClearBtn" style="display:none" onclick="clearElSettings()">Remove</button>
+      </div>
+      <div id="elSaveMsg" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--green)"></div>
+    </div>
+
+    <!-- Web Speech info -->
+    <div class="set-section" style="opacity:.7">
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px">🔊 Web Speech (default)</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.6">Always available. Works offline. Quality depends on your device — Chrome on Mac or Android usually has the best voices. No setup needed.</div>
+    </div>
+  </div>
+</div>
+
+<!-- VOCAB POPUP -->
+<div id="vocabPop" onclick="event.stopPropagation()">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+    <div style="flex:1">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);margin-bottom:5px">📖 Word meaning</div>
+      <div id="vocabWord" style="font-size:18px;font-weight:700;font-family:Georgia,serif;color:var(--text);margin-bottom:6px"></div>
+      <div id="vocabDef" style="font-size:13px;color:var(--text2);line-height:1.6"></div>
+    </div>
+    <button onclick="closeVocab()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3);padding:0 2px;line-height:1;flex-shrink:0">×</button>
+  </div>
+</div>
+
+<script>
+// ══════════ DATA ══════════════════════════════════════════
+const SD = [
+  {name:'Arjun Kumar', init:'AK',av:'av-blue',  level:'Fluent',    acc:84,wpm:98, sessions:12,done:5},
+  {name:'Meera Singh', init:'MS',av:'av-teal',  level:'Advanced',  acc:94,wpm:130,sessions:15,done:8},
+  {name:'Ravi Nair',   init:'RN',av:'av-amber', level:'Developing',acc:61,wpm:58, sessions:7, done:3},
+  {name:'Priya Patel', init:'PP',av:'av-purple',level:'Beginner',  acc:48,wpm:38, sessions:4, done:1},
+  {name:'Sahil Khan',  init:'SK',av:'av-blue',  level:'Developing',acc:70,wpm:72, sessions:9, done:4},
+  {name:'Ananya Roy',  init:'AR',av:'av-teal',  level:'Fluent',    acc:88,wpm:105,sessions:11,done:6},
+  {name:'Dev Sharma',  init:'DS',av:'av-amber', level:'Beginner',  acc:52,wpm:44, sessions:5, done:2},
+  {name:'Kavya Iyer',  init:'KI',av:'av-purple',level:'Advanced',  acc:96,wpm:138,sessions:18,done:9},
+];
+const PROF = {
+  Arjun:{init:'AK',av:'av-blue', accH:[72,76,80,84],wpmH:[78,85,92,98], level:'Fluent',   streak:4,done:5},
+  Meera:{init:'MS',av:'av-teal', accH:[85,88,91,94],wpmH:[110,118,124,130],level:'Advanced',streak:7,done:8},
+  Ravi: {init:'RN',av:'av-amber',accH:[50,54,58,61],wpmH:[40,48,53,58], level:'Developing',streak:2,done:3},
+};
+const HIST = {
+  Arjun:[{t:'Monsoon Magic',acc:92,wpm:112,d:'Today'},{t:'The Tunnel',acc:84,wpm:98,d:'Yesterday'},{t:'The Lost Kite',acc:79,wpm:90,d:'2 days ago'}],
+  Meera:[{t:'Journey to the Deep Sea',acc:96,wpm:138,d:'Today'},{t:'The Tunnel',acc:94,wpm:132,d:'Yesterday'}],
+  Ravi: [{t:'The Brave Little Firefly',acc:63,wpm:60,d:'Today'},{t:'Monsoon Magic',acc:58,wpm:55,d:'2 days ago'}],
+};
+const STORIES = [
+  {id:'tunnel',  title:'The Tunnel',               subject:'English',diff:'Medium',emoji:'🌿',bg:'#C8E6A0',desc:'A boy and a watchman share stories by a jungle railway.'},
+  {id:'kite',    title:'The Lost Kite',             subject:'English',diff:'Easy',  emoji:'🪁',bg:'#B5D4F4',desc:'Aryan searches his neighbourhood for his beloved red kite.'},
+  {id:'firefly', title:'The Brave Little Firefly',  subject:'English',diff:'Easy',  emoji:'✨',bg:'#FAEEDA',desc:'A tiny firefly lights up an entire dark forest with courage.'},
+  {id:'monsoon', title:'Monsoon Magic',             subject:'English',diff:'Easy',  emoji:'🌧️',bg:'#9FE1CB',desc:'The joy of the first monsoon rains in a small village.'},
+  {id:'deepsea', title:'Journey to the Deep Sea',   subject:'Science',diff:'Medium',emoji:'🐋',bg:'#CECBF6',desc:'Dive into ocean depths and meet creatures of the abyss.'},
+  {id:'water',   title:'The Water Cycle',           subject:'Science',diff:'Easy',  emoji:'💧',bg:'#E6F1FB',desc:'How water travels from ocean to cloud to rain and back.'},
+  {id:'desert',  title:'The Desert Fox',            subject:'EVS',    diff:'Easy',  emoji:'🦊',bg:'#F5C4B3',desc:'A young fox learns to survive the scorching Thar Desert.'},
+  {id:'ashoka',  title:"Ashoka's Message",          subject:'History',diff:'Medium',emoji:'🏛️',bg:'#FAC775',desc:'Ashoka gives up war and spreads a message of peace.'},
+  {id:'chacha',  title:'चाचा का पत्र',              subject:'Hindi',  diff:'Easy',  emoji:'✉️', bg:'#FFE4E1',desc:'एक बच्चे को उसके प्यारे चाचा का पत्र आता है।'},
+  {id:'barish',  title:'बारिश का मौसम',             subject:'Hindi',  diff:'Easy',  emoji:'🌧️', bg:'#E0F0FF',desc:'मोनू और सोनू बारिश में खेलते हैं।'},
+  {id:'sher',    title:'शेर और चूहा',               subject:'Hindi',  diff:'Easy',  emoji:'🦁', bg:'#FFF3CD',desc:'एक छोटे चूहे ने बड़े शेर की मदद की।'},
+];
+
+// ══════════ NCERT MANIFEST + CHAPTER LOADER ═══════════════
+// Chapters live in data/manifest.json (metadata) and data/chapters/*.json (lines + vocab).
+// Add a new chapter: drop a JSON in data/chapters/ and add a matching entry to manifest.json.
+let MANIFEST = null;
+const CHAPTER_INDEX = {};   // chapterId -> { chapter, book, unit }
+const CHAPTER_CACHE = {};   // chapterId -> { lines, vocab, ... }
+
+async function loadManifest(){
+  if (MANIFEST) return MANIFEST;
+  const r = await fetch('data/manifest.json');
+  if (!r.ok) throw new Error('manifest.json: '+r.status);
+  MANIFEST = await r.json();
+  for (const book of (MANIFEST.books||[])) {
+    for (const unit of (book.units||[])) {
+      for (const ch of (unit.chapters||[])) {
+        CHAPTER_INDEX[ch.id] = { chapter: ch, book, unit };
+      }
+    }
+  }
+  populateNCERTFilter();
+  return MANIFEST;
+}
+
+function populateNCERTFilter(){
+  const sel = document.getElementById('ncertFilter');
+  if (!sel || !MANIFEST) return;
+  let html = '<option value="">All chapters</option>';
+  for (const book of (MANIFEST.books||[])) {
+    html += `<optgroup label="${book.title} — Grade ${book.grade}">`;
+    html += `<option value="${book.id}">All — ${book.title} G${book.grade}</option>`;
+    for (const unit of (book.units||[])) {
+      html += `<option value="${book.id}|${unit.id}">${unit.title}</option>`;
+    }
+    html += '</optgroup>';
+  }
+  sel.innerHTML = html;
+}
+
+async function loadChapter(chapterId){
+  if (CHAPTER_CACHE[chapterId]) return CHAPTER_CACHE[chapterId];
+  const meta = CHAPTER_INDEX[chapterId];
+  if (!meta || !meta.chapter.file) throw new Error('chapter not available: '+chapterId);
+  const r = await fetch('data/' + meta.chapter.file);
+  if (!r.ok) throw new Error('chapter fetch failed: '+r.status);
+  const data = await r.json();
+  CHAPTER_CACHE[chapterId] = data;
+  if (data.vocab) VOCAB[chapterId] = data.vocab;
+  return data;
+}
+
+// ══════════ STORY LINES (call & response) ════════════════
+// speaker:'user' = student reads aloud + mic tracks
+// speaker:'app'  = TTS reads aloud automatically
+const LINES = {
+tunnel:[
+  {s:'user',e:'🌿',bg:'#C8E6A0',t:"It was almost noon, and the jungle was very still, very silent."},
+  {s:'app', e:'☀️',bg:'#d4ebc0',t:"Heat waves shimmered along the railway embankment where it cut a path through the tall evergreen trees."},
+  {s:'user',e:'🧒',bg:'#C8E6A0',t:"Suraj stood near the cutting, waiting for the midday train. He was not catching it — he wanted to watch."},
+  {s:'app', e:'🔊',bg:'#d4ebc0',t:"He heard, in the distance, the shrill whistle of the engine. A sound like distant thunder issued from the tunnel."},
+  {s:'user',e:'🚂',bg:'#C8E6A0',t:"The steam engine shot out of the tunnel, snorting and puffing like a green, black, and gold dragon."},
+  {s:'app', e:'✨',bg:'#d4ebc0',t:"Showering sparks left and right, it roared a challenge to the jungle. Then it was gone, leaving only smoke."},
+  {s:'user',e:'🕳️',bg:'#2a2a3e',t:"Suraj walked into the tunnel. When he had gone about twenty yards, it became pitch dark."},
+  {s:'app', e:'🦇',bg:'#1a1a2e',t:"The walls were damp and sticky. A bat flew past. A lizard scuttled between the railway lines."},
+  {s:'user',e:'🐆',bg:'#C8E6A0',t:"Coming into the light, he saw a flash of orange and gold — a long swishing tail between the trees."},
+  {s:'app', e:'🏡',bg:'#e8f0d8',t:"About fifteen metres from the tunnel stood the watchman's hut, with bright marigolds growing in front."},
+  {s:'user',e:'👴',bg:'#e5f0d5',t:"Welcome, welcome. I don't often have visitors. Sit down — it is truly my tunnel. I have only lent it to the Government."},
+  {s:'app', e:'🌙',bg:'#0d1b3e',t:"There is one train during the day, and one during the night. Come back tonight and watch the night mail come through."},
+],
+kite:[
+  {s:'user',e:'🪁',bg:'#B5D4F4',t:"Aryan's red kite had broken free from its string and sailed away over the rooftops."},
+  {s:'app', e:'😢',bg:'#dceefb',t:"He had made that kite himself — every fold, every tail, every careful knot — and now it was gone."},
+  {s:'user',e:'🏃',bg:'#B5D4F4',t:"He ran down the street, eyes fixed on the red speck growing smaller in the wide blue sky."},
+  {s:'app', e:'🌳',bg:'#dceefb',t:"The kite dipped, swooped, and finally tangled itself high in the branches of the old banyan tree by the temple."},
+  {s:'user',e:'👦',bg:'#B5D4F4',t:"Aryan stopped beneath the tree, staring up helplessly. The kite was far too high to reach."},
+  {s:'app', e:'👴',bg:'#dceefb',t:"An old man sitting on the temple steps smiled warmly. That tree catches one kite every week, he said."},
+  {s:'user',e:'🙏',bg:'#B5D4F4',t:"Aryan asked everyone he passed — the chai vendor, the flower seller, the school watchman."},
+  {s:'app', e:'🌸',bg:'#dceefb',t:"Nobody could help, but everyone smiled. A lost kite, they said, always finds its way to someone who needs it."},
+  {s:'user',e:'💨',bg:'#B5D4F4',t:"That evening the wind shifted. Slowly, the kite untangled itself from the branches."},
+  {s:'app', e:'🪁',bg:'#dceefb',t:"It floated gently down and landed right at Aryan's feet, as if it had come home on its own."},
+  {s:'user',e:'😄',bg:'#B5D4F4',t:"Aryan laughed and held the kite close. Some things, he decided, are worth waiting for."},
+  {s:'app', e:'🌅',bg:'#dceefb',t:"The next day he flew it again — higher than ever, with a stronger string and an even bigger smile."},
+],
+firefly:[
+  {s:'user',e:'🌑',bg:'#1a1200',t:"Deep in the forest, when the moon hid behind the clouds, everything became completely dark."},
+  {s:'app', e:'😨',bg:'#2a2010',t:"The animals huddled together, afraid to move. Even the tall trees seemed to shiver in the darkness."},
+  {s:'user',e:'✨',bg:'#FAEEDA',t:"But one tiny firefly was not afraid. She opened her wings and let her little light shine."},
+  {s:'app', e:'💡',bg:'#fdf0d5',t:"Her glow was small — just a flicker — but in total darkness, even a flicker can change everything."},
+  {s:'user',e:'🐿️',bg:'#FAEEDA',t:"The squirrel saw her light and felt brave enough to look around. The rabbit uncurled from its hiding place."},
+  {s:'app', e:'🦉',bg:'#fdf0d5',t:"The owl ruffled his feathers and let out a warm, deep hoot that echoed through the dark trees."},
+  {s:'user',e:'✨',bg:'#FAEEDA',t:"One by one, more fireflies woke up. Each one added their own small light to the forest night."},
+  {s:'app', e:'🌟',bg:'#fdf0d5',t:"Soon the entire forest was glowing — hundreds of soft lights twinkling like stars among the trees."},
+  {s:'user',e:'🦋',bg:'#FAEEDA',t:"The butterflies began to dance. The crickets began to sing. The forest was alive again."},
+  {s:'app', e:'💛',bg:'#fdf0d5',t:"All because one small firefly was brave enough to shine when everything around her was dark."},
+],
+monsoon:[
+  {s:'user',e:'☀️',bg:'#E1F5EE',t:"For weeks the sky had been white and heavy. The earth was dry and cracked with thirst."},
+  {s:'app', e:'💨',bg:'#c8f0e4',t:"Then one afternoon, a cool wind swept through the village, rattling the leaves of the old neem trees."},
+  {s:'user',e:'🌧️',bg:'#E1F5EE',t:"The first drop hit the dusty ground with a loud smack. Then another. Then a thousand drops at once."},
+  {s:'app', e:'💃',bg:'#c8f0e4',t:"Rani ran outside with her arms wide open, face turned up to the sky, laughing into the falling rain."},
+  {s:'user',e:'🌍',bg:'#E1F5EE',t:"The rain smelled like the earth waking up after a long, long sleep."},
+  {s:'app', e:'🐸',bg:'#c8f0e4',t:"Frogs appeared from nowhere, croaking joyfully in the puddles that formed within minutes."},
+  {s:'user',e:'🦚',bg:'#E1F5EE',t:"The peacock on the temple roof spread his magnificent tail and danced in the falling rain."},
+  {s:'app', e:'🌾',bg:'#c8f0e4',t:"In the fields, the farmers raised their hands to the sky, tears mixing with the raindrops on their faces."},
+  {s:'user',e:'🌿',bg:'#E1F5EE',t:"By evening the whole village was green, as if someone had painted it fresh overnight."},
+  {s:'app', e:'⭐',bg:'#c8f0e4',t:"That night, falling asleep to the steady sound of rain on the roof, Rani smiled. The monsoon had come."},
+],
+deepsea:[
+  {s:'user',e:'🌊',bg:'#CECBF6',t:"Below the sparkling surface of the ocean lies a world most humans have never seen."},
+  {s:'app', e:'🐠',bg:'#dddaf8',t:"At two hundred metres deep, sunlight fades to a dim blue glow, and strange creatures begin to appear."},
+  {s:'user',e:'🦑',bg:'#CECBF6',t:"Giant squid drift through the darkness, their enormous eyes searching for prey in the deep."},
+  {s:'app', e:'💡',bg:'#dddaf8',t:"Many deep-sea creatures make their own light — called bioluminescence — to attract food in the darkness."},
+  {s:'user',e:'🐟',bg:'#CECBF6',t:"The anglerfish dangles a glowing lure above its head like a lantern in the blackness."},
+  {s:'app', e:'🌋',bg:'#dddaf8',t:"Hydrothermal vents on the ocean floor shoot boiling water into the sea, supporting entire ecosystems."},
+  {s:'user',e:'🦐',bg:'#CECBF6',t:"Even at the very bottom, tiny shrimp and strange worms survive, feeding on marine snow drifting from above."},
+  {s:'app', e:'🐋',bg:'#dddaf8',t:"The blue whale's deep, rumbling song travels thousands of kilometres through the ocean."},
+  {s:'user',e:'🔬',bg:'#CECBF6',t:"Scientists estimate that over eighty percent of the ocean remains completely unexplored."},
+  {s:'app', e:'🚀',bg:'#dddaf8',t:"We know more about the surface of the moon than we do about the deepest parts of our own ocean."},
+],
+water:[
+  {s:'user',e:'☀️',bg:'#E6F1FB',t:"Every day the sun heats the surface of oceans, rivers, and lakes all around the world."},
+  {s:'app', e:'💨',bg:'#cee4f8',t:"This heat turns liquid water into invisible water vapour, which rises slowly up into the sky."},
+  {s:'user',e:'🌡️',bg:'#E6F1FB',t:"As the vapour rises higher and higher, the air around it gets cooler and cooler."},
+  {s:'app', e:'☁️',bg:'#cee4f8',t:"The vapour then condenses into millions of tiny water droplets, which cluster to form clouds."},
+  {s:'user',e:'🌧️',bg:'#E6F1FB',t:"When the clouds grow heavy, water falls back to Earth as rain, snow, sleet, or hail."},
+  {s:'app', e:'🌱',bg:'#cee4f8',t:"Plants absorb rainwater through their roots. Rivers carry it to the sea. Some soaks into the ground."},
+  {s:'user',e:'🔄',bg:'#E6F1FB',t:"Then the sun heats it all over again, and the whole cycle begins once more — endlessly."},
+  {s:'app', e:'🦕',bg:'#cee4f8',t:"This cycle has been running for four billion years. The water you drink today may once have been swallowed by a dinosaur."},
+],
+desert:[
+  {s:'user',e:'🦊',bg:'#FAEEDA',t:"In the golden sands of the Thar Desert, a fox kit took her very first steps outside the burrow."},
+  {s:'app', e:'☀️',bg:'#fdf0d5',t:"The sun was already blazing. By midday, the sand would be hot enough to burn bare feet."},
+  {s:'user',e:'👂',bg:'#FAEEDA',t:"The desert fox had enormous ears — much bigger than those of any city fox you have ever seen."},
+  {s:'app', e:'🌡️',bg:'#fdf0d5',t:"Those great ears act like radiators, releasing body heat into the dry air and keeping her perfectly cool."},
+  {s:'user',e:'🦎',bg:'#FAEEDA',t:"During the scorching afternoon, she rested safely deep in her cool underground burrow."},
+  {s:'app', e:'🌙',bg:'#1a1200',t:"At night the desert cooled and came alive. She hunted lizards and insects under the bright full moon."},
+  {s:'user',e:'💧',bg:'#FAEEDA',t:"She rarely needed to drink water — she got most of it from the food she ate each night."},
+  {s:'app', e:'🌅',bg:'#fdf0d5',t:"At dawn the fox returned to her burrow as the sky turned gold and pink over the silent dunes."},
+],
+ashoka:[
+  {s:'user',e:'⚔️',bg:'#FAC775',t:"Two thousand three hundred years ago, a powerful king named Ashoka ruled over most of India."},
+  {s:'app', e:'🏛️',bg:'#fde9b8',t:"He commanded a vast army and had conquered many kingdoms. His name made his enemies tremble with fear."},
+  {s:'user',e:'⚔️',bg:'#FAC775',t:"Then came the Battle of Kalinga, where over a hundred thousand soldiers were killed."},
+  {s:'app', e:'😢',bg:'#fde9b8',t:"Ashoka walked through the battlefield and saw nothing but grief — weeping women, dying men, burning villages."},
+  {s:'user',e:'💔',bg:'#FAC775',t:"He had won the battle. But he felt no joy at all — only deep, overwhelming sorrow."},
+  {s:'app', e:'🕊️',bg:'#fde9b8',t:"That day Ashoka put down his sword and vowed never to fight a war of conquest again."},
+  {s:'user',e:'🌸',bg:'#FAC775',t:"He turned to the teachings of the Buddha — compassion, non-violence, and kindness to all living things."},
+  {s:'app', e:'📜',bg:'#fde9b8',t:"He carved his new laws onto rocks and pillars across his empire so that everyone could read them."},
+  {s:'user',e:'🏥',bg:'#FAC775',t:"He built hospitals for people and for animals. He planted trees along roads to give shade to travellers."},
+  {s:'app', e:'💧',bg:'#fde9b8',t:"He dug wells so that villagers would always have clean water, even in the driest summer months."},
+  {s:'user',e:'🌍',bg:'#FAC775',t:"Ashoka sent messengers as far as Egypt and Greece to spread his message of peace and dharma."},
+  {s:'app', e:'🇮🇳',bg:'#fde9b8',t:"Today his symbol — the Ashoka Chakra — sits at the centre of India's national flag, a reminder of his great vision."},
+],
+
+chacha:[
+  {s:'app', e:'✉️',bg:'#FFE4E1',t:"आज राहुल को डाकिया एक पत्र दे गया। पत्र देखकर राहुल बहुत खुश हो गया।"},
+  {s:'user',e:'😊',bg:'#ffe8e5',t:"यह पत्र उसके प्यारे चाचा ने लिखा था जो दूर शहर में रहते थे।"},
+  {s:'app', e:'📝',bg:'#FFE4E1',t:"चाचा ने लिखा था — प्यारे राहुल, तुम्हें पढ़ाई में खूब मन लगाना चाहिए।"},
+  {s:'user',e:'📚',bg:'#ffe8e5',t:"हर रोज़ थोड़ा-थोड़ा पढ़ने से बड़ी से बड़ी किताब भी पूरी हो जाती है।"},
+  {s:'app', e:'🌟',bg:'#FFE4E1',t:"चाचा ने यह भी लिखा कि मेहनत करने वाले बच्चे ही जीवन में आगे बढ़ते हैं।"},
+  {s:'user',e:'💪',bg:'#ffe8e5',t:"राहुल ने पत्र पढ़कर सोचा — मैं भी खूब मेहनत करूँगा और चाचा को खुश करूँगा।"},
+  {s:'app', e:'✉️',bg:'#FFE4E1',t:"उसने तुरंत कागज़ उठाया और चाचा को जवाब लिखने बैठ गया।"},
+  {s:'user',e:'🖊️',bg:'#ffe8e5',t:"राहुल ने लिखा — प्यारे चाचा, आपका पत्र पाकर बहुत अच्छा लगा। मैं रोज़ पढ़ूँगा।"},
+],
+barish:[
+  {s:'app', e:'☁️',bg:'#E0F0FF',t:"आसमान में काले-काले बादल छा गए और तेज़ हवा चलने लगी।"},
+  {s:'user',e:'🌧️',bg:'#ddeeff',t:"थोड़ी देर में बारिश शुरू हो गई। मोनू और सोनू खिड़की से बाहर देख रहे थे।"},
+  {s:'app', e:'😄',bg:'#E0F0FF',t:"दोनों ने माँ से पूछा — माँ, क्या हम बाहर जाकर बारिश में खेल सकते हैं?"},
+  {s:'user',e:'👩',bg:'#ddeeff',t:"माँ मुस्कुराईं और बोलीं — ठीक है, लेकिन भीगकर आना मत। छाता लेकर जाओ।"},
+  {s:'app', e:'🌂',bg:'#E0F0FF',t:"दोनों भाग कर बाहर निकले। पानी में कागज़ की नाव चलाने लगे।"},
+  {s:'user',e:'⛵',bg:'#ddeeff',t:"मोनू की नाव तेज़ बह गई और सोनू की नाव धीरे-धीरे चलती रही।"},
+  {s:'app', e:'🐸',bg:'#E0F0FF',t:"तभी एक मेंढक कूदकर पानी में आ गया और उसने सोनू की नाव पलट दी।"},
+  {s:'user',e:'😂',bg:'#ddeeff',t:"दोनों ज़ोर से हँस पड़े। बारिश का यह दिन उन्हें हमेशा याद रहेगा।"},
+],
+sher:[
+  {s:'app', e:'🦁',bg:'#FFF3CD',t:"एक बार जंगल में एक बड़ा शेर सो रहा था। उसकी साँसें धीरे-धीरे चल रही थीं।"},
+  {s:'user',e:'🐭',bg:'#fff8dc',t:"तभी एक छोटा चूहा उसके पास से गुज़रा और गलती से शेर की पूँछ पर चढ़ गया।"},
+  {s:'app', e:'😠',bg:'#FFF3CD',t:"शेर की नींद टूट गई। उसने गुस्से में चूहे को अपने पंजे में दबा लिया।"},
+  {s:'user',e:'🙏',bg:'#fff8dc',t:"चूहा काँपते हुए बोला — महाराज, मुझे छोड़ दो। एक दिन मैं भी आपके काम आऊँगा।"},
+  {s:'app', e:'😄',bg:'#FFF3CD',t:"शेर हँसा और बोला — तू इतना छोटा, मेरे क्या काम आएगा? चल, जा यहाँ से।"},
+  {s:'user',e:'🐭',bg:'#fff8dc',t:"चूहा खुशी से वहाँ से चला गया। उसने मन में ठान लिया कि वह अपना वादा ज़रूर निभाएगा।"},
+  {s:'app', e:'🕸️',bg:'#FFF3CD',t:"कुछ दिन बाद शेर एक जाल में फँस गया। वह बहुत ज़ोर से दहाड़ रहा था।"},
+  {s:'user',e:'✂️',bg:'#fff8dc',t:"चूहे ने दहाड़ सुनी और दौड़ा चला आया। उसने अपने तेज़ दाँतों से जाल काट दिया।"},
+  {s:'app', e:'🦁',bg:'#FFF3CD',t:"शेर आज़ाद हो गया। उसने चूहे को गले लगाया और बोला — दोस्त, तुमने मेरी जान बचाई।"},
+  {s:'user',e:'🤝',bg:'#fff8dc',t:"चूहा बोला — महाराज, छोटा हो या बड़ा — हर किसी की मदद काम आती है।"},
+],
+};
+
+
+
+// ══════════ VOCABULARY ═══════════════════════════════════
+const VOCAB = {
+  tunnel:{
+    shimmered:'Gave off a soft, wavering light',
+    embankment:'A raised bank of earth built to carry a road or railway',
+    evergreen:'A tree or plant that keeps its leaves all year round',
+    contemplation:'Deep, quiet thinking',
+    marigolds:'Bright orange-yellow flowers common in Indian gardens',
+    dazzled:'Temporarily blinded by a sudden bright light',
+    scuttled:'Moved quickly with short, hurrying steps',
+    scrutiny:'Close and careful observation',
+  },
+  kite:{
+    tangled:'Twisted and caught up in a knot',
+    banyan:'A large Indian tree whose hanging branches grow into the ground',
+    vendor:'A person who sells things, usually on the street',
+    swooped:'Moved in a fast, curving dive through the air',
+    helplessly:'Without being able to do anything about it',
+  },
+  firefly:{
+    huddled:'Crowded closely together for warmth or safety',
+    bioluminescence:'Light produced naturally by a living creature',
+    flicker:'A small, quick, unsteady movement of light',
+    twinkling:'Shining with a quick, intermittent light',
+    courage:'The ability to do something even when you are afraid',
+  },
+  monsoon:{
+    magnificent:'Impressively beautiful or grand',
+    embankment:'A raised bank of earth built along a road or river',
+    parched:'Extremely dry, especially from heat',
+    shimmered:'Shone with a soft, wavering light',
+    shrill:'A high-pitched, piercing sound',
+  },
+  deepsea:{
+    bioluminescence:'Light produced naturally by a living creature',
+    hydrothermal:'Related to very hot water rising up through the earth',
+    ecosystem:'All living things in an area together with their environment',
+    abyss:'An extremely deep, seemingly bottomless space',
+    drifting:'Moving slowly and gently, carried by water or air',
+  },
+  water:{
+    evaporation:'The process of liquid changing into water vapour',
+    condensation:'Water vapour cooling and turning back into liquid droplets',
+    vapour:'A gas or mist formed when liquid is heated',
+    absorb:'To soak up or take something in fully',
+    endlessly:'Continuing forever without stopping',
+  },
+  desert:{
+    radiators:'Devices that release heat into the surrounding air',
+    burrow:'A hole or tunnel dug in the ground as an animal\'s home',
+    scorching:'Extremely and uncomfortably hot',
+    nocturnal:'Active during the night rather than during the day',
+    magnificent:'Impressively beautiful or grand',
+  },
+  ashoka:{
+    conquered:'Took control of a place or people by force',
+    compassion:'Deep sympathy for others\' suffering and a wish to help',
+    dharma:'Right and moral conduct; one\'s duty in life',
+    vowed:'Made a very serious and solemn promise',
+    embankment:'A raised bank of earth built along a road or river',
+    inscribed:'Carved or written into a hard surface like stone',
+  },
+};
+
+// ══════════ STATE ═════════════════════════════════════════
+let user=null, story=null;
+let lineIdx=0, wordIdx=0, correct=0, errors=0, totalWords=0;
+let sessionStart=null;
+let recognizing=false, recognition=null;
+let speaking=false;
+const synth=window.speechSynthesis;
+
+// ══════════ COMPLETION TRACKING ══════════════════════════
+function markDone(id){
+  const d=JSON.parse(localStorage.getItem('ra_done')||'[]');
+  if(!d.includes(id)){d.push(id);localStorage.setItem('ra_done',JSON.stringify(d));}
+}
+function isDone(id){
+  return JSON.parse(localStorage.getItem('ra_done')||'[]').includes(id);
+}
+
+// ══════════ DARK MODE ════════════════════════════════════
+function toggleDark(){
+  const on=document.body.classList.toggle('dark');
+  localStorage.setItem('ra_dark',on?'1':'0');
+  const icon=on?'☀️':'🌙';
+  ['darkBtnT','darkBtnS','darkBtnR'].forEach(id=>{const b=document.getElementById(id);if(b)b.textContent=icon;});
+}
+function initDark(){
+  if(localStorage.getItem('ra_dark')==='1'){
+    document.body.classList.add('dark');
+    ['darkBtnT','darkBtnS','darkBtnR'].forEach(id=>{const b=document.getElementById(id);if(b)b.textContent='☀️';});
+  }
+}
+
+// ══════════ STRUGGLING WORDS ═════════════════════════════
+function logHardWord(name,word){
+  if(!word||word.length<4)return;
+  const key='ra_hard_'+name;
+  const h=JSON.parse(localStorage.getItem(key)||'{}');
+  h[word.toLowerCase()]=(h[word.toLowerCase()]||0)+1;
+  localStorage.setItem(key,JSON.stringify(h));
+}
+function getHardWords(name){
+  const h=JSON.parse(localStorage.getItem('ra_hard_'+name)||'{}');
+  return Object.entries(h).sort((a,b)=>b[1]-a[1]);
+}
+function renderHardWords(){
+  const el=document.getElementById('t-words');if(!el)return;
+  const agg={};
+  // Gather from all known students
+  ['Arjun','Meera','Ravi'].forEach(n=>{
+    const h=JSON.parse(localStorage.getItem('ra_hard_'+n)||'{}');
+    Object.entries(h).forEach(([w,c])=>{
+      if(!agg[w])agg[w]={count:0,students:new Set()};
+      agg[w].count+=c;agg[w].students.add(n);
+    });
+  });
+  const top=Object.entries(agg).sort((a,b)=>b[1].count-a[1].count).slice(0,12);
+  if(!top.length){el.innerHTML='<div style="font-size:13px;color:var(--text2);padding:6px 0">No data yet — students must complete sessions first.</div>';return;}
+  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:7px;padding:4px 0">${top.map(([w,d])=>`<span style="display:inline-flex;align-items:center;gap:5px;background:var(--red2);color:var(--red);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600"><span>${w}</span><span style="background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px">${d.count}×</span></span>`).join('')}</div><div style="font-size:11px;color:var(--text3);margin-top:8px">Errors logged across all reading sessions. More sessions = more accurate data.</div>`;
+}
+
+// ══════════ VOCABULARY TAP ════════════════════════════════
+function wrapVocab(html, storyId){
+  const vocab=VOCAB[storyId];
+  if(!vocab)return html;
+  // Replace whole words that have a definition — careful not to double-wrap
+  return html.replace(/\b([A-Za-z]{4,})\b/g,(match)=>{
+    const def=vocab[match.toLowerCase()];
+    if(!def)return match;
+    return `<span class="vocab-word" onclick="showVocab(event,'${match}','${def.replace(/'/g,'&#39;')}')">${match}</span>`;
+  });
+}
+function showVocab(e,word,def){
+  e.stopPropagation();
+  document.getElementById('vocabWord').textContent=word;
+  document.getElementById('vocabDef').textContent=def;
+  document.getElementById('vocabPop').classList.add('show');
+}
+function closeVocab(){document.getElementById('vocabPop').classList.remove('show');}
+// Tap anywhere else to close
+document.addEventListener('click',()=>closeVocab());
+
+// ══════════ NAVIGATION ═══════════════════════════════════
+function showScr(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function goLogin(){stopListen();stopSpeak();showScr('scrLogin');}
+
+function login(role,name){
+  user={role,name};
+  if(role==='teacher'){showScr('scrTeacher');renderAtt();renderSt('','');renderLib('','');renderHardWords();}
+  else{
+    const p=PROF[name]||PROF.Arjun;
+    document.getElementById('sGreet').textContent='Hello, '+name+' 👋';
+    const av=document.getElementById('sAv');av.textContent=p.init;av.className='avatar '+p.av;
+    showScr('scrStudent');renderSStories('');renderProg();
+  }
+}
+
+function tTab(el,id){
+  el.parentNode.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  ['ov','st','li','as'].forEach(x=>{const d=document.getElementById('t-'+x);if(d)d.style.display=x===id?'block':'none';});
+}
+function sTab(el,id){
+  el.parentNode.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  ['ho','ncert','pr'].forEach(x=>{const d=document.getElementById('s-'+x);if(d)d.style.display=x===id?'block':'none';});
+  if(id==='ncert') renderNCERT('');
+}
+
+// ══════════ MIC PERMISSION ═══════════════════════════════
+async function askMic(){
+  const btn=document.getElementById('micBtn'),st=document.getElementById('micSt');
+  btn.textContent='Requesting…';
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({audio:true});
+    s.getTracks().forEach(t=>t.stop());
+    btn.textContent='✓ Microphone allowed!';btn.style.background='#0F6E56';
+    st.style.color='#0F6E56';st.textContent='Great — now sign in below.';
+    document.getElementById('micBox').style.borderColor='#1D9E75';
+  }catch(e){
+    btn.style.background='#A32D2D';btn.textContent='Blocked — try again';
+    st.style.color='var(--red)';
+    st.textContent=e.name==='NotAllowedError'?'Go to browser settings → Microphone → Allow this site → Refresh.':'Error: '+e.message;
+  }
+}
+
+// ══════════ TEACHER ═══════════════════════════════════════
+function renderAtt(){
+  const el=document.getElementById('t-att');
+  const needs=SD.filter(s=>s.acc<65||s.wpm<55);
+  const lc=l=>l==='Advanced'?'lv-adv':l==='Fluent'?'lv-flu':l==='Developing'?'lv-dev':'lv-beg';
+  el.innerHTML=needs.length?needs.map(s=>`<div class="srow"><div class="avatar ${s.av}" style="width:30px;height:30px;font-size:11px">${s.init}</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${s.name}</div><div style="font-size:11px;color:var(--text2)">${s.acc}% · ${s.wpm} wpm</div></div><span class="lbadge lv-beg">${s.level}</span></div>`).join(''):'<div style="font-size:13px;color:var(--text2);padding:8px 0">✓ All students on track!</div>';
+}
+function renderSt(search,level){
+  const lc=l=>l==='Advanced'?'lv-adv':l==='Fluent'?'lv-flu':l==='Developing'?'lv-dev':'lv-beg';
+  const data=SD.filter(s=>(!search||s.name.toLowerCase().includes(search.toLowerCase()))&&(!level||s.level===level));
+  document.getElementById('stList').innerHTML=data.map(s=>{
+    const hw=getHardWords(s.name.split(' ')[0]).slice(0,4);
+    const hwHtml=hw.length?`<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">${hw.map(([w,c])=>`<span style="background:var(--red2);color:var(--red);padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600">${w} <b>${c}×</b></span>`).join('')}</div>`:'';
+    return `<div class="srow" style="flex-direction:column;align-items:flex-start;gap:0">
+      <div style="display:flex;align-items:center;gap:10px;width:100%">
+        <div class="avatar ${s.av}" style="width:30px;height:30px;font-size:11px">${s.init}</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:600">${s.name}</div><div style="font-size:11px;color:var(--text2)">${s.sessions} sessions</div></div>
+        <div style="text-align:right;min-width:76px"><div class="abar"><div class="afill" style="width:${s.acc}%;background:${s.acc>=80?'#1D9E75':s.acc>=65?'#EF9F27':'#E24B4A'}"></div></div><div style="font-size:10px;color:var(--text2);margin-top:1px">${s.acc}%</div></div>
+        <span class="lbadge ${lc(s.level)}" style="margin-left:8px">${s.level}</span>
+      </div>
+      ${hwHtml}
+    </div>`;
+  }).join('');
+}
+function sCardHTML(s,clickable){
+  const dc=s.diff==='Easy'?'tag-easy':s.diff==='Medium'?'tag-med':'tag-hard';
+  const sc='tag-'+s.subject.toLowerCase();
+  const has=!!LINES[s.id];
+  const done=isDone(s.id);
+  const listenBtn=clickable&&has&&done
+    ?`<button onclick="event.stopPropagation();playFull('${s.id}')" style="margin-left:auto;padding:3px 10px;font-size:11px;border-radius:20px;border:1px solid var(--amber3);background:var(--amber2);color:var(--amber);cursor:pointer;font-weight:700">🎧 Listen</button>`
+    :clickable&&has
+      ?`<span style="margin-left:auto;font-size:10px;color:var(--text3);padding:3px 8px;border-radius:20px;border:1px solid var(--border)">🔒 Read first</span>`
+      :'';
+  const prog=done?`<div class="mini-progress"><div class="mini-progress-fill" style="width:100%"></div></div>`:'';
+  return `<div class="scard" ${clickable&&has?`onclick="startStory('${s.id}')"`:''}  style="${!has&&clickable?'opacity:.55':''}"><div class="sthumb" style="background:${s.bg}">${s.emoji}</div><div class="sinfo"><div class="stitle">${s.title}</div><div class="sdesc">${s.desc}</div><div class="stags"><span class="tag ${sc}">${s.subject}</span><span class="tag ${dc}">${s.diff}</span>${listenBtn}</div>${prog}</div></div>`;
+}
+function renderLib(subj,diff){document.getElementById('libGrid').innerHTML=STORIES.filter(s=>(!subj||s.subject===subj)&&(!diff||s.diff===diff)).map(s=>sCardHTML(s,false)).join('');}
+
+// ══════════ STUDENT ═══════════════════════════════════════
+function renderSStories(diff){document.getElementById('sGrid').innerHTML=STORIES.filter(s=>!diff||s.diff===diff).map(s=>sCardHTML(s,true)).join('');}
+
+async function renderNCERT(filter){
+  const grid=document.getElementById('ncertGrid');
+  if(!grid)return;
+  if(!MANIFEST){
+    grid.innerHTML='<div style="padding:24px;color:var(--text2);text-align:center">Loading chapters…</div>';
+    try{ await loadManifest(); }
+    catch(e){ grid.innerHTML='<div style="padding:24px;color:var(--red)">Could not load chapters: '+e.message+'</div>'; return; }
+  }
+  const [bookFilter,unitFilter]=(filter||'').split('|');
+  const items=[];
+  for(const book of (MANIFEST.books||[])){
+    if(bookFilter && book.id!==bookFilter) continue;
+    for(const unit of (book.units||[])){
+      if(unitFilter && unit.id!==unitFilter) continue;
+      for(const ch of (unit.chapters||[])) items.push({chapter:ch, book, unit});
+    }
+  }
+  if(!items.length){ grid.innerHTML='<div style="padding:24px;color:var(--text2);text-align:center">No chapters yet.</div>'; return; }
+  grid.innerHTML=items.map(({chapter:c, book, unit})=>{
+    const has=!!c.file;
+    const dc=c.diff==='Easy'?'tag-easy':c.diff==='Medium'?'tag-med':'tag-hard';
+    const tcls=c.type==='Poem'?'tag-science':c.type==='Non-fiction'?'tag-hist':'tag-eng';
+    const done=isDone(c.id);
+    const listenBtn=has&&done
+      ?`<button onclick="event.stopPropagation();playFull('${c.id}')" style="margin-left:auto;padding:3px 10px;font-size:11px;border-radius:20px;border:1px solid var(--amber3);background:var(--amber2);color:var(--amber);cursor:pointer;font-weight:700">🎧 Listen</button>`
+      :has
+        ?`<span style="margin-left:auto;font-size:10px;color:var(--text3);padding:3px 8px;border-radius:20px;border:1px solid var(--border)">🔒 Read first</span>`
+        :'';
+    const prog=done?`<div class="mini-progress"><div class="mini-progress-fill" style="width:100%"></div></div>`:'';
+    const unitLabel=`${book.title} G${book.grade} · ${unit.title}`;
+    return `<div class="scard" ${has?`onclick="startNCERT('${c.id}')"`:''}  style="${!has?'opacity:.55':''}">
+      <div class="sthumb" style="background:${c.bg};flex-direction:column;gap:4px">
+        <div style="font-size:40px">${c.emoji}</div>
+        <div class="ncert-unit">${unitLabel}</div>
+      </div>
+      <div class="sinfo">
+        <div class="stitle">${c.title}</div>
+        <div class="sdesc">${c.desc||''}</div>
+        <div class="stags">
+          <span class="tag ${tcls}">${c.type}</span>
+          <span class="tag ${dc}">${c.diff}</span>
+          ${!has?'<span style="font-size:10px;color:var(--text3);margin-left:auto">Coming soon</span>':listenBtn}
+        </div>
+        ${prog}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function startNCERT(id){
+  const meta=CHAPTER_INDEX[id];
+  if(!meta||!meta.chapter.file){ alert('Coming soon!'); return; }
+  let data;
+  try{ data=await loadChapter(id); }
+  catch(e){ alert('Could not load chapter: '+e.message); return; }
+  const ch=meta.chapter, book=meta.book, unit=meta.unit;
+  story={s:{id:ch.id,title:ch.title,subject:'English (NCERT)',diff:ch.diff,isNCERT:true}, lines:data.lines};
+  lineIdx=0;wordIdx=0;correct=0;errors=0;totalWords=0;sessionStart=Date.now();
+  autoMode=false;listenMode=false;listenThenRead=false;ltrPhase=1;
+  document.getElementById('rTitle').textContent=ch.title;
+  document.getElementById('rMeta').textContent=`${book.title} G${book.grade} · ${unit.title} · ${ch.type}`;
+  document.getElementById('readerDone').style.display='none';
+  document.getElementById('readerWrap').style.display='block';
+  showScr('scrReader');
+  updateMet();
+  buildReader();
+}
+function renderProg(){
+  const name=user.name,p=PROF[name]||PROF.Arjun;
+  const acc=p.accH[p.accH.length-1],wpm=p.wpmH[p.wpmH.length-1];
+  const ac=acc>=80?'good':acc>=65?'warn':'bad';
+  document.getElementById('sMet').innerHTML=`<div class="mc"><div class="ml">Accuracy</div><div class="mv ${ac}">${acc}%</div></div><div class="mc"><div class="ml">Speed</div><div class="mv">${wpm} wpm</div></div><div class="mc"><div class="ml">Done</div><div class="mv">${p.done}</div></div><div class="mc"><div class="ml">Streak 🔥</div><div class="mv warn">${p.streak}</div></div>`;
+  const hist=HIST[name]||[];
+  document.getElementById('sHist').innerHTML=hist.map(r=>`<div class="srow" style="justify-content:space-between"><div><div style="font-size:13px;font-weight:600">${r.t}</div><div style="font-size:11px;color:var(--text2)">${r.d}</div></div><div style="text-align:right"><div style="font-size:13px;font-weight:700;color:${r.acc>=80?'var(--green)':'var(--amber)'}">${r.acc}%</div><div style="font-size:11px;color:var(--text2)">${r.wpm} wpm</div></div></div>`).join('')||'<div style="font-size:13px;color:var(--text2);padding:8px 0">No history yet!</div>';
+  document.getElementById('sAcc').innerHTML=`<div style="display:flex;align-items:flex-end;gap:5px;height:55px">${p.accH.map((a,i)=>`<div style="display:flex;flex-direction:column;align-items:center;flex:1"><div style="width:100%;border-radius:3px 3px 0 0;background:${a>=80?'#1D9E75':a>=65?'#EF9F27':'#E24B4A'};height:${a*0.55}px"></div><div style="font-size:9px;color:var(--text2);margin-top:3px;text-align:center">Wk${i+1}<br><b>${a}%</b></div></div>`).join('')}</div>`;
+}
+
+// ══════════ READER ════════════════════════════════════
+function startStory(id){
+  const s=STORIES.find(x=>x.id===id),lines=LINES[id];
+  if(!s||!lines){alert('Coming soon!');return;}
+  story={s,lines};lineIdx=0;wordIdx=0;correct=0;errors=0;totalWords=0;sessionStart=Date.now();
+  autoMode=false;listenMode=false;listenThenRead=false;ltrPhase=1;
+  document.getElementById('rTitle').textContent=s.title;
+  document.getElementById('rMeta').textContent=s.subject+' · '+s.diff;
+  document.getElementById('readerDone').style.display='none';
+  document.getElementById('readerWrap').style.display='block';
+  showScr('scrReader');
+  updateMet();
+  buildReader();
+}
+function exitReader(){stopListen();stopSpeak();autoMode=false;listenMode=false;listenThenRead=false;ltrPhase=1;showScr(user.role==='teacher'?'scrTeacher':'scrStudent');}
+
+// Auto-flow state
+let autoMode       = false;
+let listenMode     = false;   // teacher/direct: app reads entire chapter
+let listenThenRead = false;   // student mode: phase 1 = app reads all, phase 2 = student reads all
+let ltrPhase       = 1;       // 1 = listening phase, 2 = reading phase
+
+function getWords(t){
+  // Match Hindi words (Devanagari letters only, excluding dandas ।॥) OR English words
+  // U+0900-U+0963 and U+0966-U+097F cover letters/matras; U+0964-U+0965 are dandas
+  return t.match(/[ऀ-ॣ०-ॿ]+|[a-zA-Z']+/g)||[];
+}
+function norm(s){
+  // Hindi: normalize Unicode (NFC) so Chrome's recognition matches stored text,
+  // keep Devanagari chars, strip only punctuation
+  if(/[ऀ-ॿ]/.test(s)) return s.normalize('NFC').trim().replace(/[।॥,.!?'"()\s।]/g,'');
+  // English: lowercase, strip punctuation
+  return s.toLowerCase().replace(/[^a-z0-9]/g,'');
+}
+function simScore(a,b){
+  a=norm(a);b=norm(b);
+  if(!a||!b)return 0;
+  if(a===b)return 1;
+  if(a.startsWith(b)||b.startsWith(a))return .85;
+  let m=0;for(const c of a)if(b.includes(c))m++;
+  return m/Math.max(a.length,b.length);
+}
+function getLevel(acc,wpm){
+  if(acc>=92&&wpm>=120)return{label:'Advanced',cls:'lv-adv'};
+  if(acc>=80&&wpm>=90)return{label:'Fluent',cls:'lv-flu'};
+  if(acc>=65&&wpm>=55)return{label:'Developing',cls:'lv-dev'};
+  return{label:'Beginner',cls:'lv-beg'};
+}
+function updateMet(){
+  const tot=correct+errors,acc=tot>0?Math.round(correct/tot*100):null;
+  const el=(Date.now()-(sessionStart||Date.now()))/60000;
+  const wpm=(el>0.05&&totalWords>0)?Math.round(totalWords/el):null;
+  const ma=document.getElementById('rAcc');
+  if(acc!==null){ma.textContent=acc+'%';ma.className='mv '+(acc>=80?'good':acc>=65?'warn':'bad');}
+  if(wpm!==null){document.getElementById('rWpm').textContent=wpm;document.getElementById('rWpmTop').textContent=wpm+' wpm';}
+  document.getElementById('rWords').textContent=totalWords;
+  if(story)document.getElementById('rLine').textContent=(lineIdx+1)+'/'+story.lines.length;
+  if(acc!==null&&wpm!==null){const lv=getLevel(acc,wpm);const b=document.getElementById('rBadge');b.textContent=lv.label;b.className='lbadge '+lv.cls;}
+}
+
+// ── BUILD READER UI ───────────────────────────────────
+function buildReader(){
+  if(!story)return;
+  const wrap=document.getElementById('readerWrap');
+  const lines=story.lines;
+  document.getElementById('rPbar').style.width=Math.round(lineIdx/lines.length*100)+'%';
+
+  // Show current + a peek at next line only
+  const cur=lines[lineIdx];
+  const next=lines[lineIdx+1];
+  // In ltr phase 2 every line is the student's turn, regardless of s value
+  const isUser = cur.s==='user' || (listenThenRead && ltrPhase===2);
+
+  let wordHTML=cur.t;
+  if(isUser && autoMode && !(listenThenRead && ltrPhase===1) && !listenMode){
+    const words=getWords(cur.t);
+    // Build word spans by splitting on token boundaries (works for Hindi & English)
+    // We replace each token with a placeholder, then swap in spans — using a
+    // regex built from the actual word list to avoid partial-match collisions.
+    let tmp=cur.t;
+    // Replace each word with a positional placeholder @@N@@
+    // Walk through matches left-to-right using lastIndex to avoid double-matching
+    const allTokens = Array.from(tmp.matchAll(/[ऀ-ॿ]+|[a-zA-Z']+/g));
+    // Build the replaced string in one pass
+    let out='', cursor=0;
+    allTokens.forEach((match,wi)=>{
+      out += tmp.slice(cursor, match.index);  // text before this word
+      out += `@@${wi}@@`;
+      cursor = match.index + match[0].length;
+    });
+    out += tmp.slice(cursor);  // trailing punctuation / spaces
+    wordHTML='';
+    out.split(/(@@\d+@@)/).forEach(p=>{
+      const m=p.match(/@@(\d+)@@/);
+      if(m)wordHTML+=`<span class="word" id="w${m[1]}">${words[parseInt(m[1])]}</span>`;
+      else wordHTML+=p;
+    });
+  } else {
+    // Not tracking word-by-word — apply vocab tap highlights
+    wordHTML = wrapVocab(cur.t, story.s.id);
+  }
+
+  let turnColor, turnBg, turnLabel, turnBadge, badgeBg;
+  if(listenMode){
+    turnColor='#854F0B'; turnBg='var(--amber2)';
+    turnLabel='🎧 Listening…'; turnBadge='LISTEN MODE'; badgeBg='var(--amber)';
+  } else if(listenThenRead && ltrPhase===1){
+    turnColor='#0F6E56'; turnBg='var(--teal2)';
+    turnLabel='🎧 Listen carefully…'; turnBadge='PHASE 1 — LISTEN'; badgeBg='var(--green3)';
+  } else if(listenThenRead && ltrPhase===2){
+    turnColor='#185FA5'; turnBg='var(--blue2)';
+    turnLabel='🎤 Your turn — read aloud'; turnBadge='PHASE 2 — READ'; badgeBg='var(--blue)';
+  } else if(isUser){
+    turnColor='#185FA5'; turnBg='var(--blue2)';
+    turnLabel='🎤 Your turn — read aloud'; turnBadge='YOUR TURN'; badgeBg='var(--blue)';
+  } else {
+    turnColor='#0F6E56'; turnBg='var(--teal2)';
+    turnLabel='🔊 App is reading…'; turnBadge='APP TURN'; badgeBg='var(--green3)';
+  }
+
+  let html=`
+  <!-- PAST lines summary bar -->
+  ${lineIdx>0?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:8px 14px;margin-bottom:10px;font-size:12px;color:var(--text2)">
+    ✓ ${lineIdx} line${lineIdx>1?'s':''} done &nbsp;·&nbsp; ${Math.round(lineIdx/lines.length*100)}% complete
+  </div>`:''}
+
+  <!-- CURRENT LINE — big and clear -->
+  <div id="curLine" style="border-radius:var(--rl);overflow:hidden;border:2px solid ${turnColor};box-shadow:0 0 0 4px ${isUser?'rgba(55,138,221,.12)':'rgba(29,158,117,.12)'};margin-bottom:12px">
+    <div style="background:${cur.bg};height:160px;display:flex;align-items:center;justify-content:center;font-size:80px">${cur.e}</div>
+    <div style="background:${turnBg};padding:16px 18px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-size:11px;font-weight:700;color:${turnColor};text-transform:uppercase;letter-spacing:.08em">${turnLabel}</span>
+        <span style="background:${badgeBg};color:#fff;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700">${turnBadge}</span>
+      </div>
+      <div style="font-size:21px;line-height:1.9;font-family:Georgia,serif" id="curText">${wordHTML}</div>
+    </div>
+  </div>
+
+  <!-- NEXT LINE — subtle preview -->
+  ${next?(()=>{
+    const nextUser = (listenThenRead && ltrPhase===2) ? true : next.s==='user';
+    // In ltr phase 1 the next line is always spoken by app
+    const nextUser1 = (listenThenRead && ltrPhase===1) ? false : nextUser;
+    return `<div style="opacity:.35;border-radius:var(--rl);border:1px solid var(--border);overflow:hidden;margin-bottom:14px">
+      <div style="background:${nextUser1?'var(--blue2)':'var(--teal2)'};padding:10px 16px">
+        <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;margin-bottom:4px">${nextUser1?'🎤 Next — your turn':'🔊 Next — app turn'}</div>
+        <div style="font-size:14px;color:var(--text2);font-family:Georgia,serif">${next.t.substring(0,70)}${next.t.length>70?'…':''}</div>
+      </div>
+    </div>`;
+  })():''}
+
+  <!-- STATUS BAR -->
+  <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:11px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <div id="sDot" style="flex-shrink:0"></div>
+    <div id="sTxt" style="font-size:13px;color:var(--text2);font-style:italic;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div style="display:flex;gap:10px">
+    ${listenMode
+      ? `<button class="btn btn-red btn-xl" onclick="stopFullListen()" style="flex:1">⏹ Stop</button>`
+      : !autoMode && lineIdx===0
+        ? `<button class="btn btn-primary btn-xl" onclick="startAuto()" style="flex:1">▶ 1by1</button>
+           <button class="btn btn-xl" onclick="startListenThenRead()" style="flex:1">👂 Listen then Read</button>`
+        : !autoMode
+          ? `<button class="btn btn-primary btn-xl" onclick="resumeAuto()" style="flex:1">▶ Resume</button>`
+          : `<button class="btn btn-red btn-xl" onclick="pauseAuto()" style="flex:1" id="pauseBtn">⏸ Pause</button>`
+    }
+    ${!listenMode?`<button class="btn btn-sm" onclick="skipLine()" style="min-height:58px;padding:10px 16px">Skip →</button>`:''}
+  </div>`;
+
+  wrap.innerHTML=html;
+}
+
+// ── AUTO FLOW ─────────────────────────────────────────
+function startAuto(){
+  // 1by1 mode — app and student alternate line by line
+  listenThenRead=false; ltrPhase=1;
+  autoMode=true; listenMode=false;
+  // ⚠️ RULE 1 — warm() MUST stay here, inside a real user-tap handler.
+  // Moving this call anywhere else will break audio on lines 3, 5, 7… etc.
+  elevenLabsProvider.warm();
+  if(synth){ const u=new SpeechSynthesisUtterance(''); u.volume=0; synth.speak(u); }
+  nextLine();
+}
+
+function startListenThenRead(){
+  // Phase 1: app reads entire chapter. Phase 2: student reads entire chapter.
+  listenThenRead=true; ltrPhase=1;
+  autoMode=true; listenMode=false;
+  // ⚠️ RULE 1 — warm() must be here in the user-tap handler
+  elevenLabsProvider.warm();
+  if(synth){ const u=new SpeechSynthesisUtterance(''); u.volume=0; synth.speak(u); }
+  nextLine();
+}
+
+function resumeAuto(){
+  // Resume whichever mode was active before pause — state is already set
+  autoMode=true;
+  // ⚠️ RULE 1 — warm() must be here in the user-tap handler
+  elevenLabsProvider.warm();
+  if(synth){ const u=new SpeechSynthesisUtterance(''); u.volume=0; synth.speak(u); }
+  nextLine();
+}
+
+function pauseAuto(){
+  autoMode=false;
+  stopListen();
+  stopSpeak();
+  buildReader();
+  document.getElementById('sTxt').textContent='Paused — press Resume to continue';
+}
+
+function nextLine(){
+  if(!story||!autoMode)return;
+  if(lineIdx>=story.lines.length){
+    if(listenMode){
+      showListenDone();
+    } else if(listenThenRead && ltrPhase===1){
+      // Phase 1 done — reset and start Phase 2 (student reads everything)
+      ltrPhase=2;
+      lineIdx=0; wordIdx=0; correct=0; errors=0; totalWords=0; sessionStart=Date.now();
+      updateMet();
+      buildReader();
+      const st=document.getElementById('sTxt');
+      if(st) st.textContent='🎤 Now read it yourself — starting in 3 seconds…';
+      setTimeout(()=>nextLine(), 3000);
+    } else {
+      showDone();
+    }
+    return;
+  }
+  const line=story.lines[lineIdx];
+  updateMet();
+  buildReader();
+  if(listenMode || (listenThenRead && ltrPhase===1)){
+    // App speaks every line
+    speakLine(line.t);
+  } else if(listenThenRead && ltrPhase===2){
+    // Student reads every line
+    setTimeout(()=>startListen(), 400);
+  } else {
+    // 1by1: follow the line's assigned speaker
+    if(line.s==='app') speakLine(line.t);
+    else setTimeout(()=>startListen(), 400);
+  }
+}
+
+function skipLine(){
+  stopListen();stopSpeak();
+  lineIdx++;wordIdx=0;
+  if(autoMode) nextLine();
+  else buildReader();
+}
+
+// ── SPEECH RECOGNITION (user turn) ───────────────────
+function startListen(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    document.getElementById('sTxt').textContent='Speech recognition not available — use Chrome.';
+    setTimeout(()=>{lineIdx++;wordIdx=0;nextLine();},3000);
+    return;
+  }
+  if(!sessionStart)sessionStart=Date.now();
+
+  const _isHindi = story && story.lines[lineIdx] && /[ऀ-ॿ]/.test(story.lines[lineIdx].t);
+
+  function _startRec(){
+    if(!recognizing)return;
+    recognition=new SR();
+    recognition.continuous     = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives= 1;
+    recognition.lang = _isHindi ? 'hi-IN' : 'en-IN';
+
+    recognition.onresult=(e)=>{
+      const st=document.getElementById('sTxt');
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const res=e.results[i];
+        const transcript=res[0].transcript;
+        if(_isHindi){
+          // For Hindi: try to match on EVERY result (interim or final)
+          if(st) st.textContent='🎤 '+transcript;
+          processSpoken(transcript);
+        } else {
+          // English: only process final results
+          if(res.isFinal){
+            processSpoken(transcript);
+          } else {
+            if(st) st.textContent='🎤 '+transcript;
+          }
+        }
+      }
+    };
+
+    recognition.onerror=(e)=>{
+      const st=document.getElementById('sTxt');
+      if(e.error==='no-speech'){
+        // Restart and keep waiting — don't skip line
+        if(recognizing) setTimeout(_startRec,200);
+      } else if(e.error==='aborted'||e.error==='interrupted'){
+        // intentional stop — do nothing
+      } else if(e.error==='not-allowed'){
+        if(st) st.textContent='❌ Microphone blocked — allow mic in browser settings';
+        recognizing=false;
+      } else {
+        if(st) st.textContent='⚠️ Mic: '+e.error;
+        if(recognizing) setTimeout(_startRec,500);
+      }
+    };
+
+    recognition.onend=()=>{
+      if(recognizing) _startRec();
+    };
+
+    try{recognition.start();}catch(ex){}
+  }
+
+  recognizing=true;
+  _startRec();
+
+  const dot=document.getElementById('sDot');
+  const txt=document.getElementById('sTxt');
+  if(dot) dot.innerHTML='<span class="mic-dot"></span>';
+  if(txt) txt.textContent=_isHindi?'🎤 बोलिए… (हिन्दी)':'🎤 Listening — read aloud';
+}
+function stopListen(){
+  recognizing=false;
+  if(recognition){try{recognition.stop();}catch(ex){}recognition=null;}
+  const dot=document.getElementById('sDot');
+  if(dot)dot.innerHTML='';
+}
+
+function processSpoken(transcript){
+  if(!story)return;
+  const line=story.lines[lineIdx];
+  if(!line) return;
+  // In ltr phase 2 the student reads every line (including what were 'app' lines)
+  if(line.s!=='user' && !(listenThenRead && ltrPhase===2)) return;
+  const words=getWords(line.t);
+  if(!words.length)return;
+  const isHindi=/[ऀ-ॿ]/.test(line.t);
+  const st=document.getElementById('sTxt');
+
+  if(isHindi){
+    // ── Hindi: sentence-level matching ──────────────────────────
+    // Chrome gives us the right text but isFinal is unreliable.
+    // We compare the whole recognized sentence against the whole expected line.
+    const normTr = transcript.normalize('NFC').trim().replace(/[।॥\s]+/g,' ');
+    const spokenWords = normTr.split(/\s+/).filter(Boolean);
+    const normLine = line.t.normalize('NFC').trim().replace(/[।॥\s]+/g,' ');
+    const lineWords = normLine.split(/\s+/).filter(Boolean);
+
+    // Match: for each expected word, find best spoken word
+    let matched=0;
+    const usedIdx=new Set();
+    const wordStatus=[];
+    for(let ei=0;ei<lineWords.length;ei++){
+      let bestSc=0,bestSi=-1;
+      for(let si=0;si<spokenWords.length;si++){
+        if(usedIdx.has(si))continue;
+        const sc=simScore(spokenWords[si],lineWords[ei]);
+        if(sc>bestSc){bestSc=sc;bestSi=si;}
+      }
+      const hit=bestSc>=0.45;
+      wordStatus.push(hit);
+      if(hit){matched++;usedIdx.add(bestSi);}
+    }
+
+    // Update word spans
+    for(let i=0;i<words.length;i++){
+      const el=document.getElementById('w'+i);
+      if(!el)continue;
+      el.className=wordStatus[i]?'word done':'word';
+    }
+
+    const ratio=lineWords.length>0?matched/lineWords.length:0;
+    if(st) st.textContent='✓ '+matched+'/'+lineWords.length+' words matched ('+Math.round(ratio*100)+'%)';
+
+    // If at least 60% of words matched, accept and advance
+    if(ratio>=0.6){
+      correct+=matched; errors+=(words.length-matched); totalWords+=words.length;
+      wordIdx=words.length;
+      updateMet();
+      stopListen();
+      wordIdx=0;lineIdx++;
+      setTimeout(()=>nextLine(),600);
+    }
+    // else: keep listening — mic restarts via onend→_startRec
+    return;
+  }
+
+  // ── English: sequential word-by-word matching ─────────────────
+  const spoken=transcript.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  for(const spk of spoken){
+    if(wordIdx>=words.length)break;
+    const el=document.getElementById('w'+wordIdx);
+    const expected=words[wordIdx];
+    const sc=simScore(spk,expected);
+    if(st) st.textContent='Heard: "'+spk+'" | Expected: "'+expected+'" ('+Math.round(sc*100)+'%)';
+    if(sc>=0.65){if(el)el.className='word done';correct++;}
+    else{if(el)el.className='word err';errors++;logHardWord(user?user.name:'',expected);}
+    totalWords++;wordIdx++;
+    updateMet();
+    if(wordIdx>=words.length){
+      stopListen();wordIdx=0;lineIdx++;
+      setTimeout(()=>nextLine(),500);
+      return;
+    }
+    highlightW();
+  }
+}
+
+function highlightW(){
+  if(!story)return;
+  const words=getWords(story.lines[lineIdx].t);
+  for(let i=0;i<words.length;i++){
+    const el=document.getElementById('w'+i);if(!el)continue;
+    if(i<wordIdx)el.className='word done';
+    else if(i===wordIdx)el.className='word active';
+    else el.className='word';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// TTS ENGINE
+// ────────────────────────────────────────────────────────────
+// Clean provider pattern. To swap to ElevenLabs or OpenAI:
+//   1. Implement the provider object (see stubs below)
+//   2. Change TTS_PROVIDER to its key — nothing else changes.
+//
+// Provider contract:
+//   .speak(text, lang, onEnd, onError) → void
+//   .stop()                            → void
+// ════════════════════════════════════════════════════════════
+
+// ── Web Speech provider ──────────────────────────────────
+const webSpeechProvider = (function(){
+  const syn = window.speechSynthesis;
+  const _voiceCache = {};     // lang → best Voice object
+  const _timers = [];         // pending inter-phrase timers
+  let   _stopped = false;
+
+  // Scored preference list — first name-match wins, higher score = better
+  const VOICE_PREFS = [
+    ['Google UK English Female', 100],
+    ['Google UK English Male',    90],
+    ['Microsoft Aria',            88],
+    ['Samantha',                  85],  // macOS
+    ['Karen',                     82],  // macOS Australian
+    ['Moira',                     78],  // macOS Irish
+    ['Daniel',                    75],  // macOS British male
+    ['Microsoft Zira',            68],
+    ['Google US English',         65],
+    ['Google',                    55],  // any other Google neural voice
+  ];
+
+  function pickVoice(lang) {
+    if (_voiceCache[lang]) return _voiceCache[lang];
+    const all = syn.getVoices();
+    if (!all.length) return null;        // voices not loaded yet — browser uses default
+    let best = null, bestScore = -1;
+    if (lang === 'hi-IN') {
+      // Priority: exact hi-IN > any Hindi > Google Hindi > Lekha (macOS)
+      const HINDI_PREFS = ['Lekha','Google Hindi','hi-IN','hi_IN'];
+      for (const pref of HINDI_PREFS) {
+        best = all.find(v => v.name.includes(pref) || v.lang === pref || v.lang.startsWith('hi'));
+        if (best) break;
+      }
+      // If still nothing found, let the browser pick — don't return null,
+      // because null means "use whatever default" which may produce wrong lang
+      if (!best) best = all.find(v => v.lang.startsWith('hi')) || null;
+    } else {
+      all.forEach(v => {
+        if (!v.lang.startsWith('en')) return;
+        const entry = VOICE_PREFS.find(([n]) => v.name.includes(n));
+        const sc    = entry ? entry[1] : (v.localService ? 4 : 12);
+        if (sc > bestScore) { best = v; bestScore = sc; }
+      });
+    }
+    if (best) _voiceCache[lang] = best;
+    return best;
+  }
+
+  // Split one line of text into speakable phrases:
+  //   • always split at sentence boundaries (. ! ?)
+  //   • also split at em-dash (—) for a dramatic beat inside a sentence
+  function toPhrases(text) {
+    const sentences = text.match(/[^.!?]+[.!?]*/g)?.map(s => s.trim()).filter(Boolean) || [text];
+    const out = [];
+    sentences.forEach(sent => {
+      const isQ  = sent.trimEnd().endsWith('?');
+      const isEx = sent.trimEnd().endsWith('!');
+      const parts = sent.split(/\s*—\s*/);        // em-dash → sub-phrases
+      parts.forEach((p, i) => {
+        p = p.trim();
+        if (!p) return;
+        out.push({
+          text:    p,
+          isQ,   isEx,
+          isDash:  parts.length > 1 && i < parts.length - 1,  // pause follows
+          sentEnd: i === parts.length - 1,                      // last chunk of sentence
+        });
+      });
+    });
+    return out;
+  }
+
+  // Per-phrase prosody: rate / pitch / volume
+  function getProsody(ph) {
+    const wc = ph.text.split(/\s+/).length;
+    let rate = 0.87, pitch = 1.0, volume = 1.0;
+
+    // Length-based rate: very short phrases land heavier; very long eases off
+    if      (wc <= 4)  rate = 0.81;
+    else if (wc <= 8)  rate = 0.85;
+    else if (wc > 18)  rate = 0.83;
+
+    if (ph.sentEnd) {
+      if (ph.isQ)  { pitch = 1.14; rate -= 0.03; }           // question rises
+      if (ph.isEx) { pitch = 1.09; rate += 0.03; }           // exclamation lifts
+      if (!ph.isQ && !ph.isEx) rate = Math.max(rate - 0.02, 0.74); // settle at end
+    }
+    if (ph.isDash) rate = Math.max(rate - 0.05, 0.73);       // slow before the drama
+
+    return { rate: Math.min(Math.max(rate, 0.72), 1.0), pitch, volume };
+  }
+
+  // Silence gap (ms) to insert after a phrase
+  function gapAfter(ph) {
+    if (ph.isDash)  return 380;  // em-dash — dramatic beat pause
+    return 0;                    // inter-sentence gap handled by speakLine
+  }
+
+  function stop() {
+    _stopped = true;
+    syn.cancel();
+    _timers.forEach(clearTimeout);
+    _timers.length = 0;
+  }
+
+  function speak(text, lang, onEnd, onError) {
+    if (!syn) { onError(); return; }
+    stop();
+    _stopped = false;
+
+    const phrases = toPhrases(text);
+    const voice   = pickVoice(lang);
+    let i = 0;
+
+    function next() {
+      if (_stopped) return;
+      if (i >= phrases.length) { onEnd(); return; }
+
+      const ph  = phrases[i];
+      const pro = getProsody(ph);
+      const utt = new SpeechSynthesisUtterance(ph.text);
+      utt.lang   = lang;
+      utt.rate   = pro.rate;
+      utt.pitch  = pro.pitch;
+      utt.volume = pro.volume;
+      if (voice) utt.voice = voice;
+
+      utt.onend = () => {
+        if (_stopped) return;
+        i++;
+        const gap = gapAfter(ph);
+        if (gap > 0) _timers.push(setTimeout(next, gap));
+        else next();
+      };
+      utt.onerror = e => {
+        if (_stopped || e.error === 'interrupted') return;
+        i++; next();    // skip broken phrase and carry on
+      };
+
+      if (syn.paused) syn.resume();
+      syn.speak(utt);
+    }
+    next();
+  }
+
+  return { speak, stop };
+})();
+
+// ── Future provider stubs — implement and uncomment to activate ──
+//
+// const elevenLabsProvider = {
+//   _audio: null,
+//   async speak(text, lang, onEnd, onError) {
+//     const res = await fetch('https://api.elevenlabs.io/v1/text-to-speech/VOICE_ID', {
+//       method: 'POST',
+//       headers: { 'xi-api-key': EL_API_KEY, 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ text, model_id: 'eleven_turbo_v2' })
+//     });
+//     const blob = await res.blob();
+//     this._audio = new Audio(URL.createObjectURL(blob));
+//     this._audio.onended = onEnd;
+//     this._audio.onerror = onError;
+//     this._audio.play();
+//   },
+//   stop() { if (this._audio) { this._audio.pause(); this._audio.currentTime = 0; } }
+// };
+//
+// const openAiProvider = {
+//   _audio: null,
+//   async speak(text, lang, onEnd, onError) {
+//     const res = await fetch('https://api.openai.com/v1/audio/speech', {
+//       method: 'POST',
+//       headers: { 'Authorization': 'Bearer ' + OAI_API_KEY, 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ model: 'tts-1-hd', voice: 'nova', input: text })
+//     });
+//     const blob = await res.blob();
+//     this._audio = new Audio(URL.createObjectURL(blob));
+//     this._audio.onended = onEnd;
+//     this._audio.onerror = onError;
+//     this._audio.play();
+//   },
+//   stop() { if (this._audio) { this._audio.pause(); this._audio.currentTime = 0; } }
+// };
+
+// ── ElevenLabs provider (via Cloudflare Worker + R2 cache) ───
+//
+// Audio caching hierarchy (fastest → slowest):
+//   1. In-memory map  (_memCache)  — same tab, instant
+//   2. IndexedDB      (idb)        — same device across sessions, ~5ms
+//   3. Cloudflare R2  (via Worker) — any device, already generated audio
+//   4. ElevenLabs API (via Worker) — new audio, stored in R2 for future use
+//
+// The browser NEVER sees the ElevenLabs API key.
+// Set WORKER_URL below to your deployed Cloudflare Worker URL.
+// ─────────────────────────────────────────────────────────────
+
+// ▶ SET THIS after deploying your Cloudflare Worker:
+const WORKER_URL = localStorage.getItem('ra_worker_url') || '';
+// e.g. 'https://readaloud-tts.YOUR_SUBDOMAIN.workers.dev'
+// Users can also set it in Settings and it persists in localStorage.
+
+// Tiny silent audio — used to unlock the Audio element on iOS Safari BEFORE
+// any async fetch. iOS requires audio.play() synchronously in the gesture handler.
+const _SILENT_AUDIO = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+
+// ── IndexedDB helper (audio blob storage) ────────────────────
+const _idb = (function () {
+  const DB_NAME    = 'readaloud_audio';
+  const STORE_NAME = 'blobs';
+  const DB_VERSION = 1;
+  let _db = null;
+
+  function open() {
+    if (_db) return Promise.resolve(_db);
+    return new Promise((res, rej) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = e => e.target.result.createObjectStore(STORE_NAME);
+      req.onsuccess = e => { _db = e.target.result; res(_db); };
+      req.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  async function get(key) {
+    try {
+      const db = await open();
+      return new Promise((res, rej) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const req = tx.objectStore(STORE_NAME).get(key);
+        req.onsuccess = () => res(req.result || null);
+        req.onerror   = () => res(null);   // non-fatal
+      });
+    } catch { return null; }
+  }
+
+  async function put(key, blob) {
+    try {
+      const db = await open();
+      return new Promise((res) => {
+        const tx  = db.transaction(STORE_NAME, 'readwrite');
+        const req = tx.objectStore(STORE_NAME).put(blob, key);
+        req.onsuccess = () => res(true);
+        req.onerror   = () => res(false);
+      });
+    } catch { return false; }
+  }
+
+  return { get, put };
+})();
+
+// ── Provider ──────────────────────────────────────────────────
+// ╔══════════════════════════════════════════════════════════════════════════╗
+// ║  AUDIO PLAYBACK — THREE RULES THAT MUST NEVER BE BROKEN                ║
+// ║                                                                          ║
+// ║  1. elevenLabsProvider.warm() MUST be called inside startAuto()         ║
+// ║     (a real user-tap handler). It creates & unlocks the Audio element.  ║
+// ║     Moving it anywhere else will cause autoplay to be blocked.          ║
+// ║                                                                          ║
+// ║  2. _audio must NEVER be set to null inside stop().                     ║
+// ║     The element stays alive between lines so play() never needs a       ║
+// ║     fresh user gesture.                                                  ║
+// ║                                                                          ║
+// ║  3. speak() must NEVER create a new Audio(). It must always reuse       ║
+// ║     the persistent _audio element created by warm().                    ║
+// ║     Speech-recognition callbacks are NOT user gestures — a new          ║
+// ║     Audio().play() would be blocked by the browser on every line.       ║
+// ╚══════════════════════════════════════════════════════════════════════════╝
+const elevenLabsProvider = (function () {
+  const _memCache = {};   // cacheKey → blob URL  (in-memory, current tab)
+
+  // ONE persistent audio element, pre-unlocked during the user gesture.
+  // We never destroy it — just pause and swap src between lines.
+  let _audio   = null;
+  let _aborted = false;
+
+  function _cacheKey(text, lang, voiceId) {
+    return `${voiceId}|${lang}|${text.trim().toLowerCase()}`;
+  }
+
+  async function _fetchFromWorker(text, lang) {
+    const workerUrl = (localStorage.getItem('ra_worker_url') || WORKER_URL).replace(/\/+$/, '');
+    if (!workerUrl) throw new Error('No Worker URL configured');
+    const voiceId = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
+    const res = await fetch(`${workerUrl}/tts`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ text: text.trim(), lang, voiceId }),
+    });
+    if (!res.ok) throw new Error(`Worker ${res.status}`);
+    const blob = await res.blob();
+    console.log(`[TTS] ${res.headers.get('X-Cache') === 'HIT' ? 'R2 hit ✓' : 'ElevenLabs fetch'}`);
+    return blob;
+  }
+
+  async function _getAudioUrl(text, lang) {
+    const voiceId = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
+    const ck = _cacheKey(text, lang, voiceId);
+    if (_memCache[ck]) return _memCache[ck];
+    const idbBlob = await _idb.get(ck);
+    if (idbBlob) {
+      const url = URL.createObjectURL(idbBlob);
+      _memCache[ck] = url;
+      return url;
+    }
+    const blob = await _fetchFromWorker(text, lang);
+    const url  = URL.createObjectURL(blob);
+    _memCache[ck] = url;
+    _idb.put(ck, blob).catch(() => {});
+    return url;
+  }
+
+  // ── warm() ────────────────────────────────────────────────────────────────
+  // Call this SYNCHRONOUSLY inside a user gesture (e.g. the Start button click).
+  // It creates the persistent Audio element and plays a silent clip so the
+  // browser marks it as "user-activated". All later play() calls on this same
+  // element are then allowed without requiring another gesture.
+  function warm() {
+    if (_audio) return;   // already warmed — idempotent, safe to call multiple times
+    _audio = new Audio();
+    _audio.volume = 1.0;            // always max — never let this drift
+    _audio.src = _SILENT_AUDIO;
+    _audio.play().catch(() => {});  // ⚠️ RULE 1 — unlocks this element inside the user gesture
+  }
+
+  async function speak(text, lang, onEnd, onError) {
+    _aborted = false;
+    const workerUrl = (localStorage.getItem('ra_worker_url') || WORKER_URL).replace(/\/+$/, '');
+    const st = document.getElementById('sTxt');
+    if (!workerUrl) {
+      if(st) st.textContent = '❌ No Worker URL set in Settings';
+      onError(); return;
+    }
+
+    // ⚠️ RULE 3 — never create new Audio() here. Always reuse _audio.
+    // warm() should have been called from startAuto() (user gesture). Guard only.
+    if (!_audio) warm();
+
+    try {
+      if(st) st.textContent = '⏳ Loading audio…';
+      const url = await _getAudioUrl(text, lang);
+      if (_aborted) return;
+      if(st) st.textContent = '▶ Playing…';
+
+      // Swap src on the persistent, already-unlocked element.
+      // Detach old handlers first so stale events don't fire.
+      _audio.onended = null;
+      _audio.onerror = null;
+      _audio.pause();
+      _audio.onended = () => { if(!_aborted) onEnd(); };
+      _audio.onerror = () => {
+        if(_aborted) return;
+        const code = _audio && _audio.error ? _audio.error.code : '?';
+        if(st) st.textContent = '❌ Play error code: ' + code;
+        onError();
+      };
+      _audio.volume = 1.0;
+      _audio.src = url;
+      _audio.play().catch(err => {
+        if(_aborted) return;
+        if(st) st.textContent = '❌ play() blocked: ' + err.message;
+        onError();
+      });
+    } catch (err) {
+      console.warn('[EL] error:', err.message);
+      if(st) st.textContent = '❌ Fetch error: ' + err.message;
+      if (!_aborted) onError();
+    }
+  }
+
+  async function prefetch(text, lang) {
+    const workerUrl = (localStorage.getItem('ra_worker_url') || WORKER_URL).replace(/\/+$/, '');
+    if (!workerUrl) return;
+    const voiceId = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
+    const ck = _cacheKey(text, lang, voiceId);
+    if (_memCache[ck]) return;
+    const idbBlob = await _idb.get(ck);
+    if (idbBlob) { _memCache[ck] = URL.createObjectURL(idbBlob); return; }
+    try {
+      const blob = await _fetchFromWorker(text, lang);
+      _memCache[ck] = URL.createObjectURL(blob);
+      _idb.put(ck, blob).catch(() => {});
+    } catch (_) {}
+  }
+
+  function stop() {
+    _aborted = true;
+    if (_audio) {
+      try { _audio.pause(); } catch(e) {}
+      _audio.onended = null;
+      _audio.onerror = null;
+      // ⚠️ RULE 2 — do NOT set _audio = null here.
+      // Keeping the element alive means every subsequent play() works
+      // without needing another user gesture.
+    }
+  }
+
+  return { speak, stop, prefetch, warm };
+})();
+
+// ── Provider registry ─────────────────────────────────────
+// ttsSpeak() auto-selects: ElevenLabs (via Worker) if Worker URL is set,
+// else falls back to Web Speech API.
+// Adding a new provider = implement its object above + one line here.
+
+function _hasWorker() {
+  return !!(localStorage.getItem('ra_worker_url') || WORKER_URL);
+}
+
+function ttsSpeak(text, lang, onEnd, onError) {
+  // Only ElevenLabs via Cloudflare Worker — no Web Speech fallback
+  elevenLabsProvider.speak(text, lang, onEnd, onError);
+}
+function ttsStop() {
+  elevenLabsProvider.stop();
+  webSpeechProvider.stop();
+}
+
+// Kick off background pre-fetch for the NEXT TTS line while current one plays
+function prefetchNextLine() {
+  if (!_hasWorker() || !story) return;
+  if (listenThenRead && ltrPhase===2) return;  // phase 2 = student reads, no TTS to prefetch
+  for (let i = lineIdx + 1; i < story.lines.length; i++) {
+    const ln = story.lines[i];
+    if (listenMode || (listenThenRead && ltrPhase===1) || ln.s === 'app') {
+      const lang = /[ऀ-ॿ]/.test(ln.t) ? 'hi-IN' : 'en-IN';
+      elevenLabsProvider.prefetch(ln.t, lang);
+      break;
+    }
+  }
+}
+
+// ── Settings UI ───────────────────────────────────────────
+function openSettings() {
+  const workerUrl = localStorage.getItem('ra_worker_url') || '';
+  const voice     = localStorage.getItem('el_voice') || '21m00Tcm4TlvDq8ikWAM';
+  document.getElementById('elKeyInput').value   = workerUrl;
+  document.getElementById('elVoiceInput').value = voice;
+  document.getElementById('elClearBtn').style.display = workerUrl ? 'inline-flex' : 'none';
+  _updateSettingsStatus();
+  document.getElementById('settingsModal').classList.add('open');
+}
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('open');
+  document.getElementById('elSaveMsg').textContent = '';
+}
+function saveElSettings() {
+  const workerUrl = document.getElementById('elKeyInput').value.trim();
+  const voice     = document.getElementById('elVoiceInput').value;
+  const msg       = document.getElementById('elSaveMsg');
+  if (!workerUrl) { msg.style.color='var(--red)'; msg.textContent='Please paste your Worker URL first.'; return; }
+  if (!workerUrl.startsWith('https://')) { msg.style.color='var(--red)'; msg.textContent='URL must start with https://'; return; }
+  localStorage.setItem('ra_worker_url', workerUrl);
+  localStorage.setItem('el_voice',      voice);
+  document.getElementById('elClearBtn').style.display = 'inline-flex';
+  msg.style.color = 'var(--green)';
+  msg.textContent = '✓ Worker connected! Neural voice active on next line.';
+  _updateSettingsStatus();
+}
+function clearElSettings() {
+  localStorage.removeItem('ra_worker_url');
+  localStorage.removeItem('el_voice');
+  document.getElementById('elKeyInput').value = '';
+  document.getElementById('elClearBtn').style.display = 'none';
+  const msg = document.getElementById('elSaveMsg');
+  msg.style.color = 'var(--text2)';
+  msg.textContent = 'Worker removed — switched back to system voice.';
+  _updateSettingsStatus();
+}
+function _updateSettingsStatus() {
+  const active = _hasWorker();
+  const name   = document.getElementById('setProviderName');
+  const desc   = document.getElementById('setProviderDesc');
+  const pill   = document.getElementById('setProviderPill');
+  if (active) {
+    const voiceNames = {
+      '21m00Tcm4TlvDq8ikWAM':'Rachel','EXAVITQu4vr4xnSDxMaL':'Bella',
+      'AZnzlk1XvdvUeBnXmlld':'Domi','ErXwobaYiN019PkySvjV':'Antoni',
+      'TxGEqnHWrfWFTfGW9XjX':'Josh','VR6AewLTigWG4xSOukaG':'Arnold',
+    };
+    const vName = voiceNames[localStorage.getItem('el_voice')] || 'Custom';
+    name.textContent = '🎙️ ElevenLabs — ' + vName;
+    desc.textContent = 'Neural voice via Cloudflare Worker. Falls back to system voice on error.';
+    pill.textContent = 'ON'; pill.className = 'el-pill el-on';
+  } else {
+    name.textContent = '🔊 System voice';
+    desc.textContent = 'Web Speech API — built-in, works offline. Add Worker URL for neural voice.';
+    pill.textContent = 'OFF'; pill.className = 'el-pill el-off';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+
+// ── App-level speaker — calls TTS engine, handles line advance
+function speakLine(text){
+  // Always kill any existing TTS before starting a new one
+  ttsStop();
+  const line = story ? story.lines[lineIdx] : null;
+  const lang = (line && /[ऀ-ॿ]/.test(line.t)) ? 'hi-IN' : 'en-IN';
+
+  const dot = document.getElementById('sDot');
+  const txt = document.getElementById('sTxt');
+  if(dot) dot.innerHTML = '<span class="app-dot"></span>';
+  if(txt) txt.textContent = (lang === 'hi-IN' ? 'सुनिए ध्यान से…' : 'Listen carefully…');
+
+  // Guard: only the first of (onEnd / fallback timer) may advance the line
+  let done = false;
+  const advance = (pause) => {
+    if(done) return;
+    done = true; clearTimeout(fallback); speaking = false;
+    lineIdx++; setTimeout(()=>nextLine(), pause);
+  };
+  // Safety net: if the TTS engine never fires onEnd (Chrome bug), advance anyway
+  const estMs = text.split(/\s+/).length * 700 + 3500;
+  const fallback = setTimeout(()=>advance(0), estMs);
+
+  speaking = true;
+  ttsSpeak(text, lang,
+    ()=>{ advance(680 + Math.random()*320); },   // onEnd — natural post-line breath
+    ()=>{                                         // onError — specific msg already set by speak()
+      speaking = false;
+      clearTimeout(fallback);
+      done = true;
+      // DO NOT overwrite sTxt here — speak() already set a specific diagnostic message
+      // e.g. "❌ Fetch error: Worker 500" or "❌ play() blocked: NotAllowedError"
+    }
+  );
+  prefetchNextLine();   // background-fetch next TTS line while this one plays
+}
+function stopSpeak(){ ttsStop(); speaking=false; }
+
+// ── FINISH ────────────────────────────────────────────
+function showDone(){
+  autoMode=false;stopListen();stopSpeak();
+  markDone(story.s.id);
+  document.getElementById('rPbar').style.width='100%';
+  document.getElementById('readerWrap').style.display='none';
+  const tot=correct+errors,acc=tot>0?Math.round(correct/tot*100):0;
+  const el2=(Date.now()-(sessionStart||Date.now()))/60000,wpm=el2>0?Math.round(totalWords/Math.max(el2,.01)):0;
+  const lv=getLevel(acc,wpm),col=acc>=80?'var(--green)':acc>=65?'var(--amber)':'var(--red)';
+  const msg=acc>=88?'🌟 Excellent! Your reading is clear and confident.'
+    :acc>=72?'👍 Good effort! Keep practising every day.'
+    :'💪 Great start — reading a little each day goes a long way!';
+  const sid=story.s.id;
+  const isNCERT=!!story.s.isNCERT;
+  document.getElementById('readerDone').style.display='block';
+  document.getElementById('readerDone').innerHTML=`
+  <div class="finish-card">
+    <div class="score-ring"><span class="score-num" style="color:${col}">${acc}%</span><span class="score-sub">accuracy</span></div>
+    <h2 style="font-size:20px;margin-bottom:6px">Story complete! 🎉</h2>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1.2rem">You finished <em>${story.s.title}</em></p>
+    <div class="g4" style="margin-bottom:1rem">
+      <div class="mc"><div class="ml">Accuracy</div><div class="mv" style="color:${col}">${acc}%</div></div>
+      <div class="mc"><div class="ml">Speed</div><div class="mv">${wpm} wpm</div></div>
+      <div class="mc"><div class="ml">Words</div><div class="mv">${totalWords}</div></div>
+      <div class="mc"><div class="ml">Lines</div><div class="mv">${story.lines.length}</div></div>
+    </div>
+    <span class="lbadge ${lv.cls}" style="font-size:13px;padding:5px 16px;display:inline-flex;margin-bottom:10px">${lv.label} reader</span>
+    <p style="font-size:13px;color:var(--text2);margin:8px 0 1rem">${msg}</p>
+    <div style="background:var(--amber2);border:1px solid var(--amber3);border-radius:var(--r);padding:12px 14px;margin-bottom:1.2rem;display:flex;align-items:center;gap:10px">
+      <span style="font-size:22px">🎧</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--amber)">Chapter unlocked for listening!</div>
+        <div style="font-size:11px;color:var(--amber);opacity:.8">You can now listen to the full chapter read aloud</div>
+      </div>
+      <button class="btn btn-sm" style="background:var(--amber);color:#fff;border-color:var(--amber);white-space:nowrap" onclick="playFull('${sid}')">🎧 Listen now</button>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-primary btn-xl" style="width:auto;min-width:130px" onclick="${isNCERT?`startNCERT('${sid}')`:`startStory('${sid}')`}">🔁 Read again</button>
+      <button class="btn btn-xl" style="width:auto;min-width:130px" onclick="exitReader()">← Back</button>
+    </div>
+  </div>`;
+  updateMet();
+}
+
+function showListenDone(){
+  autoMode=false;listenMode=false;stopSpeak();
+  document.getElementById('rPbar').style.width='100%';
+  document.getElementById('readerWrap').style.display='none';
+  const sid=story.s.id;
+  const isNCERT=!!story.s.isNCERT;
+  document.getElementById('readerDone').style.display='block';
+  document.getElementById('readerDone').innerHTML=`
+  <div class="finish-card">
+    <div style="font-size:56px;margin-bottom:0.75rem">🎧</div>
+    <h2 style="font-size:20px;margin-bottom:6px">Finished listening!</h2>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1.5rem">You listened to the full chapter — <em>${story.s.title}</em></p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-primary btn-xl" style="width:auto;min-width:130px" onclick="playFull('${sid}')">🎧 Listen again</button>
+      <button class="btn btn-xl" style="width:auto;min-width:130px" onclick="${isNCERT?`startNCERT('${sid}')`:`startStory('${sid}')`}">📖 Read it</button>
+      <button class="btn btn-xl" style="width:auto;min-width:130px" onclick="exitReader()">← Back</button>
+    </div>
+  </div>`;
+}
+
+function stopFullListen(){
+  autoMode=false;listenMode=false;stopSpeak();
+  buildReader();
+  document.getElementById('sTxt').textContent='Listening stopped — press Read to continue.';
+}
+
+async function playFull(id){
+  const s=STORIES.find(x=>x.id===id),lines=LINES[id];
+  if(s&&lines){
+    story={s,lines};
+    document.getElementById('rTitle').textContent=s.title;
+    document.getElementById('rMeta').textContent=s.subject+' · '+s.diff+' · 🎧 Listen mode';
+  } else if(CHAPTER_INDEX[id] && CHAPTER_INDEX[id].chapter.file){
+    let data;
+    try{ data=await loadChapter(id); }
+    catch(e){ alert('Could not load chapter: '+e.message); return; }
+    const meta=CHAPTER_INDEX[id], ch=meta.chapter;
+    story={s:{id:ch.id,title:ch.title,subject:'English (NCERT)',diff:ch.diff,isNCERT:true}, lines:data.lines};
+    document.getElementById('rTitle').textContent=ch.title;
+    document.getElementById('rMeta').textContent=`${meta.book.title} G${meta.book.grade} · ${meta.unit.title} · ${ch.type} · 🎧 Listen mode`;
+  } else { return; }
+  lineIdx=0;wordIdx=0;correct=0;errors=0;totalWords=0;sessionStart=Date.now();
+  listenMode=true;autoMode=true;
+  document.getElementById('readerDone').style.display='none';
+  document.getElementById('readerWrap').style.display='block';
+  showScr('scrReader');
+  updateMet();
+  if(synth){const u=new SpeechSynthesisUtterance('');u.volume=0;synth.speak(u);}
+  nextLine();
+}
+
+// ══════ INIT ══════════════════════════════════════════════
+renderSt('','');
+renderLib('','');
+if(synth)synth.onvoiceschanged=()=>synth.getVoices();
+initDark();
+</script>
 </body>
 </html>
